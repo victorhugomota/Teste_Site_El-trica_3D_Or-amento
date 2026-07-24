@@ -13,6 +13,24 @@ const PRECOS_DATABASE = {
       "unit": "un",
       "price": 350.0
     },
+    "QMON-400x300x200": {
+      "desc": "QUADRO DE MONTAGEM METÁLICO 400X300X200 (PADRÃO COMANDO)",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 450.0
+    },
+    "QMON-500x400x200": {
+      "desc": "QUADRO DE MONTAGEM METÁLICO 400X300X200 (PADRÃO COMANDO)",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 450.0
+    },
+    "QMON-500x500x200": {
+      "desc": "QUADRO DE MONTAGEM METÁLICO 400X300X200 (PADRÃO COMANDO)",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 450.0
+    },
     "QMON-600x400x250": {
       "desc": "QUADRO DE MONTAGEM METÁLICO 600X400X250",
       "brand": "BRUM",
@@ -24,6 +42,114 @@ const PRECOS_DATABASE = {
       "brand": "BRUM",
       "unit": "un",
       "price": 700.0
+    },
+    "QMON-700x600x200": {
+      "desc": "QUADRO DE MONTAGEM METÁLICO 600X600X201",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 701.0
+    },
+    "QMON-800x600x200": {
+      "desc": "QUADRO DE MONTAGEM METÁLICO 600X600X202",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 702.0
+    },
+    "QMON-1000x600x200": {
+      "desc": "QUADRO DE MONTAGEM METÁLICO 600X600X203",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 703.0
+    },
+    "QMON-1200x800x200": {
+      "desc": "QUADRO DE MONTAGEM METÁLICO 600X600X204",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 704.0
+    },
+    "MSW012F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 12A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 100.0
+    },
+    "MSW016F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 16A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 120.0
+    },
+    "MSW020F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 20A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 140.0
+    },
+    "MSW025F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 25A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 160.0
+    },
+    "MSW032F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 32A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 200.0
+    },
+    "MSW040F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 40A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 250.0
+    },
+    "MSW063F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 63A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 350.0
+    },
+    "MSW080F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 80A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 450.0
+    },
+    "MSW100F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 100A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 600.0
+    },
+    "MSW125F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 125A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 800.0
+    },
+    "MSW160F-3P00-3R": {
+      "desc": "CHAVE SECCIONADORA ROTATIVA DE PORTA WEG MSW 160A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 1000.0
+    },
+    "SINALEIRO-VERDE": {
+      "desc": "SINALEIRO LED MONOBLOCO VERDE 220V/24V (INDICADOR LIGADO)",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 25.0
+    },
+    "SINALEIRO-VERMELHO": {
+      "desc": "SINALEIRO LED MONOBLOCO VERMELHO 220V/24V (INDICADOR FALHA)",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 25.0
+    },
+    "CHAVE-SELETORA-3POS": {
+      "desc": "CHAVE SELETORA ROTATIVA DE 3 POSIÇÕES MANUAL-0-AUTO",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 45.0
     },
     "DISJ-MOTOR-0.18_0.37kW": {
       "desc": "DISJUNTOR MOTOR MPW18 / MPW40 (ATÉ 1,5A)",
@@ -685,11 +811,29 @@ const PRECOS_DATABASE = {
       "unit": "un",
       "price": 3200.0
     },
-    "SUPERVISORIO": {
-      "desc": "LICENÇA E INTEGRAÇÃO DE SISTEMA SUPERVISÓRIO SCADA",
+    "SUP-MODELO-1": {
+      "desc": "SISTEMA SUPERVISÓRIO SCADA MODELO 1 (ATÉ 3 EQUIPAMENTOS)",
+      "brand": "INTEGRADOR",
+      "unit": "un",
+      "price": 1500.0
+    },
+    "SUP-MODELO-2": {
+      "desc": "SISTEMA SUPERVISÓRIO SCADA MODELO 2 (4 A 6 EQUIPAMENTOS)",
       "brand": "INTEGRADOR",
       "unit": "un",
       "price": 2500.0
+    },
+    "SUP-MODELO-3": {
+      "desc": "SISTEMA SUPERVISÓRIO SCADA MODELO 3 (7 A 10 EQUIPAMENTOS)",
+      "brand": "INTEGRADOR",
+      "unit": "un",
+      "price": 4000.0
+    },
+    "SUP-MODELO-4": {
+      "desc": "SISTEMA SUPERVISÓRIO SCADA MODELO 4 (ACIMA DE 10 EQUIP.)",
+      "brand": "INTEGRADOR",
+      "unit": "un",
+      "price": 6000.0
     },
     "SENS-TEMP-UMID-DUTO": {
       "desc": "SENSOR DE TEMPERATURA E UMIDADE PARA DUTO NTC",
@@ -775,12 +919,6 @@ const PRECOS_DATABASE = {
       "unit": "un",
       "price": 80.0
     },
-    "SECCIONADORA-3POS": {
-      "desc": "SECCIONADORA 3 POSIÇÕES - 2NA",
-      "brand": "CSW",
-      "unit": "un",
-      "price": 45.0
-    },
     "PORTA-PLAQUETA": {
       "desc": "CONJUNTO PORTA PLAQUETA APP30 + PLAQUETA",
       "brand": "APP30-256",
@@ -800,7 +938,7 @@ const PRECOS_DATABASE = {
       "price": 2.0
     },
     "IDENTIFICADOR-BTW": {
-      "desc": "IDENTIFICADOR PARA GRUPO DE BORNES BTW",
+      "desc": "IDENTIFICADOR PARA GRUNE BORNES BTW",
       "brand": "WEG",
       "unit": "un",
       "price": 4.0
@@ -858,6 +996,156 @@ const PRECOS_DATABASE = {
       "brand": "EONUT",
       "unit": "un",
       "price": 85.0
+    },
+    "CONTROLADOR-PROP-AQUECIMENTO": {
+      "desc": "CONTROLADOR PROPORCIONAL DE AQUECIMENTO / SCR 24V",
+      "brand": "WEG/INTEGRADOR",
+      "unit": "un",
+      "price": 800.0
+    },
+    "CONTROLADOR-PROP-UMIDIFICACAO": {
+      "desc": "CONTROLADOR PROPORCIONAL DE UMIDIFICAÇÃO 24V",
+      "brand": "CAREL/INTEGRADOR",
+      "unit": "un",
+      "price": 800.0
+    },
+    "SENS-TEMP-DUTO": {
+      "desc": "SENSOR DE TEMPERATURA DE DUTO NTC",
+      "brand": "WEG/INTEGRADOR",
+      "unit": "un",
+      "price": 250.0
+    },
+    "SENS-TEMP-AMBIENTE": {
+      "desc": "SENSOR DE TEMPERATURA DE AMBIENTE NTC",
+      "brand": "WEG/INTEGRADOR",
+      "unit": "un",
+      "price": 220.0
+    },
+    "SENS-UMIDADE-DUTO": {
+      "desc": "SENSOR DE UMIDADE DE DUTO",
+      "brand": "WEG/INTEGRADOR",
+      "unit": "un",
+      "price": 480.0
+    },
+    "SENS-UMIDADE-AMBIENTE": {
+      "desc": "SENSOR DE UMIDADE DE AMBIENTE",
+      "brand": "WEG/INTEGRADOR",
+      "unit": "un",
+      "price": 450.0
+    },
+    "SENS-TEMP-UMID-AMBIENTE": {
+      "desc": "SENSOR DE TEMPERATURA E UMIDADE DE AMBIENTE",
+      "brand": "WEG/INTEGRADOR",
+      "unit": "un",
+      "price": 550.0
+    },
+    "SENS-CO2-DUTO": {
+      "desc": "SENSOR DE QUALIDADE DO AR / CO2 PARA DUTO",
+      "brand": "WEG/INTEGRADOR",
+      "unit": "un",
+      "price": 850.0
+    },
+    "SENS-CO2-AMBIENTE": {
+      "desc": "SENSOR DE QUALIDADE DO AR / CO2 DE AMBIENTE",
+      "brand": "WEG/INTEGRADOR",
+      "unit": "un",
+      "price": 800.0
+    },
+    "CONTATORA-AUXILIAR": {
+      "desc": "CONTATORA AUXILIAR DE COMANDO 24V/220V",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 150.0
+    },
+    "DISJ-AGW100-3P-32A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW100 3P 32A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 380.0
+    },
+    "DISJ-AGW100-3P-40A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW100 3P 40A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 380.0
+    },
+    "DISJ-AGW100-3P-50A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW100 3P 50A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 380.0
+    },
+    "DISJ-AGW100-3P-63A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW100 3P 63A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 390.0
+    },
+    "DISJ-AGW100-3P-80A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW100 3P 80A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 390.0
+    },
+    "DISJ-AGW100-3P-100A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW100 3P 100A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 410.0
+    },
+    "DISJ-AGW250-3P-125A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW250 3P 125A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 550.0
+    },
+    "DISJ-AGW250-3P-160A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW250 3P 160A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 580.0
+    },
+    "DISJ-AGW250-3P-200A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW250 3P 200A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 680.0
+    },
+    "DISJ-AGW250-3P-250A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW250 3P 250A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 720.0
+    },
+    "DISJ-AGW400-3P-315A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW400 3P 315A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 1150.0
+    },
+    "DISJ-AGW400-3P-400A": {
+      "desc": "DISJUNTOR EM CAIXA MOLDADA AGW400 3P 400A",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 1350.0
+    },
+    "MANOPLA-ROTATIVA-AGW100": {
+      "desc": "MANOPLA ROTATIVA PARA DISJUNTOR AGW100",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 120.0
+    },
+    "MANOPLA-ROTATIVA-AGW250": {
+      "desc": "MANOPLA ROTATIVA PARA DISJUNTOR AGW250",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 150.0
+    },
+    "MANOPLA-ROTATIVA-AGW400": {
+      "desc": "MANOPLA ROTATIVA PARA DISJUNTOR AGW400",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 220.0
     }
   },
   "compositions": {
@@ -5354,8 +5642,30 @@ const PRECOS_DATABASE = {
       "qty": 1.0
     }
   },
-  "supervisorio": {
-    "code": "SUPERVISORIO",
-    "qty": 1.0
-  }
+  "supervisorioRules": [
+    {
+      "minQty": 1,
+      "maxQty": 3,
+      "code": "bossMicro",
+      "qty": 1.0
+    },
+    {
+      "minQty": 4,
+      "maxQty": 10,
+      "code": "MiniBoss",
+      "qty": 1.0
+    },
+    {
+      "minQty": 11,
+      "maxQty": 30,
+      "code": "Boss 100disp",
+      "qty": 1.0
+    },
+    {
+      "minQty": 31,
+      "maxQty": 999,
+      "code": "Boss 300disp",
+      "qty": 1.0
+    }
+  ]
 };

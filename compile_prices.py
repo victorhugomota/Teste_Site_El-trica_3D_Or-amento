@@ -20,7 +20,7 @@ def compile_excel_to_js():
         "sensors": {},
         "clpRules": [],
         "ihmMapping": {},
-        "supervisorio": {}
+        "supervisorioRules": []
     }
     
     # 1. Catalog
@@ -97,7 +97,7 @@ def compile_excel_to_js():
                 "connQty": float(conn_qty) if conn_qty is not None else 0.0
             })
             
-    # 5. IHMs e Supervisório
+    # 5. IHMs
     ws_ihm = wb["IHMs e Supervisório"]
     for row in range(2, ws_ihm.max_row + 1):
         opt = ws_ihm.cell(row=row, column=1).value
@@ -106,16 +106,26 @@ def compile_excel_to_js():
         
         if opt and comp_code:
             opt_str = str(opt).strip()
-            if opt_str == "Sistema Supervisório":
-                database["supervisorio"] = {
-                    "code": str(comp_code).strip(),
-                    "qty": float(qty) if qty is not None else 1.0
-                }
-            else:
-                database["ihmMapping"][opt_str] = {
-                    "code": str(comp_code).strip(),
-                    "qty": float(qty) if qty is not None else 1.0
-                }
+            database["ihmMapping"][opt_str] = {
+                "code": str(comp_code).strip(),
+                "qty": float(qty) if qty is not None else 1.0
+            }
+            
+    # 6. Supervisório Rules (New!)
+    ws_sup = wb["Modelos de Supervisório"]
+    for row in range(2, ws_sup.max_row + 1):
+        min_qty = ws_sup.cell(row=row, column=1).value
+        max_qty = ws_sup.cell(row=row, column=2).value
+        comp_code = ws_sup.cell(row=row, column=3).value
+        qty = ws_sup.cell(row=row, column=4).value
+        
+        if min_qty is not None and comp_code:
+            database["supervisorioRules"].append({
+                "minQty": int(min_qty),
+                "maxQty": int(max_qty) if max_qty is not None else 999,
+                "code": str(comp_code).strip(),
+                "qty": float(qty) if qty is not None else 1.0
+            })
                 
     # Write to precos.js
     with open(js_path, 'w', encoding='utf-8') as f:

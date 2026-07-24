@@ -7,6 +7,36 @@ let budgetState = {
 // Draft equipments for the panel currently being created
 let draftEquipments = [];
 
+// Helper to find the next highest standard power rating key in compositions database
+function getNextStandardPower(customKw) {
+  const stdPowers = [
+    { val: 0.18, key: "0.18kW" },
+    { val: 0.37, key: "0.37kW" },
+    { val: 0.75, key: "0.75kW" },
+    { val: 1.5,  key: "1.5kW" },
+    { val: 2.2,  key: "2.2kW" },
+    { val: 3.0,  key: "3.0kW" },
+    { val: 4.0,  key: "4.0kW" },
+    { val: 5.5,  key: "5.5kW" },
+    { val: 7.5,  key: "7.5kW" },
+    { val: 11.0, key: "11kW" },
+    { val: 15.0, key: "15kW" },
+    { val: 18.5, key: "18.5kW" },
+    { val: 22.0, key: "22kW" },
+    { val: 30.0, key: "30kW" },
+    { val: 37.0, key: "37kW" },
+    { val: 45.0, key: "45kW" },
+    { val: 55.0, key: "55kW" },
+    { val: 75.0, key: "75kW" }
+  ];
+  for (let i = 0; i < stdPowers.length; i++) {
+    if (stdPowers[i].val >= customKw) {
+      return stdPowers[i].key;
+    }
+  }
+  return "75kW";
+}
+
 // Default Components per Panel Type (Dummy values)
 // Calculate detailed panel components and pricing based on the PRECOS_DATABASE
 function calculatePanelComponents(panel) {
@@ -43,40 +73,101 @@ function calculatePanelComponents(panel) {
   const type = panel.type;
   const voltage = panel.voltage || '220V';
   
-  // 1. Shared / Panel-level structural components
+  // A) Count total equipments
   let totalEquips = 0;
   if (type === 'comando' || type === 'remoto') {
     totalEquips = parseInt(panel.quantity) || 1;
   } else if (panel.equipments) {
     totalEquips = panel.equipments.length;
   }
-  
-  // Quadro de montagem sizing
-  let boxCode = 'QMON-300x200x250';
-  const hasClpOrIhm = (type === 'automacao' || type === 'completo' || panel.hasIhm || type === 'remoto');
-  if (hasClpOrIhm) {
-    if (totalEquips <= 2) {
-      boxCode = 'QMON-600x400x250';
-    } else {
-      boxCode = 'QMON-600x600x200';
+
+  // B) Calculate Total Power & Three-Phase Current to select WEG MSW switch
+  let totalPowerKw = 0;
+  if (type === 'potencia' || type === 'potencia-comando' || type === 'completo') {
+    if (panel.equipments) {
+      panel.equipments.forEach(eq => {
+        if (eq.power) {
+          const cleanPowerStr = eq.power.replace("kW", "").trim().replace(",", ".");
+          const val = parseFloat(cleanPowerStr) || 0;
+          if (!isNaN(val)) totalPowerKw += val;
+        }
+        // Add custom heating power (resistive load, typed as text, e.g. "3,5")
+        if (eq.type === 'UTA' && eq.hasHeating && eq.heatingPower) {
+          const cleanStr = eq.heatingPower.replace("kW", "").trim().replace(",", ".");
+          const val = parseFloat(cleanStr);
+          if (!isNaN(val)) totalPowerKw += val;
+        }
+        // Add custom humidification power (typed as text)
+        if (eq.type === 'UTA' && eq.hasHumid && eq.humidPower) {
+          const cleanStr = eq.humidPower.replace("kW", "").trim().replace(",", ".");
+          const val = parseFloat(cleanStr);
+          if (!isNaN(val)) totalPowerKw += val;
+        }
+      });
     }
+  } else if (type === 'automacao' || type === 'remoto') {
+    totalPowerKw = 2.0; // standard power of 2kW
+  }
+  
+  let calculatedCurrent = 0;
+  if (totalPowerKw > 0) {
+    const voltageVal = parseInt(voltage.replace("V", "")) || 220;
+    calculatedCurrent = (totalPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+  }
+  
+  // Save total power and current on panel for display/stats
+  panel.totalPowerKw = totalPowerKw;
+  panel.calculatedCurrent = calculatedCurrent;
+
+  // 1. Shared / Panel-level structural components
+  
+  // Sizing of assembly box
+  let boxCode = 'QMON-300x200x250';
+  if (type === 'comando') {
+    boxCode = 'QMON-400x300x200';
   } else {
-    if (totalEquips <= 2) {
-      boxCode = 'QMON-300x200x250';
-    } else if (totalEquips <= 4) {
-      boxCode = 'QMON-600x400x250';
+    const hasClpOrIhm = (type === 'automacao' || type === 'completo' || panel.hasIhm || type === 'remoto');
+    if (hasClpOrIhm) {
+      if (totalEquips <= 2) {
+        boxCode = 'QMON-600x400x250';
+      } else {
+        boxCode = 'QMON-600x600x200';
+      }
     } else {
-      boxCode = 'QMON-600x600x200';
+      if (totalEquips <= 2) {
+        boxCode = 'QMON-300x200x250';
+      } else if (totalEquips <= 4) {
+        boxCode = 'QMON-600x400x250';
+      } else {
+        boxCode = 'QMON-600x600x200';
+      }
     }
   }
   addComp(boxCode, 1);
+  
+  // WEG MSW Rotary switch selection based on total three-phase current
+  if (type === 'potencia' || type === 'potencia-comando' || type === 'automacao' || type === 'completo' || type === 'remoto') {
+    let mswCode = 'MSW012F-3P00-3R';
+    if (calculatedCurrent <= 12) mswCode = 'MSW012F-3P00-3R';
+    else if (calculatedCurrent <= 16) mswCode = 'MSW016F-3P00-3R';
+    else if (calculatedCurrent <= 20) mswCode = 'MSW020F-3P00-3R';
+    else if (calculatedCurrent <= 25) mswCode = 'MSW025F-3P00-3R';
+    else if (calculatedCurrent <= 32) mswCode = 'MSW032F-3P00-3R';
+    else if (calculatedCurrent <= 40) mswCode = 'MSW040F-3P00-3R';
+    else if (calculatedCurrent <= 63) mswCode = 'MSW063F-3P00-3R';
+    else if (calculatedCurrent <= 80) mswCode = 'MSW080F-3P00-3R';
+    else if (calculatedCurrent <= 100) mswCode = 'MSW100F-3P00-3R';
+    else if (calculatedCurrent <= 125) mswCode = 'MSW125F-3P00-3R';
+    else mswCode = 'MSW160F-3P00-3R';
+    
+    addComp(mswCode, 1);
+  }
   
   // Common shared items
   addComp('BARRAMENTO-TERRA', 1);
   addComp('BARRAMENTO-NEUTRO', 1);
   addComp('CANALETA-50X50', 1);
   addComp('CANALETA-30X50', 1);
-  addComp('SECCIONADORA-3POS', 1);
   addComp('TOMADA-DIM', 1);
   
   // Transformador de comando para 440V
@@ -102,19 +193,24 @@ function calculatePanelComponents(panel) {
     for (let i = 0; i < qty; i++) {
       addComp('MINIDISJ-MDW-C10', 1);
       addComp('CONTATOR-CWM9', 1);
-      addComp('BORNE-BTWP-2.5', 5);
-      addComp('CABO-1.0', 10);
-      addComp('PORTA-PLAQUETA', 1);
+      addComp('CHAVE-SELETORA-3POS', 1);
+      addComp('SINALEIRO-VERDE', 1);
+      addComp('SINALEIRO-VERMELHO', 1);
+      addComp('BORNE-BTWP-2.5', 6); // 6 bornes per equipment
+      addComp('CABO-1.0', 15);
+      addComp('PORTA-PLAQUETA', 3);
     }
   } 
   else if (type === 'remoto') {
     const qty = parseInt(panel.quantity) || 1;
     for (let i = 0; i < qty; i++) {
       addComp('MINIDISJ-MDW-C10', 1);
-      addComp('SECCIONADORA-3POS', 1);
-      addComp('PORTA-PLAQUETA', 2);
-      addComp('BORNE-BTWP-2.5', 4);
-      addComp('CABO-1.0', 10);
+      addComp('CHAVE-SELETORA-3POS', 1);
+      addComp('SINALEIRO-VERDE', 1);
+      addComp('SINALEIRO-VERMELHO', 1);
+      addComp('PORTA-PLAQUETA', 3);
+      addComp('BORNE-BTWP-2.5', 6);
+      addComp('CABO-1.0', 15);
     }
     // Remote HMI
     if (panel.remotoIhmSize) {
@@ -155,7 +251,17 @@ function calculatePanelComponents(panel) {
         }
       }
       
-      // B) Automation sensors and digital outputs
+      // B) Command items (signal lights + selector switch + bornes)
+      const hasCommandItems = (type === 'potencia-comando' || type === 'completo');
+      if (hasCommandItems) {
+        addComp('CHAVE-SELETORA-3POS', 1);
+        addComp('SINALEIRO-VERDE', 1);
+        addComp('SINALEIRO-VERMELHO', 1);
+        addComp('BORNE-BTWP-2.5', 6);
+        addComp('PORTA-PLAQUETA', 3);
+      }
+      
+      // C) Automation sensors and digital outputs
       const hasAutomationCol = (type === 'automacao' || type === 'completo');
       if (hasAutomationCol) {
         let hasAutomationComponents = false;
@@ -219,9 +325,67 @@ function calculatePanelComponents(panel) {
           }
         }
       }
+
+      // D) Custom UTA additional configurations (Heating, Humidification, Valve)
+      if (eqType === 'UTA') {
+        // Heating components
+        if (eq.hasHeating && eq.heatingPower) {
+          if (eq.heatingControl === 'OnOff') {
+            const cleanStr = eq.heatingPower.replace("kW", "").trim().replace(",", ".");
+            const customKw = parseFloat(cleanStr) || 0.75;
+            const stdPowerKey = getNextStandardPower(customKw);
+            const compKey = `Direta_${stdPowerKey}_${voltage}`;
+            const composition = PRECOS_DATABASE.compositions[compKey];
+            if (composition) {
+              composition.forEach(c => {
+                if (c.code.startsWith('DISJ-MOTOR') || c.code.startsWith('CONTATOR')) {
+                  addComp(c.code, c.qty);
+                }
+              });
+              addComp('PORTA-PLAQUETA', 1);
+            }
+          } else if (eq.heatingControl === 'Proporcional') {
+            addComp('CONTROLADOR-PROP-AQUECIMENTO', 1);
+            addComp('MINIDISJ-MDW-C10-2', 1);
+            addComp('PORTA-PLAQUETA', 1);
+          }
+        }
+
+        // Humidification components
+        if (eq.hasHumid && eq.humidPower) {
+          if (eq.humidControl === 'OnOff') {
+            const cleanStr = eq.humidPower.replace("kW", "").trim().replace(",", ".");
+            const customKw = parseFloat(cleanStr) || 0.75;
+            const stdPowerKey = getNextStandardPower(customKw);
+            const compKey = `Direta_${stdPowerKey}_${voltage}`;
+            const composition = PRECOS_DATABASE.compositions[compKey];
+            if (composition) {
+              composition.forEach(c => {
+                if (c.code.startsWith('DISJ-MOTOR') || c.code.startsWith('CONTATOR')) {
+                  addComp(c.code, c.qty);
+                }
+              });
+              addComp('PORTA-PLAQUETA', 1);
+            }
+          } else if (eq.humidControl === 'Proporcional') {
+            addComp('CONTROLADOR-PROP-UMIDIFICACAO', 1);
+            addComp('MINIDISJ-MDW-C10-2', 1);
+            addComp('PORTA-PLAQUETA', 1);
+          }
+        }
+
+        // Valve components (Indirect Expansion)
+        if (eq.expansionType === 'Indireta' && eq.valveType) {
+          if (eq.valveType === 'OnOff') {
+            addComp('VALVULA-BLOQUEIO', 1);
+          } else if (eq.valveType === 'Proporcional') {
+            addComp('VALVULA-BYPASS', 1);
+          }
+        }
+      }
     });
     
-    // C) CLP and Connector kit rules based on equipment counts
+    // D) CLP and Connector kit rules based on equipment counts
     let selectedClpRule = null;
     if (automationEquipsCount['UTA'] > 0) {
       const count = automationEquipsCount['UTA'];
@@ -252,11 +416,11 @@ function calculatePanelComponents(panel) {
     }
   }
   
-  // 4. SCADA Supervisório Selection
+  // 4. SCADA Supervisório Selection (Rules based on equipment count)
   if (panel.hasSupervisorio) {
-    const supervisorioConfig = PRECOS_DATABASE.supervisorio;
-    if (supervisorioConfig) {
-      addComp(supervisorioConfig.code, supervisorioConfig.qty);
+    const rule = PRECOS_DATABASE.supervisorioRules.find(r => totalEquips >= r.minQty && totalEquips <= r.maxQty);
+    if (rule) {
+      addComp(rule.code, rule.qty);
     }
   }
   
@@ -289,11 +453,20 @@ function loadState() {
       if (!budgetState.panels) budgetState.panels = [];
       if (!budgetState.theme) budgetState.theme = 'dark';
       
-      // Migrate existing panels if they don't have components
+      // Migrate/recalculate existing panels to sync with the new catalog and engineering rules
       budgetState.panels.forEach(panel => {
-        if (!panel.components) {
-          panel.components = calculatePanelComponents(panel);
+        const customPrices = {};
+        if (panel.components) {
+          panel.components.forEach(c => {
+            customPrices[c.code] = c.value;
+          });
         }
+        panel.components = calculatePanelComponents(panel);
+        panel.components.forEach(c => {
+          if (customPrices[c.code] !== undefined) {
+            c.value = customPrices[c.code];
+          }
+        });
       });
     } catch (e) {
       console.error("Erro ao carregar dados do LocalStorage:", e);
@@ -390,9 +563,15 @@ function updateThemeIcon() {
   }
 }
 
-// Format panel and equipments details into standard text output
 function formatPanelDescription(panel, index) {
-  let output = `Quadro ${index + 1} - ${panel.name} (${panel.voltage || '220V'})\n`;
+  let output = `Quadro ${index + 1} - ${panel.name} (${panel.voltage || '220V'}`;
+  if (panel.totalPowerKw) {
+    output += ` | Potência: ${panel.totalPowerKw.toFixed(1)}kW`;
+  }
+  if (panel.calculatedCurrent) {
+    output += ` | Corrente: ${panel.calculatedCurrent.toFixed(1)}A`;
+  }
+  output += `)\n`;
   
   if (panel.type === 'comando') {
     output += `${panel.quantity} equipamentos\n`;
@@ -407,8 +586,13 @@ function formatPanelDescription(panel, index) {
       let eqDesc = `Equipamento ${eqIdx + 1} - `;
       
       if (panel.type === 'potencia' || panel.type === 'potencia-comando') {
-        const startsStr = equip.starts && equip.starts.length > 0 ? equip.starts.join(' - ') : 'Não definida';
-        eqDesc += `Potência ${equip.power}, Partida ${startsStr}, ${equip.type}`;
+        const pStr = equip.power ? (equip.power.toLowerCase().includes("kw") ? equip.power : `${equip.power}kW`) : 'Não definida';
+        if (equip.type === 'CHILLER') {
+          eqDesc += `Potência ${pStr}, ${equip.type}`;
+        } else {
+          const startsStr = equip.starts && equip.starts.length > 0 ? equip.starts.join(' - ') : 'Não definida';
+          eqDesc += `Potência ${pStr}, Partida ${startsStr}, ${equip.type}`;
+        }
       } 
       else if (panel.type === 'automacao') {
         eqDesc += `${equip.type}`;
@@ -433,8 +617,13 @@ function formatPanelDescription(panel, index) {
       } 
       else if (panel.type === 'completo') {
         // Potência, Comando e Automação
-        const startsStr = equip.starts && equip.starts.length > 0 ? equip.starts.join(' - ') : 'Não definida';
-        eqDesc += `Potência ${equip.power}, Partida ${startsStr}, ${equip.type}`;
+        const pStr = equip.power ? (equip.power.toLowerCase().includes("kw") ? equip.power : `${equip.power}kW`) : 'Não definida';
+        if (equip.type === 'CHILLER') {
+          eqDesc += `Potência ${pStr}, ${equip.type}`;
+        } else {
+          const startsStr = equip.starts && equip.starts.length > 0 ? equip.starts.join(' - ') : 'Não definida';
+          eqDesc += `Potência ${pStr}, Partida ${startsStr}, ${equip.type}`;
+        }
         
         // Append automation configurations if present
         let autoDetails = [];
@@ -454,6 +643,25 @@ function formatPanelDescription(panel, index) {
         
         if (autoDetails.length > 0) {
           eqDesc += ` (${autoDetails.join(' | ')})`;
+        }
+      }
+      if (equip.type === 'UTA') {
+        let utaExtra = [];
+        if (equip.hasHeating) {
+          utaExtra.push(`Aquecimento: ${equip.heatingPower} (${equip.heatingControl === 'OnOff' ? 'On/Off' : 'Prop.'})`);
+        }
+        if (equip.hasHumid) {
+          utaExtra.push(`Umidificação: ${equip.humidPower} (${equip.humidControl === 'OnOff' ? 'On/Off' : 'Prop.'})`);
+        }
+        if (equip.expansionType) {
+          let expText = `Expansão: ${equip.expansionType}`;
+          if (equip.expansionType === 'Indireta' && equip.valveType) {
+            expText += ` (${equip.valveType === 'OnOff' ? 'Válvula On/Off' : 'Válvula Prop.'})`;
+          }
+          utaExtra.push(expText);
+        }
+        if (utaExtra.length > 0) {
+          eqDesc += ` | ${utaExtra.join(' - ')}`;
         }
       }
       
@@ -671,26 +879,30 @@ function renderPanelsList() {
     const totalFormatted = totalComponentsValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     panel.components.forEach((comp, compIdx) => {
-      const qtyDetails = comp.qty ? ` (${comp.qty} ${comp.unit} x R$ ${(comp.value / comp.qty).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})})` : '';
       componentsHTML += `
         <div class="component-row">
-          <span class="component-name">${comp.name}${qtyDetails}</span>
-          <div class="component-price-container">
-            <span class="component-price-symbol">R$</span>
-            <input type="number" step="0.01" class="component-price-input" 
-                   data-panel-id="${panel.id}" data-comp-idx="${compIdx}" 
-                   value="${comp.value.toFixed(2)}">
+          <span class="component-name" style="flex-grow: 1; margin-right: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem;" title="${comp.name}">${comp.name}</span>
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <span class="component-qty-badge">${comp.qty || 1} ${comp.unit || 'un'}</span>
+            <div class="component-price-container">
+              <span class="component-price-symbol">R$</span>
+              <input type="number" step="0.01" class="component-price-input" 
+                     data-panel-id="${panel.id}" data-comp-idx="${compIdx}" 
+                     value="${comp.value.toFixed(2)}">
+            </div>
           </div>
         </div>
       `;
     });
     
     card.innerHTML = `
-      <div class="panel-card-header">
-        <h3 style="font-size:1.05rem; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:55%;" title="${panel.name}">${panel.name}</h3>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <span class="badge" style="background-color:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-primary); font-size:0.75rem; padding:4px 8px; font-weight:600;">${panel.voltage || '220V'}</span>
-          <span class="panel-type-tag ${typeClass}">${typeLabel}</span>
+      <div class="panel-card-header" style="align-items: center;">
+        <h3 style="font-size:1.05rem; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:50%; margin:0;" title="${panel.name}">${panel.name}</h3>
+        <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap; justify-content:flex-end; max-width:50%;">
+          ${panel.totalPowerKw ? `<span class="badge" style="background-color:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.15); color:#10b981; font-size:0.7rem; padding:2px 6px; font-weight:600;" title="Potência Total do Quadro">${panel.totalPowerKw.toFixed(1)}kW</span>` : ''}
+          ${panel.calculatedCurrent ? `<span class="badge" style="background-color:rgba(99, 102, 241, 0.1); border:1px solid rgba(99, 102, 241, 0.15); color:var(--primary); font-size:0.7rem; padding:2px 6px; font-weight:600;" title="Corrente Trifásica Geral">${panel.calculatedCurrent.toFixed(1)}A</span>` : ''}
+          <span class="badge" style="background-color:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-primary); font-size:0.7rem; padding:2px 6px; font-weight:600;">${panel.voltage || '220V'}</span>
+          <span class="panel-type-tag ${typeClass}" style="font-size:0.7rem; padding:2px 6px;">${typeLabel}</span>
         </div>
       </div>
       <div class="panel-card-body">
@@ -809,16 +1021,44 @@ function resetEquipmentForm() {
   document.getElementById('equip-name').value = '';
   document.getElementById('equip-type').selectedIndex = 0;
   document.getElementById('equip-motor-power').selectedIndex = 2; // 0.75kW default
+  const motorPowerTxt = document.getElementById('equip-motor-power-txt');
+  if (motorPowerTxt) motorPowerTxt.value = '';
   
-  // Uncheck all checkboxes
-  const checkboxes = document.querySelectorAll('#panel-creator-form input[type="checkbox"]');
+  // Uncheck all checkboxes within the equipment builder section
+  const checkboxes = document.querySelectorAll('#equipment-builder-section input[type="checkbox"]');
   checkboxes.forEach(cb => {
-    if (cb.id !== 'panel-has-ihm') {
-      cb.checked = false;
-      const tile = cb.closest('.checkbox-tile');
-      if (tile) tile.classList.remove('checked');
-    }
+    cb.checked = false;
+    const tile = cb.closest('.checkbox-tile');
+    if (tile) tile.classList.remove('checked');
   });
+  
+  // Reset custom UTA fields
+  const utaHeating = document.getElementById('uta-has-heating');
+  if (utaHeating) utaHeating.checked = false;
+  const utaHumid = document.getElementById('uta-has-humid');
+  if (utaHumid) utaHumid.checked = false;
+  
+  const heatingSelect = document.getElementById('uta-heating-power');
+  if (heatingSelect) heatingSelect.value = '';
+  const humidSelect = document.getElementById('uta-humid-power');
+  if (humidSelect) humidSelect.value = '';
+  
+  const heatingOnOff = document.querySelector('input[name="uta-heating-control"][value="OnOff"]');
+  if (heatingOnOff) heatingOnOff.checked = true;
+  const humidOnOff = document.querySelector('input[name="uta-humid-control"][value="OnOff"]');
+  if (humidOnOff) humidOnOff.checked = true;
+  
+  const expansionIndireta = document.querySelector('input[name="uta-expansion-type"][value="Indireta"]');
+  if (expansionIndireta) expansionIndireta.checked = true;
+  const valveProporcional = document.querySelector('input[name="uta-valve-type"][value="Proporcional"]');
+  if (valveProporcional) valveProporcional.checked = true;
+  
+  const heatingPanel = document.getElementById('uta-heating-details-panel');
+  if (heatingPanel) heatingPanel.classList.add('hidden-section');
+  const humidPanel = document.getElementById('uta-humid-details-panel');
+  if (humidPanel) humidPanel.classList.add('hidden-section');
+  const valvesPanel = document.getElementById('uta-indirect-valves-panel');
+  if (valvesPanel) valvesPanel.classList.remove('hidden-section');
   
   // Reset automation fields
   toggleAutomationFields();
@@ -887,11 +1127,54 @@ function handlePanelTypeChange(type) {
   if (type === 'automacao' || type === 'completo' || type === 'remoto') {
     document.getElementById('panel-supervisorio-section').classList.remove('hidden-section');
   }
+  
+  toggleAutomationFields();
 }
 
 // Toggle nested automation fields inside equipment builder based on Equipment Type select
 function toggleAutomationFields() {
   const equipType = document.getElementById('equip-type').value;
+  const panelType = document.getElementById('panel-type').value;
+  
+  // Toggle UTA additional configs
+  const utaConfigs = document.getElementById('uta-additional-configs');
+  if (utaConfigs) {
+    if (equipType === 'UTA') {
+      utaConfigs.classList.remove('hidden-section');
+    } else {
+      utaConfigs.classList.add('hidden-section');
+    }
+  }
+
+  // Toggle Starting Group based on Equipment Type & Panel Type
+  const startingGroup = document.getElementById('equip-starting-group');
+  if (startingGroup) {
+    if (panelType === 'potencia' || panelType === 'potencia-comando' || panelType === 'completo') {
+      if (equipType === 'CHILLER') {
+        startingGroup.classList.add('hidden-section');
+      } else {
+        startingGroup.classList.remove('hidden-section');
+      }
+    } else {
+      startingGroup.classList.add('hidden-section');
+    }
+  }
+
+  // Toggle Motor Power Input vs Dropdown Select based on Chiller type
+  const powerSelect = document.getElementById('equip-motor-power');
+  const powerTxt = document.getElementById('equip-motor-power-txt');
+  const powerLabel = document.getElementById('equip-motor-power-label');
+  if (powerSelect && powerTxt) {
+    if (equipType === 'CHILLER') {
+      powerSelect.classList.add('hidden-section');
+      powerTxt.classList.remove('hidden-section');
+      if (powerLabel) powerLabel.textContent = "Potência do Chiller (kW)";
+    } else {
+      powerSelect.classList.remove('hidden-section');
+      powerTxt.classList.add('hidden-section');
+      if (powerLabel) powerLabel.textContent = "Potência do Motor";
+    }
+  }
   
   // Hide all sub-sections
   document.getElementById('aut-fields-uta').classList.add('hidden-section');
@@ -899,7 +1182,6 @@ function toggleAutomationFields() {
   document.getElementById('aut-fields-bombas').classList.add('hidden-section');
   document.getElementById('aut-fields-chiller').classList.add('hidden-section');
   
-  const panelType = document.getElementById('panel-type').value;
   if (panelType !== 'automacao' && panelType !== 'completo') return;
   
   // Show matched sub-section
@@ -934,11 +1216,25 @@ function renderDraftEquipments() {
     item.className = 'preview-item';
     
     let subDetails = [];
-    if (eq.power) subDetails.push(`Potência: ${eq.power}`);
+    if (eq.power) {
+      const pStr = eq.power.toLowerCase().includes("kw") ? eq.power : `${eq.power} kW`;
+      subDetails.push(`Potência: ${pStr}`);
+    }
     if (eq.starts && eq.starts.length > 0) subDetails.push(`Partida: ${eq.starts.join('/')}`);
     if (eq.readings && eq.readings.length > 0) subDetails.push(`Leituras: ${eq.readings.join('/')}`);
     if (eq.nestedStarts && eq.nestedStarts.length > 0) subDetails.push(`Partida Aut: ${eq.nestedStarts.join('/')}`);
     if (eq.nestedStandards && eq.nestedStandards.length > 0) subDetails.push(`Padrão: ${eq.nestedStandards.join('/')}`);
+    
+    // Custom UTA details
+    if (eq.type === 'UTA') {
+      if (eq.hasHeating) subDetails.push(`Aquecimento: ${eq.heatingPower} (${eq.heatingControl === 'OnOff' ? 'On/Off' : 'Prop.'})`);
+      if (eq.hasHumid) subDetails.push(`Umidificação: ${eq.humidPower} (${eq.humidControl === 'OnOff' ? 'On/Off' : 'Prop.'})`);
+      if (eq.expansionType) {
+        let expStr = `Exp: ${eq.expansionType}`;
+        if (eq.expansionType === 'Indireta' && eq.valveType) expStr += ` (${eq.valveType === 'OnOff' ? 'Válvula On/Off' : 'Válvula Prop.'})`;
+        subDetails.push(expStr);
+      }
+    }
     
     const detailsString = subDetails.map(d => `<span class="badge">${d}</span>`).join(' ');
     
@@ -974,11 +1270,16 @@ function addEquipmentToDraft() {
   
   // Power / Starts
   if (panelType === 'potencia' || panelType === 'potencia-comando' || panelType === 'completo') {
-    newEquip.power = document.getElementById('equip-motor-power').value;
-    
-    // Starts checkboxes
-    const checkedStarts = Array.from(document.querySelectorAll('input[name="starting-type"]:checked')).map(cb => cb.value);
-    newEquip.starts = checkedStarts;
+    if (equipType === 'CHILLER') {
+      newEquip.power = document.getElementById('equip-motor-power-txt').value.trim();
+      newEquip.starts = [];
+    } else {
+      newEquip.power = document.getElementById('equip-motor-power').value;
+      
+      // Starts checkboxes
+      const checkedStarts = Array.from(document.querySelectorAll('input[name="starting-type"]:checked')).map(cb => cb.value);
+      newEquip.starts = checkedStarts;
+    }
   }
   
   // Automation fields
@@ -995,6 +1296,34 @@ function addEquipmentToDraft() {
     } 
     else if (equipType === 'CHILLER') {
       newEquip.readings = Array.from(document.querySelectorAll('input[name="chiller-readings"]:checked')).map(cb => cb.value);
+    }
+  }
+
+  // Custom UTA attributes (available whenever type is UTA, regardless of panelType)
+  if (equipType === 'UTA') {
+    const hasHeating = document.getElementById('uta-has-heating').checked;
+    newEquip.hasHeating = hasHeating;
+    if (hasHeating) {
+      newEquip.heatingPower = document.getElementById('uta-heating-power').value;
+      newEquip.heatingControl = document.querySelector('input[name="uta-heating-control"]:checked').value;
+    }
+    
+    const hasHumid = document.getElementById('uta-has-humid').checked;
+    newEquip.hasHumid = hasHumid;
+    if (hasHumid) {
+      newEquip.humidPower = document.getElementById('uta-humid-power').value;
+      newEquip.humidControl = document.querySelector('input[name="uta-humid-control"]:checked').value;
+    }
+    
+    const expansionRadio = document.querySelector('input[name="uta-expansion-type"]:checked');
+    if (expansionRadio) {
+      newEquip.expansionType = expansionRadio.value;
+      if (newEquip.expansionType === 'Indireta') {
+        const valveRadio = document.querySelector('input[name="uta-valve-type"]:checked');
+        if (valveRadio) {
+          newEquip.valveType = valveRadio.value;
+        }
+      }
     }
   }
   
@@ -1211,11 +1540,25 @@ function renderEditEquipments(panel) {
     item.style.backgroundColor = 'var(--bg-secondary)';
     
     let subDetails = [];
-    if (eq.power) subDetails.push(`Potência: ${eq.power}`);
+    if (eq.power) {
+      const pStr = eq.power.toLowerCase().includes("kw") ? eq.power : `${eq.power} kW`;
+      subDetails.push(`Potência: ${pStr}`);
+    }
     if (eq.starts && eq.starts.length > 0) subDetails.push(`Partida: ${eq.starts.join('/')}`);
     if (eq.readings && eq.readings.length > 0) subDetails.push(`Leituras: ${eq.readings.join('/')}`);
     if (eq.nestedStarts && eq.nestedStarts.length > 0) subDetails.push(`Partida Aut: ${eq.nestedStarts.join('/')}`);
     if (eq.nestedStandards && eq.nestedStandards.length > 0) subDetails.push(`Padrão: ${eq.nestedStandards.join('/')}`);
+    
+    // Custom UTA details
+    if (eq.type === 'UTA') {
+      if (eq.hasHeating) subDetails.push(`Aquecimento: ${eq.heatingPower} (${eq.heatingControl === 'OnOff' ? 'On/Off' : 'Prop.'})`);
+      if (eq.hasHumid) subDetails.push(`Umidificação: ${eq.humidPower} (${eq.humidControl === 'OnOff' ? 'On/Off' : 'Prop.'})`);
+      if (eq.expansionType) {
+        let expStr = `Exp: ${eq.expansionType}`;
+        if (eq.expansionType === 'Indireta' && eq.valveType) expStr += ` (${eq.valveType === 'OnOff' ? 'Válvula On/Off' : 'Válvula Prop.'})`;
+        subDetails.push(expStr);
+      }
+    }
     
     const detailsString = subDetails.map(d => `<span class="badge">${d}</span>`).join(' ');
     
@@ -1389,6 +1732,51 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       tile.classList.remove('checked');
     }
+  });
+
+  // Toggle UTA Heating details panel
+  const utaHasHeating = document.getElementById('uta-has-heating');
+  if (utaHasHeating) {
+    utaHasHeating.addEventListener('change', (e) => {
+      const panel = document.getElementById('uta-heating-details-panel');
+      if (panel) {
+        if (e.target.checked) {
+          panel.classList.remove('hidden-section');
+        } else {
+          panel.classList.add('hidden-section');
+        }
+      }
+    });
+  }
+
+  // Toggle UTA Humidification details panel
+  const utaHasHumid = document.getElementById('uta-has-humid');
+  if (utaHasHumid) {
+    utaHasHumid.addEventListener('change', (e) => {
+      const panel = document.getElementById('uta-humid-details-panel');
+      if (panel) {
+        if (e.target.checked) {
+          panel.classList.remove('hidden-section');
+        } else {
+          panel.classList.add('hidden-section');
+        }
+      }
+    });
+  }
+
+  // Toggle UTA Expansion details panel
+  const utaExpansionRadios = document.querySelectorAll('input[name="uta-expansion-type"]');
+  utaExpansionRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const panel = document.getElementById('uta-indirect-valves-panel');
+      if (panel) {
+        if (e.target.value === 'Indireta') {
+          panel.classList.remove('hidden-section');
+        } else {
+          panel.classList.add('hidden-section');
+        }
+      }
+    });
   });
   
   // Toggle checkbox tiles visually on click

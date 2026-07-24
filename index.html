@@ -273,7 +273,7 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
 
                 <!-- Motor Power combobox (Potência, Potência e Comando, Completo) -->
                 <div class="form-group" id="equip-power-group">
-                  <label class="form-label" for="equip-motor-power">Potência do Motor</label>
+                  <label class="form-label" for="equip-motor-power" id="equip-motor-power-label">Potência do Motor</label>
                   <select class="form-control" id="equip-motor-power">
                     <option value="0.18kW">0.18 kW (0.25 cv)</option>
                     <option value="0.37kW">0.37 kW (0.5 cv)</option>
@@ -294,6 +294,7 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
                     <option value="55kW">55 kW (75 cv)</option>
                     <option value="75kW">75 kW (100 cv)</option>
                   </select>
+                  <input class="form-control hidden-section" type="text" id="equip-motor-power-txt" placeholder="Ex: 150,0">
                 </div>
               </div>
 
@@ -368,6 +369,99 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
                       <label class="checkbox-tile"><input type="checkbox" name="chiller-readings" value="Val. Bloqueio"> Val. Bloqueio</label>
                       <label class="checkbox-tile"><input type="checkbox" name="chiller-readings" value="Val. Bypass"> Val. Bypass</label>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configurações Adicionais Exclusivas para UTA -->
+              <div id="uta-additional-configs" class="hidden-section" style="padding-top: 15px; border-top: 1px dashed var(--border-color); margin-top: 15px;">
+                <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--primary);">Configurações de Aquecimento / Umidificação / Válvulas (UTA)</h3>
+                
+                <div class="form-row" style="margin-bottom: 15px;">
+                  <!-- Checkbox Aquecimento -->
+                  <div class="form-group" style="flex: 1;">
+                    <div class="checkbox-tile" id="uta-heating-checkbox-tile">
+                      <input type="checkbox" id="uta-has-heating">
+                      <span>Aquecimento</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Checkbox Umidificação -->
+                  <div class="form-group" style="flex: 1;">
+                    <div class="checkbox-tile" id="uta-humid-checkbox-tile">
+                      <input type="checkbox" id="uta-has-humid">
+                      <span>Umidificação</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Painel de Detalhes do Aquecimento (Hidden by default) -->
+                <div id="uta-heating-details-panel" class="hidden-section" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
+                  <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Configurações do Aquecimento</h4>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label" for="uta-heating-power">Potência de Aquecimento (kW)</label>
+                      <input class="form-control" type="text" id="uta-heating-power" placeholder="Ex: 3,5">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Tipo de Controle (Aquecimento)</label>
+                      <div style="display: flex; gap: 15px; align-items: center; height: 38px;">
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                          <input type="radio" name="uta-heating-control" value="OnOff" checked> On/Off
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                          <input type="radio" name="uta-heating-control" value="Proporcional"> Proporcional
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Painel de Detalhes da Umidificação (Hidden by default) -->
+                <div id="uta-humid-details-panel" class="hidden-section" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
+                  <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Configurações da Umidificação</h4>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label" for="uta-humid-power">Potência de Umidificação (kW)</label>
+                      <input class="form-control" type="text" id="uta-humid-power" placeholder="Ex: 2,2">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Tipo de Controle (Umidificação)</label>
+                      <div style="display: flex; gap: 15px; align-items: center; height: 38px;">
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                          <input type="radio" name="uta-humid-control" value="OnOff" checked> On/Off
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                          <input type="radio" name="uta-humid-control" value="Proporcional"> Proporcional
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tipo de Expansão (Direta ou Indireta) -->
+                <div class="form-group" style="margin-bottom: 15px;">
+                  <label class="form-label">Tipo de Expansão (UTA)</label>
+                  <div style="display: flex; gap: 20px; align-items: center; height: 38px;">
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="radio" name="uta-expansion-type" value="Direta"> Expansão Direta
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="radio" name="uta-expansion-type" value="Indireta" checked> Expansão Indireta
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Painel de Válvulas para Expansão Indireta (Shown by default) -->
+                <div id="uta-indirect-valves-panel" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
+                  <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Opções de Válvula (Expansão Indireta)</h4>
+                  <div style="display: flex; gap: 20px; align-items: center; height: 38px;">
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="radio" name="uta-valve-type" value="OnOff"> Válvula ON/OFF
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="radio" name="uta-valve-type" value="Proporcional" checked> Válvula Proporcional
+                    </label>
                   </div>
                 </div>
               </div>
