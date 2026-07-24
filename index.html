@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orçamentos de Quadros Elétricos</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Hamburger Button (Mobile) -->
+    <button class="hamburger" id="hamburger-toggle" aria-label="Abrir Menu">
+      <svg viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar-nav">
+      <div class="logo-container">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">PanelBuilder</div>
+      </div>
+      
+      <nav class="nav-menu">
+        <div class="nav-item">
+          <button class="nav-link active" data-target="dashboard-view">
+            <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Painel Geral
+          </button>
+        </div>
+        <div class="nav-item">
+          <button class="nav-link" data-target="creator-view" id="nav-btn-creator">
+            <svg viewBox="0 0 24 24"><path d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Criar Quadro
+          </button>
+        </div>
+        <div class="nav-item">
+          <button class="nav-link" data-target="list-view">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            Lista de Quadros
+          </button>
+        </div>
+        <div class="nav-item">
+          <button class="nav-link" data-target="help-view">
+            <svg viewBox="0 0 24 24"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Ajuda & Guia
+          </button>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="theme-toggle-btn" id="theme-toggle">
+          <span>Alterar Tema</span>
+          <svg id="theme-icon" viewBox="0 0 24 24">
+            <!-- Moon icon (dark mode active) -->
+            <path id="moon-path" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- HEADER -->
+      <header class="header">
+        <div class="header-title">
+          <h1 id="view-title">Painel Geral</h1>
+          <p id="view-subtitle">Resumo estatístico e exportação do orçamento de quadros elétricos.</p>
+        </div>
+      </header>
+
+      <!-- VIEW 1: DASHBOARD -->
+      <section id="dashboard-view" class="view-section active">
+        <!-- Stats Cards -->
+        <div class="dashboard-stats">
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3>Quadros Totais</h3>
+              <div class="stat-value" id="stat-total-panels">0</div>
+            </div>
+            <div class="stat-icon-wrapper primary">
+              <svg viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3>Equipamentos</h3>
+              <div class="stat-value" id="stat-total-equipments">0</div>
+            </div>
+            <div class="stat-icon-wrapper success">
+              <svg viewBox="0 0 24 24"><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3>Tamanho de IHMs</h3>
+              <div class="stat-value" id="stat-ihm-count">0</div>
+            </div>
+            <div class="stat-icon-wrapper warning">
+              <svg viewBox="0 0 24 24"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13V5a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3>Valor Total</h3>
+              <div class="stat-value" id="stat-total-price">R$ 0,00</div>
+            </div>
+            <div class="stat-icon-wrapper success">
+              <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-container">
+          <!-- Left: Consolidated output description -->
+          <div class="card">
+            <div class="card-title-bar">
+              <h2 class="card-title">Resumo Descritivo para Orçamento</h2>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary btn-sm" id="btn-copy-budget">
+                  <svg viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                  Copiar
+                </button>
+                <button class="btn btn-danger btn-sm" id="btn-clear-budget">
+                  <svg viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  Limpar
+                </button>
+              </div>
+            </div>
+            <div class="export-output-box" id="budget-consolidated-text">
+<!-- Seus quadros aparecerão aqui de forma consolidada -->
+Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Esta visualização consolida todos os quadros e seus respectivos equipamentos formatados exatamente conforme as regras de negócio.</p>
+          </div>
+
+          <!-- Right: Summary details by Panel Category -->
+          <div class="card">
+            <h2 class="card-title" style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">Status por Categoria</h2>
+            <div style="display: flex; flex-direction: column; gap: 16px;" id="dashboard-category-summary">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: PANEL CREATOR -->
+      <section id="creator-view" class="view-section">
+        <form id="panel-creator-form" onsubmit="event.preventDefault();">
+          <div class="card">
+            <h2 class="card-title" style="margin-bottom: 20px;">Configuração Básica do Quadro</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="panel-name">Nome do Quadro</label>
+                <input class="form-control" type="text" id="panel-name" placeholder="Ex: Quadro 1 - Principal" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="panel-type">Tipo de Quadro</label>
+                <select class="form-control" id="panel-type" required>
+                  <option value="" disabled selected>Selecione um tipo...</option>
+                  <option value="potencia">Potência</option>
+                  <option value="comando">Comando</option>
+                  <option value="potencia-comando">Potência e Comando</option>
+                  <option value="automacao">Automação</option>
+                  <option value="completo">Potência, Comando e Automação</option>
+                  <option value="remoto">Automação Remoto</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-top: 15px;">
+              <div class="form-group">
+                <label class="form-label">Tensão de Alimentação</label>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <div class="checkbox-tile" id="panel-voltage-220-tile">
+                    <input type="checkbox" name="panel-voltage" id="panel-voltage-220" value="220V">
+                    <span>220V</span>
+                  </div>
+                  <div class="checkbox-tile" id="panel-voltage-380-tile">
+                    <input type="checkbox" name="panel-voltage" id="panel-voltage-380" value="380V">
+                    <span>380V</span>
+                  </div>
+                  <div class="checkbox-tile" id="panel-voltage-440-tile">
+                    <input type="checkbox" name="panel-voltage" id="panel-voltage-440" value="440V">
+                    <span>440V</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel-level HMI Section (Only visible for Automação and Completo) -->
+            <div id="panel-ihm-section" class="hidden-section" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Terá IHM?</label>
+                  <div class="checkbox-tile" id="panel-ihm-checkbox-tile">
+                    <input type="checkbox" id="panel-has-ihm">
+                    <span id="panel-has-ihm-label">Não</span>
+                  </div>
+                </div>
+                <div class="form-group hidden-section" id="panel-ihm-size-group">
+                  <label class="form-label" for="panel-ihm-size">Tamanho da IHM</label>
+                  <select class="form-control" id="panel-ihm-size">
+                    <option value="4.3&quot;">4.3"</option>
+                    <option value="7.0&quot;">7.0"</option>
+                    <option value="10&quot;">10"</option>
+                    <option value="15&quot;">15"</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel-level SCADA Section (For Automação, Completo and Remoto) -->
+            <div id="panel-supervisorio-section" class="hidden-section" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Sistema Supervisório?</label>
+                  <div class="checkbox-tile" id="panel-supervisorio-checkbox-tile">
+                    <input type="checkbox" id="panel-has-supervisorio">
+                    <span id="panel-has-supervisorio-label">Não</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Simple Quantity Field (For Comando and Automação Remoto only) -->
+            <div id="panel-quantity-section" class="hidden-section" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="panel-equipment-qty">Quantidade de Equipamentos</label>
+                  <input class="form-control" type="number" id="panel-equipment-qty" min="1" value="1">
+                </div>
+                <div class="form-group hidden-section" id="panel-remoto-ihm-group">
+                  <label class="form-label" for="panel-remoto-ihm-size">Tamanho da IHM</label>
+                  <select class="form-control" id="panel-remoto-ihm-size">
+                    <option value="4.3&quot;">4.3"</option>
+                    <option value="7.0&quot;">7.0"</option>
+                    <option value="10&quot;">10"</option>
+                    <option value="15&quot;">15"</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Equipment builder section (Hidden for Comando and Automação Remoto) -->
+          <div class="card hidden-section" id="equipment-builder-section">
+            <h2 class="card-title" style="margin-bottom: 20px;">Adicionar Equipamentos ao Quadro</h2>
+            
+            <div class="equipment-builder-card">
+              <div class="form-row">
+                <!-- Equipment Name (Required for Power/Command, hidden/not needed for pure Automation) -->
+                <div class="form-group" id="equip-name-group">
+                  <label class="form-label" for="equip-name">Nome do Equipamento</label>
+                  <input class="form-control" type="text" id="equip-name" placeholder="Ex: Motor UTA-01">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="equip-type">Tipo de Equipamento</label>
+                  <select class="form-control" id="equip-type">
+                    <option value="UTA" selected>UTA</option>
+                    <option value="EX/CV">EX/CV</option>
+                    <option value="BOMBAS">BOMBAS</option>
+                    <option value="CHILLER">CHILLER</option>
+                  </select>
+                </div>
+
+                <!-- Motor Power combobox (Potência, Potência e Comando, Completo) -->
+                <div class="form-group" id="equip-power-group">
+                  <label class="form-label" for="equip-motor-power">Potência do Motor</label>
+                  <select class="form-control" id="equip-motor-power">
+                    <option value="0.18kW">0.18 kW (0.25 cv)</option>
+                    <option value="0.37kW">0.37 kW (0.5 cv)</option>
+                    <option value="0.75kW">0.75 kW (1.0 cv)</option>
+                    <option value="1.5kW">1.5 kW (2.0 cv)</option>
+                    <option value="2.2kW">2.2 kW (3.0 cv)</option>
+                    <option value="3.0kW">3.0 kW (4.0 cv)</option>
+                    <option value="4.0kW">4.0 kW (5.5 cv)</option>
+                    <option value="5.5kW">5.5 kW (7.5 cv)</option>
+                    <option value="7.5kW">7.5 kW (10 cv)</option>
+                    <option value="11kW">11 kW (15 cv)</option>
+                    <option value="15kW">15 kW (20 cv)</option>
+                    <option value="18.5kW">18.5 kW (25 cv)</option>
+                    <option value="22kW">22 kW (30 cv)</option>
+                    <option value="30kW">30 kW (40 cv)</option>
+                    <option value="37kW">37 kW (50 cv)</option>
+                    <option value="45kW">45 kW (60 cv)</option>
+                    <option value="55kW">55 kW (75 cv)</option>
+                    <option value="75kW">75 kW (100 cv)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Starting Type checklist (Potência, Potência e Comando, Completo) -->
+              <div class="form-group" id="equip-starting-group">
+                <label class="form-label">Tipo de Partida</label>
+                <div class="checkbox-grid">
+                  <label class="checkbox-tile"><input type="checkbox" name="starting-type" value="Direta"> Direta</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="starting-type" value="Inversor"> Inversor</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="starting-type" value="SoftStarter"> SoftStarter</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="starting-type" value="EC"> EC</label>
+                </div>
+              </div>
+
+              <!-- Automation conditional options -->
+              <div id="equip-automation-fields" class="hidden-section" style="padding-top: 15px; border-top: 1px dashed var(--border-color); margin-top: 15px;">
+                <!-- UTA Option -->
+                <div id="aut-fields-uta" class="hidden-section">
+                  <div class="form-group">
+                    <label class="form-label">Definir Leituras (UTA)</label>
+                    <div class="checkbox-grid">
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="Temperatura"> Temperatura</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="Umidade"> Umidade</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="CO2"> CO2</label>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Definir Partida (Automação UTA)</label>
+                    <div class="checkbox-grid">
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-starts" value="Direta"> Direta</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-starts" value="Inversor"> Inversor</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-starts" value="SoftStarter"> SoftStarter</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-starts" value="EC"> EC</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- EX/CV Option -->
+                <div id="aut-fields-excv" class="hidden-section">
+                  <div class="form-group">
+                    <label class="form-label">Definir Leituras (EX/CV)</label>
+                    <div class="checkbox-grid">
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Temperatura"> Temperatura</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Umidade"> Umidade</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="CO2"> CO2</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Vazão"> Vazão</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BOMBAS Option -->
+                <div id="aut-fields-bombas" class="hidden-section">
+                  <div class="form-group">
+                    <label class="form-label">Definir Padrão (BOMBAS)</label>
+                    <div class="checkbox-grid">
+                      <label class="checkbox-tile"><input type="checkbox" name="bombas-standards" value="Partida Direta"> Partida Direta</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="bombas-standards" value="Inversor"> Inversor</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="bombas-standards" value="SoftStarter"> SoftStarter</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chiller Option -->
+                <div id="aut-fields-chiller" class="hidden-section">
+                  <div class="form-group">
+                    <label class="form-label">Definir Leituras (Chiller)</label>
+                    <div class="checkbox-grid">
+                      <label class="checkbox-tile"><input type="checkbox" name="chiller-readings" value="Temp Entrada"> Temp Entrada</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="chiller-readings" value="Temp. Saída"> Temp. Saída</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="chiller-readings" value="Pressão"> Pressão</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="chiller-readings" value="Vazão"> Vazão</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="chiller-readings" value="Val. Bloqueio"> Val. Bloqueio</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="chiller-readings" value="Val. Bypass"> Val. Bypass</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" id="btn-add-equipment">
+                  <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                  Adicionar Equipamento
+                </button>
+              </div>
+            </div>
+
+            <!-- List of Equipments added to this panel draft -->
+            <div class="equipment-list-preview">
+              <h3 style="font-size: 1rem; margin-bottom: 12px; font-weight: 600;">Equipamentos do Quadro (Rascunho)</h3>
+              <div id="draft-equipments-container">
+                <!-- Added dynamically -->
+                <div class="empty-state" style="padding: 30px; margin-top: 0; background-color: transparent; border: 1px dashed var(--border-color);">
+                  <p style="margin: 0; font-size: 0.9rem;">Nenhum equipamento adicionado a este quadro ainda.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save/Cancel actions -->
+          <div style="display: flex; gap: 16px; margin-bottom: 40px;">
+            <button type="button" class="btn btn-primary" id="btn-save-panel">
+              <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              Salvar Quadro no Orçamento
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-cancel-creator">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- VIEW 3: PANELS LIST -->
+      <section id="list-view" class="view-section">
+        <div class="panels-grid" id="panels-list-grid">
+          <!-- Rendered dynamically -->
+        </div>
+        
+        <div class="empty-state" id="panels-empty-state">
+          <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          <h3>Nenhum Quadro Cadastrado</h3>
+          <p>Você ainda não adicionou nenhum quadro elétrico a este orçamento. Comece a configurar o seu primeiro quadro elétrico agora mesmo.</p>
+          <button class="btn btn-primary" onclick="navigateToCreator()">
+            <svg viewBox="0 0 24 24"><path d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Configurar Primeiro Quadro
+          </button>
+        </div>
+      </section>
+
+      <!-- VIEW 4: HELP & GUIDE -->
+      <section id="help-view" class="view-section">
+        <div class="card">
+          <h2 class="card-title" style="margin-bottom: 16px;">Guia de Uso do Sistema</h2>
+          <p style="margin-bottom: 20px;">Este sistema foi desenvolvido para facilitar a especificação técnica de quadros elétricos de comando, potência e automação, gerando uma lista descritiva unificada (memorial descritivo) ideal para envio a fornecedores ou incorporação em propostas comerciais.</p>
+          
+          <h3 style="font-size: 1.05rem; font-weight: 600; margin-top: 24px; margin-bottom: 8px;">Como Funciona</h3>
+          <ol style="margin-left: 20px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px;">
+            <li><strong>Criar um Quadro:</strong> Vá no menu "Criar Quadro", defina um nome (ex: <i>"QTA-01"</i>) e selecione uma das 6 categorias disponíveis.</li>
+            <li><strong>Adicionar Equipamentos:</strong> Conforme o tipo de quadro, monte a lista de equipamentos especificando potências, partidas, ou conexões de automação.</li>
+            <li><strong>Consolidar:</strong> O painel geral soma automaticamente os equipamentos e exibe o orçamento consolidado.</li>
+            <li><strong>Exportar:</strong> Use a ferramenta do painel geral para copiar o texto com um único clique ou limpe o orçamento para começar outro.</li>
+          </ol>
+
+          <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 12px; padding-top: 16px; border-top: 1px solid var(--border-color);">Resumo das Categorias</h3>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 8px;">
+            <div style="padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-primary);">
+              <h4 style="font-weight: 600; color: #818cf8; margin-bottom: 6px;">Potência / Potência e Comando</h4>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">Focado no acionamento de motores. Permite selecionar potências (kW) e os métodos de partida (Direta, Inversores, SoftStarters ou motores de tecnologia EC).</p>
+            </div>
+            
+            <div style="padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-primary);">
+              <h4 style="font-weight: 600; color: #f87171; margin-bottom: 6px;">Comando</h4>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">Indicado para quadros simplificados de comando. Mapeia apenas a quantidade bruta de equipamentos acionados.</p>
+            </div>
+
+            <div style="padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-primary);">
+              <h4 style="font-weight: 600; color: #22d3ee; margin-bottom: 6px;">Automação</h4>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">Quadros de controle inteligente. Habilita telas específicas de sensores (temperatura, umidade, CO2, vazão) baseadas no tipo de máquina (UTA, Chiller, Bombas, Exaustores/Ventiladores) e a presença de IHM.</p>
+            </div>
+
+            <div style="padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-primary);">
+              <h4 style="font-weight: 600; color: #34d399; margin-bottom: 6px;">Completo (Pot., Com. e Aut.)</h4>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">Combina toda a especificação mecânica e elétrica de força e comandos de partida juntamente com as instrumentações de automação.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- EDIT PANEL MODAL -->
+  <div class="modal-overlay" id="edit-panel-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="card-title" id="edit-modal-title">Editar Quadro Elétrico</h3>
+        <button class="btn-icon-only" onclick="closeEditModal()" aria-label="Fechar modal">
+          <svg viewBox="0 0 24 24" style="width:16px; height:16px;"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-panel-form" onsubmit="event.preventDefault();">
+          <input type="hidden" id="edit-panel-id">
+          <input type="hidden" id="edit-panel-type-hidden">
+          
+          <div class="form-group">
+            <label class="form-label" for="edit-panel-name">Nome do Quadro</label>
+            <input class="form-control" type="text" id="edit-panel-name" required>
+          </div>
+
+          <div class="form-group" style="margin-top: 15px; margin-bottom: 15px;">
+            <label class="form-label">Tensão de Alimentação</label>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div class="checkbox-tile" id="edit-voltage-220-tile">
+                <input type="checkbox" name="edit-panel-voltage" id="edit-panel-voltage-220" value="220V">
+                <span>220V</span>
+              </div>
+              <div class="checkbox-tile" id="edit-voltage-380-tile">
+                <input type="checkbox" name="edit-panel-voltage" id="edit-panel-voltage-380" value="380V">
+                <span>380V</span>
+              </div>
+              <div class="checkbox-tile" id="edit-voltage-440-tile">
+                <input type="checkbox" name="edit-panel-voltage" id="edit-panel-voltage-440" value="440V">
+                <span>440V</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conditional: HMI options for automation-related panels -->
+          <div id="edit-panel-ihm-section" class="hidden-section">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Terá IHM?</label>
+                <div class="checkbox-tile" id="edit-ihm-checkbox-tile">
+                  <input type="checkbox" id="edit-panel-has-ihm">
+                  <span id="edit-panel-has-ihm-label">Não</span>
+                </div>
+              </div>
+              <div class="form-group hidden-section" id="edit-panel-ihm-size-group">
+                <label class="form-label" for="edit-panel-ihm-size">Tamanho da IHM</label>
+                <select class="form-control" id="edit-panel-ihm-size">
+                  <option value="4.3&quot;">4.3"</option>
+                  <option value="7.0&quot;">7.0"</option>
+                  <option value="10&quot;">10"</option>
+                  <option value="15&quot;">15"</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conditional: SCADA option for automation-related panels -->
+          <div id="edit-panel-supervisorio-section" class="hidden-section" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Sistema Supervisório?</label>
+                <div class="checkbox-tile" id="edit-supervisorio-checkbox-tile">
+                  <input type="checkbox" id="edit-panel-has-supervisorio">
+                  <span id="edit-panel-has-supervisorio-label">Não</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conditional: Quantity for Command and Remote Automation -->
+          <div id="edit-panel-qty-section" class="hidden-section">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="edit-panel-qty">Quantidade de Equipamentos</label>
+                <input class="form-control" type="number" id="edit-panel-qty" min="1">
+              </div>
+              <div class="form-group hidden-section" id="edit-panel-remoto-ihm-group">
+                <label class="form-label" for="edit-panel-remoto-ihm-size">Tamanho da IHM</label>
+                <select class="form-control" id="edit-panel-remoto-ihm-size">
+                  <option value="4.3&quot;">4.3"</option>
+                  <option value="7.0&quot;">7.0"</option>
+                  <option value="10&quot;">10"</option>
+                  <option value="15&quot;">15"</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic list of equipments inside edit panel, so user can edit items or delete items -->
+          <div id="edit-equipments-list-section" class="hidden-section" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <h4 class="form-label" style="margin-bottom: 12px;">Equipamentos no Quadro</h4>
+            <div id="edit-equipments-container" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Loaded via JS -->
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-edit-panel">Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="precos.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
