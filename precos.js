@@ -1566,6 +1566,150 @@ const PRECOS_DATABASE = {
       "brand": "WEG",
       "unit": "un",
       "price": 25.0
+    },
+    "ELETRODUTO-PESADO-1/2": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 1/2 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 30.0
+    },
+    "CONDULETE-PESADO-T-1/2": {
+      "desc": "CONDULETE PESADO TIPO T 1/2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 37.5
+    },
+    "CONDULETE-PESADO-LR-1/2": {
+      "desc": "CONDULETE PESADO TIPO LR 1/2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 37.5
+    },
+    "CONDULETE-PESADO-E-1/2": {
+      "desc": "CONDULETE PESADO TIPO E 1/2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 37.5
+    },
+    "ELETRODUTO-PESADO-3/4": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 3/4 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 36.0
+    },
+    "CONDULETE-PESADO-T-3/4": {
+      "desc": "CONDULETE PESADO TIPO T 3/4 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 45.0
+    },
+    "CONDULETE-PESADO-LR-3/4": {
+      "desc": "CONDULETE PESADO TIPO LR 3/4 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 45.0
+    },
+    "CONDULETE-PESADO-E-3/4": {
+      "desc": "CONDULETE PESADO TIPO E 3/4 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 45.0
+    },
+    "ELETRODUTO-PESADO-1": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 1 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 48.0
+    },
+    "CONDULETE-PESADO-T-1": {
+      "desc": "CONDULETE PESADO TIPO T 1 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 62.5
+    },
+    "CONDULETE-PESADO-LR-1": {
+      "desc": "CONDULETE PESADO TIPO LR 1 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 62.5
+    },
+    "CONDULETE-PESADO-E-1": {
+      "desc": "CONDULETE PESADO TIPO E 1 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 62.5
+    },
+    "ELETRODUTO-PESADO-1.1/4": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 1.1/4 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 66.0
+    },
+    "CONDULETE-PESADO-T-1.1/4": {
+      "desc": "CONDULETE PESADO TIPO T 1.1/4 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 87.5
+    },
+    "CONDULETE-PESADO-LR-1.1/4": {
+      "desc": "CONDULETE PESADO TIPO LR 1.1/4 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 87.5
+    },
+    "CONDULETE-PESADO-E-1.1/4": {
+      "desc": "CONDULETE PESADO TIPO E 1.1/4 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 87.5
+    },
+    "ELETRODUTO-PESADO-1.1/2": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 1.1/2 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 84.0
+    },
+    "CONDULETE-PESADO-T-1.1/2": {
+      "desc": "CONDULETE PESADO TIPO T 1.1/2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 112.5
+    },
+    "CONDULETE-PESADO-LR-1.1/2": {
+      "desc": "CONDULETE PESADO TIPO LR 1.1/2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 112.5
+    },
+    "CONDULETE-PESADO-E-1.1/2": {
+      "desc": "CONDULETE PESADO TIPO E 1.1/2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 112.5
+    },
+    "ELETRODUTO-PESADO-2": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 2 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 114.0
+    },
+    "CONDULETE-PESADO-T-2": {
+      "desc": "CONDULETE PESADO TIPO T 2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 162.5
+    },
+    "CONDULETE-PESADO-LR-2": {
+      "desc": "CONDULETE PESADO TIPO LR 2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 162.5
+    },
+    "CONDULETE-PESADO-E-2": {
+      "desc": "CONDULETE PESADO TIPO E 2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 162.5
     }
   },
   "compositions": {

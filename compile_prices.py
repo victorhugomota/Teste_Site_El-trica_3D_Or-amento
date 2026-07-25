@@ -48,6 +48,49 @@ def compile_excel_to_js():
             "unit": "un",
             "price": 25.0
         }
+        
+    # Inject Heavy Line items (NBR 5597 / NBR 5598)
+    heavy_eletroduto_prices = {
+        '1/2': 30.0,
+        '3/4': 36.0,
+        '1': 48.0,
+        '1.1/4': 66.0,
+        '1.1/2': 84.0,
+        '2': 114.0
+    }
+    heavy_condulete_prices = {
+        '1/2': 37.5,
+        '3/4': 45.0,
+        '1': 62.5,
+        '1.1/4': 87.5,
+        '1.1/2': 112.5,
+        '2': 162.5
+    }
+    for size in ['1/2', '3/4', '1', '1.1/4', '1.1/2', '2']:
+        database["catalog"][f"ELETRODUTO-PESADO-{size}"] = {
+            "desc": f"ELETRODUTO GALVANIZADO PESADO {size} (NBR 5597/5598)",
+            "brand": "WETZEL",
+            "unit": "m",
+            "price": heavy_eletroduto_prices[size]
+        }
+        database["catalog"][f"CONDULETE-PESADO-T-{size}"] = {
+            "desc": f"CONDULETE PESADO TIPO T {size} COM TAMPA (NBR 5597/5598)",
+            "brand": "WETZEL",
+            "unit": "un",
+            "price": heavy_condulete_prices[size]
+        }
+        database["catalog"][f"CONDULETE-PESADO-LR-{size}"] = {
+            "desc": f"CONDULETE PESADO TIPO LR {size} COM TAMPA (NBR 5597/5598)",
+            "brand": "WETZEL",
+            "unit": "un",
+            "price": heavy_condulete_prices[size]
+        }
+        database["catalog"][f"CONDULETE-PESADO-E-{size}"] = {
+            "desc": f"CONDULETE PESADO TIPO E {size} COM TAMPA (NBR 5597/5598)",
+            "brand": "WETZEL",
+            "unit": "un",
+            "price": heavy_condulete_prices[size]
+        }
             
     # 2. Compositions
     ws_comp = wb["Composições de Partida"]

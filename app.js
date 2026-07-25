@@ -2098,15 +2098,19 @@ function calculateInfraComponentsForPanel(panel) {
     // 4. Conduit and fittings sizing
     const stdConduitSize = getConduitSizeForCables(eqCables);
     const redConduitSize = getReducedConduitSize(stdConduitSize);
+    const infraType = panel.infraType || 'leve';
 
     if (isEletrocalhaMode) {
       const trayLen = 0.8 * D;
       const condLen = 0.2 * D;
       totalEletrocalhaLength += trayLen;
       
-      addInfra(`ELETRODUTO-GALV-${redConduitSize}`, condLen);
+      if (infraType === 'pesada') {
+        addInfra(`ELETRODUTO-PESADO-${redConduitSize}`, condLen);
+      } else {
+        addInfra(`ELETRODUTO-GALV-${redConduitSize}`, condLen);
+      }
       addInfra(`SUPORTE-ABRACADEIRA`, Math.ceil(condLen / 1.5));
-      addInfra(`UNIDUT-GALV-${redConduitSize}`, 2);
       
       let conduleteCount = Math.ceil(condLen);
       let autCount = 0;
@@ -2117,8 +2121,19 @@ function calculateInfraComponentsForPanel(panel) {
         if (eq.type === 'UTA' && eq.expansionType === 'Indireta') autCount++;
       }
       conduleteCount += autCount;
+      
       if (conduleteCount > 0) {
-        addInfra(`CONDULETE-GALV-${redConduitSize}`, conduleteCount);
+        if (infraType === 'pesada') {
+          const qT = Math.floor(conduleteCount / 3);
+          const qLR = Math.floor(conduleteCount / 3);
+          const qE = conduleteCount - 2 * qT;
+          if (qT > 0) addInfra(`CONDULETE-PESADO-T-${redConduitSize}`, qT);
+          if (qLR > 0) addInfra(`CONDULETE-PESADO-LR-${redConduitSize}`, qLR);
+          if (qE > 0) addInfra(`CONDULETE-PESADO-E-${redConduitSize}`, qE);
+        } else {
+          addInfra(`CONDULETE-GALV-${redConduitSize}`, conduleteCount);
+          addInfra(`UNIDUT-GALV-${redConduitSize}`, 3 * conduleteCount);
+        }
       }
       
       if (eq.power) addInfra(`PRENSA-CABO-3/4`, 1);
@@ -2127,12 +2142,15 @@ function calculateInfraComponentsForPanel(panel) {
       const stdLen = 0.7 * D;
       const redLen = 0.3 * D;
       
-      addInfra(`ELETRODUTO-GALV-${stdConduitSize}`, stdLen);
-      addInfra(`ELETRODUTO-GALV-${redConduitSize}`, redLen);
+      if (infraType === 'pesada') {
+        addInfra(`ELETRODUTO-PESADO-${stdConduitSize}`, stdLen);
+        addInfra(`ELETRODUTO-PESADO-${redConduitSize}`, redLen);
+      } else {
+        addInfra(`ELETRODUTO-GALV-${stdConduitSize}`, stdLen);
+        addInfra(`ELETRODUTO-GALV-${redConduitSize}`, redLen);
+      }
       
       addInfra(`SUPORTE-ABRACADEIRA`, Math.ceil((stdLen + redLen) / 1.5));
-      addInfra(`UNIDUT-GALV-${stdConduitSize}`, 2);
-      addInfra(`UNIDUT-GALV-${redConduitSize}`, 2);
       
       let stdCondCount = Math.ceil(stdLen);
       let redCondCount = Math.ceil(redLen);
@@ -2146,8 +2164,33 @@ function calculateInfraComponentsForPanel(panel) {
       }
       redCondCount += autCount;
       
-      if (stdCondCount > 0) addInfra(`CONDULETE-GALV-${stdConduitSize}`, stdCondCount);
-      if (redCondCount > 0) addInfra(`CONDULETE-GALV-${redConduitSize}`, redCondCount);
+      if (stdCondCount > 0) {
+        if (infraType === 'pesada') {
+          const qT = Math.floor(stdCondCount / 3);
+          const qLR = Math.floor(stdCondCount / 3);
+          const qE = stdCondCount - 2 * qT;
+          if (qT > 0) addInfra(`CONDULETE-PESADO-T-${stdConduitSize}`, qT);
+          if (qLR > 0) addInfra(`CONDULETE-PESADO-LR-${stdConduitSize}`, qLR);
+          if (qE > 0) addInfra(`CONDULETE-PESADO-E-${stdConduitSize}`, qE);
+        } else {
+          addInfra(`CONDULETE-GALV-${stdConduitSize}`, stdCondCount);
+          addInfra(`UNIDUT-GALV-${stdConduitSize}`, 3 * stdCondCount);
+        }
+      }
+      
+      if (redCondCount > 0) {
+        if (infraType === 'pesada') {
+          const qT = Math.floor(redCondCount / 3);
+          const qLR = Math.floor(redCondCount / 3);
+          const qE = redCondCount - 2 * qT;
+          if (qT > 0) addInfra(`CONDULETE-PESADO-T-${redConduitSize}`, qT);
+          if (qLR > 0) addInfra(`CONDULETE-PESADO-LR-${redConduitSize}`, qLR);
+          if (qE > 0) addInfra(`CONDULETE-PESADO-E-${redConduitSize}`, qE);
+        } else {
+          addInfra(`CONDULETE-GALV-${redConduitSize}`, redCondCount);
+          addInfra(`UNIDUT-GALV-${redConduitSize}`, 3 * redCondCount);
+        }
+      }
       
       if (eq.power) addInfra(`PRENSA-CABO-3/4`, 1);
       if (autCount > 0) addInfra(`PRENSA-CABO-1/2`, autCount);
@@ -2242,11 +2285,27 @@ function renderInfraView() {
     };
   };
 
+  const typeSelect = document.getElementById('infra-type-select');
+  if (typeSelect) {
+    typeSelect.onchange = (e) => {
+      const pId = parseInt(select.value);
+      const panel = budgetState.panels.find(p => p.id === pId);
+      if (panel) {
+        panel.infraType = e.target.value;
+        saveStateSilently();
+        renderInfraTableForPanel(panel);
+      }
+    };
+  }
+
   if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
     select.value = currentVal;
     const panel = budgetState.panels.find(p => p.id === parseInt(currentVal));
     if (panel) {
       document.getElementById('infra-config-panel').classList.remove('hidden-section');
+      if (typeSelect) {
+        typeSelect.value = panel.infraType || 'leve';
+      }
       updateAddBtnState(panel);
     }
   } else {
@@ -2258,6 +2317,9 @@ function renderInfraView() {
     const panel = budgetState.panels.find(p => p.id === pId);
     if (panel) {
       document.getElementById('infra-config-panel').classList.remove('hidden-section');
+      if (typeSelect) {
+        typeSelect.value = panel.infraType || 'leve';
+      }
       renderInfraEquipmentsInputs(panel);
       renderInfraTableForPanel(panel);
       updateAddBtnState(panel);
