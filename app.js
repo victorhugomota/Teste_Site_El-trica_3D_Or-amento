@@ -3738,6 +3738,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnClearBudget.addEventListener('click', clearBudget);
   }
   
+  const btnGenTest = document.getElementById('btn-generate-test-scenarios');
+  if (btnGenTest) {
+    btnGenTest.addEventListener('click', generateTestScenarios);
+  }
+  
   // Save Edit modal changes
   const btnSaveEditPanel = document.getElementById('btn-save-edit-panel');
   if (btnSaveEditPanel) {
@@ -3746,3 +3751,221 @@ document.addEventListener('DOMContentLoaded', () => {
   
   setupEditEquipmentEvents();
 });
+
+function generateTestScenarios() {
+  if (!confirm("Isso apagará o orçamento atual para gerar os quadros de teste de validação. Deseja continuar?")) {
+    return;
+  }
+  
+  budgetState.panels = [];
+  budgetState.consolidatedInfraPanels = [];
+  
+  const createEquip = (type, name, power, starts, extra = {}) => {
+    const id = Date.now() + Math.floor(Math.random() * 1000000);
+    return {
+      id: id,
+      type: type,
+      name: name,
+      power: power,
+      starts: Array.isArray(starts) ? starts : [starts],
+      ...extra
+    };
+  };
+  
+  const panelsData = [
+    {
+      name: "T01 - UTA Completo (Direta 2.2kW 220V)",
+      type: "completo",
+      voltage: "220V",
+      hasIhm: true,
+      ihmSize: '7.0"',
+      hasSupervisorio: true,
+      equips: [
+        createEquip("UTA", "UTA-01", "2.2kW", "Direta", {
+          readings: ["Temp Duto", "Umid Duto"]
+        })
+      ]
+    },
+    {
+      name: "T02 - UTA Completo (Inversor 4kW 380V)",
+      type: "completo",
+      voltage: "380V",
+      hasIhm: true,
+      ihmSize: '7.0"',
+      hasSupervisorio: true,
+      equips: [
+        createEquip("UTA", "UTA-02", "4.0kW", "Inversor", {
+          readings: ["Temp Duto", "Umid Duto"]
+        })
+      ]
+    },
+    {
+      name: "T03 - UTA Completo (SoftStarter 15kW 440V)",
+      type: "completo",
+      voltage: "440V",
+      hasIhm: true,
+      ihmSize: '7.0"',
+      hasSupervisorio: true,
+      equips: [
+        createEquip("UTA", "UTA-03", "15kW", "SoftStarter", {
+          readings: ["Temp Duto", "Umid Duto"]
+        })
+      ]
+    },
+    {
+      name: "T04 - UTA Completo (Partida EC 3kW 220V)",
+      type: "completo",
+      voltage: "220V",
+      hasIhm: true,
+      ihmSize: '7.0"',
+      hasSupervisorio: true,
+      equips: [
+        createEquip("UTA", "UTA-04", "3.0kW", "EC", {
+          readings: ["Temp Duto", "Umid Duto"]
+        })
+      ]
+    },
+    {
+      name: "T05 - EX/CV Potência (Direta 0.75kW 220V)",
+      type: "potencia",
+      voltage: "220V",
+      equips: [
+        createEquip("EX/CV", "EX-01", "0.75kW", "Direta")
+      ]
+    },
+    {
+      name: "T06 - EX/CV Pot. e Com. (Inversor 3kW 380V)",
+      type: "potencia-comando",
+      voltage: "380V",
+      equips: [
+        createEquip("EX/CV", "EX-02", "3.0kW", "Inversor")
+      ]
+    },
+    {
+      name: "T07 - BOMBAS Completo (Direta 1.5kW 220V)",
+      type: "completo",
+      voltage: "220V",
+      hasIhm: false,
+      hasSupervisorio: false,
+      equips: [
+        createEquip("BOMBAS", "BOMBA-01", "1.5kW", "Direta", {
+          nestedStandards: ["Partida Direta"]
+        })
+      ]
+    },
+    {
+      name: "T08 - BOMBAS Completo (Inversor 4kW 380V)",
+      type: "completo",
+      voltage: "380V",
+      hasIhm: false,
+      hasSupervisorio: false,
+      equips: [
+        createEquip("BOMBAS", "BOMBA-02", "4.0kW", "Inversor", {
+          nestedStandards: ["Inversor"]
+        })
+      ]
+    },
+    {
+      name: "T09 - BOMBAS Completo (SoftStarter 22kW 440V)",
+      type: "completo",
+      voltage: "440V",
+      hasIhm: false,
+      hasSupervisorio: false,
+      equips: [
+        createEquip("BOMBAS", "BOMBA-03", "22kW", "SoftStarter", {
+          nestedStandards: ["SoftStarter"]
+        })
+      ]
+    },
+    {
+      name: "T10 - CHILLER Completo (30kW 380V)",
+      type: "completo",
+      voltage: "380V",
+      hasIhm: true,
+      ihmSize: '7.0"',
+      hasSupervisorio: true,
+      equips: [
+        createEquip("CHILLER", "CHILLER-01", "30", [], {
+          readings: ["Temp Entrada", "Temp. Saída", "Pressão", "Vazão"]
+        })
+      ]
+    },
+    {
+      name: "T11 - UTA Completo + Opcionais (Inversor 4kW 380V)",
+      type: "completo",
+      voltage: "380V",
+      hasIhm: true,
+      ihmSize: '7.0"',
+      hasSupervisorio: true,
+      equips: [
+        createEquip("UTA", "UTA-OPC", "4.0kW", "Inversor", {
+          readings: ["Temp Duto", "Umid Duto", "Vazão"],
+          hasHeating: true,
+          heatingPower: "6.0kW",
+          heatingControl: "Proporcional",
+          heatingStages: 2,
+          hasHumid: true,
+          humidPower: "4.0kW",
+          humidControl: "OnOff",
+          humidStages: 2,
+          expansionType: "Indireta",
+          valveType: "Proporcional"
+        })
+      ]
+    },
+    {
+      name: "T12 - Comando Exclusivo (3 Equips)",
+      type: "comando",
+      voltage: "220V",
+      quantity: 3,
+      equips: []
+    },
+    {
+      name: "T13 - Remoto com IHM 7.0 (2 Equips)",
+      type: "remoto",
+      voltage: "220V",
+      quantity: 2,
+      remotoIhmSize: '7.0"',
+      hasSupervisorio: true,
+      equips: []
+    }
+  ];
+  
+  panelsData.forEach((pData, idx) => {
+    const pId = Date.now() + idx;
+    const panel = {
+      id: pId,
+      name: pData.name,
+      type: pData.type,
+      voltage: pData.voltage,
+      equipments: pData.equips,
+      components: [],
+      infraDistances: {}
+    };
+    
+    if (pData.hasIhm !== undefined) panel.hasIhm = pData.hasIhm;
+    if (pData.ihmSize !== undefined) panel.ihmSize = pData.ihmSize;
+    if (pData.hasSupervisorio !== undefined) panel.hasSupervisorio = pData.hasSupervisorio;
+    if (pData.quantity !== undefined) panel.quantity = pData.quantity;
+    if (pData.remotoIhmSize !== undefined) panel.remotoIhmSize = pData.remotoIhmSize;
+    
+    // Set default infra distances to 15 meters for all equipments
+    pData.equips.forEach(eq => {
+      panel.infraDistances[eq.id] = 15;
+    });
+    
+    panel.components = calculatePanelComponents(panel);
+    budgetState.panels.push(panel);
+    
+    // Auto-add to consolidated infra list
+    budgetState.consolidatedInfraPanels.push(pId);
+  });
+  
+  saveState();
+  renderDashboard();
+  renderPanelsList();
+  renderCargasView();
+  renderInfraView();
+  
+  alert("13 Cenários de Teste criados com sucesso! Verifique-os nas abas 'Lista de Quadros', 'Resumo de Cargas' e 'Infraestrutura'.");
+}
