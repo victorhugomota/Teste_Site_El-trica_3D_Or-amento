@@ -1363,13 +1363,8 @@ function renderDashboard() {
   });
   
   // Calculate total infra price
-  let totalInfraPrice = 0;
-  budgetState.consolidatedInfraPanels = budgetState.consolidatedInfraPanels || [];
-  const addedPanels = budgetState.panels.filter(p => budgetState.consolidatedInfraPanels.includes(p.id));
-  addedPanels.forEach(panel => {
-    const items = calculateInfraComponentsForPanel(panel);
-    totalInfraPrice += items.reduce((sum, item) => sum + (parseFloat(item.value) || 0), 0);
-  });
+  const totalInfraItems = getConsolidatedInfraItems();
+  const totalInfraPrice = totalInfraItems.reduce((sum, item) => sum + (parseFloat(item.value) || 0), 0);
   
   document.getElementById('stat-total-equipments').textContent = totalEquipments;
   document.getElementById('stat-total-price').textContent = totalBudgetPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -2409,18 +2404,105 @@ function renderInfraTableForPanel(panel) {
   tableBody.appendChild(totalRow);
 }
 
+function getConsolidatedInfraItems() {
+  const totalInfraMap = {};
+  
+  // 1. Gather normal panel items
+  const addedPanels = budgetState.panels.filter(p => (budgetState.consolidatedInfraPanels || []).includes(p.id));
+  addedPanels.forEach(panel => {
+    const items = calculateInfraComponentsForPanel(panel);
+    items.forEach(item => {
+      if (totalInfraMap[item.code]) {
+        totalInfraMap[item.code].qty += item.qty;
+        totalInfraMap[item.code].value = totalInfraMap[item.code].qty * totalInfraMap[item.code].unitPrice;
+      } else {
+        totalInfraMap[item.code] = { ...item };
+      }
+    });
+  });
+
+  // 2. Gather Central Automation items if checked
+  if (budgetState.hasCentralAutomation) {
+    const addConsolidated = (code, qtyMultiplier = 1) => {
+      if (!code) return;
+      const catItem = PRECOS_DATABASE.catalog[code];
+      if (!catItem) return;
+      if (totalInfraMap[code]) {
+        totalInfraMap[code].qty += qtyMultiplier;
+        totalInfraMap[code].value = totalInfraMap[code].qty * totalInfraMap[code].unitPrice;
+      } else {
+        totalInfraMap[code] = {
+          code: code,
+          name: catItem.desc,
+          brand: catItem.brand,
+          unit: catItem.unit,
+          qty: qtyMultiplier,
+          unitPrice: catItem.price,
+          value: qtyMultiplier * catItem.price
+        };
+      }
+    };
+
+    addedPanels.forEach(panel => {
+      const isEligible = panel.type === 'automacao' || panel.type === 'remoto' || panel.type === 'completo';
+      if (!isEligible) return;
+      
+      const distances = panel.infraDistances || {};
+      const infraType = panel.infraType || 'leve';
+      
+      let equips = [];
+      if (panel.equipments && panel.equipments.length > 0) {
+        equips = panel.equipments;
+      } else if ((panel.type === 'comando' || panel.type === 'remoto') && panel.quantity > 0) {
+        for (let i = 1; i <= panel.quantity; i++) {
+          equips.push({ id: `virtual-${i}` });
+        }
+      }
+      
+      equips.forEach(eq => {
+        const D = parseFloat(distances[eq.id]) || 0;
+        if (D <= 0) return;
+        
+        addConsolidated('CABO-REDE-CAT6', D);
+        
+        const size = '1/2';
+        if (infraType === 'pesada') {
+          addConsolidated(`ELETRODUTO-PESADO-${size}`, D);
+        } else {
+          addConsolidated(`ELETRODUTO-GALV-${size}`, D);
+        }
+        
+        addConsolidated('SUPORTE-ABRACADEIRA', Math.ceil(D / 1.5));
+        
+        const conduleteCount = Math.ceil(D);
+        if (conduleteCount > 0) {
+          if (infraType === 'pesada') {
+            const qT = Math.floor(conduleteCount / 3);
+            const qLR = Math.floor(conduleteCount / 3);
+            const qE = conduleteCount - 2 * qT;
+            if (qT > 0) addConsolidated(`CONDULETE-PESADO-T-${size}`, qT);
+            if (qLR > 0) addConsolidated(`CONDULETE-PESADO-LR-${size}`, qLR);
+            if (qE > 0) addConsolidated(`CONDULETE-PESADO-E-${size}`, qE);
+          } else {
+            addConsolidated(`CONDULETE-GALV-${size}`, conduleteCount);
+            addConsolidated(`UNIDUT-GALV-${size}`, 3 * conduleteCount);
+          }
+        }
+      });
+    });
+  }
+
+  return Object.values(totalInfraMap);
+}
+
 function renderConsolidatedInfraTable() {
   const tableBody = document.getElementById('infra-consolidated-table-body');
   if (!tableBody) return;
   tableBody.innerHTML = '';
   
-  // Ensure consolidatedInfraPanels is initialized
   budgetState.consolidatedInfraPanels = budgetState.consolidatedInfraPanels || [];
-  
-  // Filter panels that have been explicitly added to the consolidated list
   const addedPanels = budgetState.panels.filter(p => budgetState.consolidatedInfraPanels.includes(p.id));
   
-  // Render list of added panels with a remove button
   const addedPanelsList = document.getElementById('infra-added-panels-list');
   if (addedPanelsList) {
     addedPanelsList.innerHTML = '';
@@ -2450,29 +2532,15 @@ function renderConsolidatedInfraTable() {
         removeBtn.onclick = () => {
           budgetState.consolidatedInfraPanels = budgetState.consolidatedInfraPanels.filter(id => id !== p.id);
           saveState();
-          renderInfraView(); // Re-render to update select button state and tables
+          renderInfraView();
         };
         
         addedPanelsList.appendChild(badge);
       });
     }
   }
-
-  const totalInfraMap = {};
   
-  addedPanels.forEach(panel => {
-    const items = calculateInfraComponentsForPanel(panel);
-    items.forEach(item => {
-      if (totalInfraMap[item.code]) {
-        totalInfraMap[item.code].qty += item.qty;
-        totalInfraMap[item.code].value = totalInfraMap[item.code].qty * totalInfraMap[item.code].unitPrice;
-      } else {
-        totalInfraMap[item.code] = { ...item };
-      }
-    });
-  });
-  
-  const totalItems = Object.values(totalInfraMap);
+  const totalItems = getConsolidatedInfraItems();
   if (totalItems.length === 0) {
     tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 24px;">Adicione quadros na lista acima para ver o consolidado geral de materiais de infraestrutura.</td></tr>';
     return;
@@ -4176,10 +4244,16 @@ function generateTestScenarios() {
     if (pData.quantity !== undefined) panel.quantity = pData.quantity;
     if (pData.remotoIhmSize !== undefined) panel.remotoIhmSize = pData.remotoIhmSize;
     
-    // Set default infra distances to 15 meters for all equipments
-    pData.equips.forEach(eq => {
-      panel.infraDistances[eq.id] = 15;
-    });
+    // Set default infra distances to 15 meters for all equipments (and virtual ones)
+    if (pData.equips && pData.equips.length > 0) {
+      pData.equips.forEach(eq => {
+        panel.infraDistances[eq.id] = 15;
+      });
+    } else if (pData.quantity && (pData.type === 'comando' || pData.type === 'remoto')) {
+      for (let i = 1; i <= pData.quantity; i++) {
+        panel.infraDistances[`virtual-${i}`] = 15;
+      }
+    }
     
     panel.components = calculatePanelComponents(panel);
     budgetState.panels.push(panel);
@@ -4458,20 +4532,7 @@ function exportToPDF() {
     } else {
       html += `<p style="font-size:9.5pt; color:#64748b; margin-bottom:10px;">Quadros considerados na infraestrutura: ${addedPanels.map(p => p.name).join(', ')}</p>`;
       
-      const totalInfraMap = {};
-      addedPanels.forEach(panel => {
-        const items = typeof calculateInfraComponentsForPanel === 'function' ? calculateInfraComponentsForPanel(panel) : [];
-        items.forEach(item => {
-          if (totalInfraMap[item.code]) {
-            totalInfraMap[item.code].qty += item.qty;
-            totalInfraMap[item.code].value = totalInfraMap[item.code].qty * totalInfraMap[item.code].unitPrice;
-          } else {
-            totalInfraMap[item.code] = { ...item };
-          }
-        });
-      });
-      
-      const totalItems = Object.values(totalInfraMap);
+      const totalItems = getConsolidatedInfraItems();
       let grandTotalInfra = 0;
       
       html += `

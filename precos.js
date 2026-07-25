@@ -1710,6 +1710,12 @@ const PRECOS_DATABASE = {
       "brand": "WETZEL",
       "unit": "un",
       "price": 162.5
+    },
+    "CABO-REDE-CAT6": {
+      "desc": "CABO DE REDE ETHERNET CAT-06 (AZUL)",
+      "brand": "FURUKAWA",
+      "unit": "m",
+      "price": 5.0
     }
   },
   "compositions": {

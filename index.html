@@ -592,10 +592,21 @@
           </div>
 
           <div id="infra-consolidated-panel" style="border-top: 2px solid var(--border-color); margin-top: 40px; padding-top: 30px;">
-            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--primary);">Lista Geral de Infraestrutura Consolidada</h3>
-            <p style="margin-bottom: 20px; font-size: 0.85rem; color: var(--text-secondary);">
-              Soma acumulada dos materiais de infraestrutura de quadros selecionados.
-            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; color: var(--primary);">Lista Geral de Infraestrutura Consolidada</h3>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">
+                  Soma acumulada dos materiais de infraestrutura de quadros selecionados.
+                </p>
+              </div>
+              <!-- Checkbox for Automação Central -->
+              <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background-color: var(--bg-secondary); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                <input type="checkbox" id="central-automation-checkbox" style="width: 16px; height: 16px; cursor: pointer;">
+                <label for="central-automation-checkbox" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); cursor: pointer; user-select: none; margin: 0;">
+                  Terá Automação Central?
+                </label>
+              </div>
+            </div>
             
             <div style="margin-bottom: 24px; padding: 16px; background-color: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
               <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">Quadros considerados na lista geral:</h4>

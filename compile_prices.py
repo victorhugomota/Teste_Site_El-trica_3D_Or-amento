@@ -91,6 +91,14 @@ def compile_excel_to_js():
             "unit": "un",
             "price": heavy_condulete_prices[size]
         }
+        
+    # Inject Network Cable CAT 6
+    database["catalog"]["CABO-REDE-CAT6"] = {
+        "desc": "CABO DE REDE ETHERNET CAT-06 (AZUL)",
+        "brand": "FURUKAWA",
+        "unit": "m",
+        "price": 5.0
+    }
             
     # 2. Compositions
     ws_comp = wb["Composições de Partida"]
