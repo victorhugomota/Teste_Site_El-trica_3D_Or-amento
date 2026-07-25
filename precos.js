@@ -20,13 +20,13 @@ const PRECOS_DATABASE = {
       "price": 450.0
     },
     "QMON-500x400x200": {
-      "desc": "QUADRO DE MONTAGEM METÁLICO 400X300X200 (PADRÃO COMANDO)",
+      "desc": "QUADRO DE MONTAGEM METÁLICO 500x400x200",
       "brand": "BRUM",
       "unit": "un",
       "price": 450.0
     },
     "QMON-500x500x200": {
-      "desc": "QUADRO DE MONTAGEM METÁLICO 400X300X200 (PADRÃO COMANDO)",
+      "desc": "QUADRO DE MONTAGEM METÁLICO 400X300X200 (PADRÃO UTA-EC)",
       "brand": "BRUM",
       "unit": "un",
       "price": 450.0
@@ -44,25 +44,25 @@ const PRECOS_DATABASE = {
       "price": 700.0
     },
     "QMON-700x600x200": {
-      "desc": "QUADRO DE MONTAGEM METÁLICO 600X600X201",
+      "desc": "QUADRO DE MONTAGEM METÁLICO 700x600x200",
       "brand": "BRUM",
       "unit": "un",
       "price": 701.0
     },
     "QMON-800x600x200": {
-      "desc": "QUADRO DE MONTAGEM METÁLICO 600X600X202",
+      "desc": "QUADRO DE MONTAGEM METÁLICO 800x600x200",
       "brand": "BRUM",
       "unit": "un",
       "price": 702.0
     },
     "QMON-1000x600x200": {
-      "desc": "QUADRO DE MONTAGEM METÁLICO 600X600X203",
+      "desc": "QUADRO DE MONTAGEM METÁLICO 1000x600x200",
       "brand": "BRUM",
       "unit": "un",
       "price": 703.0
     },
     "QMON-1200x800x200": {
-      "desc": "QUADRO DE MONTAGEM METÁLICO 600X600X204",
+      "desc": "QUADRO DE MONTAGEM METÁLICO 1200x800x200",
       "brand": "BRUM",
       "unit": "un",
       "price": 704.0
@@ -281,487 +281,325 @@ const PRECOS_DATABASE = {
       "desc": "INVERSOR DE FRÊQUENCIA 0.18kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1010.8
+      "price": 2000.0
     },
-    "CFW500-0.18kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 0.18kW CFW500 380V",
+    "CFW500-0.18kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 0.18kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1162.42
-    },
-    "CFW500-0.18kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 0.18kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 1263.5
+      "price": 2200.0
     },
     "CFW500-0.37kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 0.37kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1022.2
+      "price": 2400.0
     },
-    "CFW500-0.37kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 0.37kW CFW500 380V",
+    "CFW500-0.37kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 0.37kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1175.53
-    },
-    "CFW500-0.37kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 0.37kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 1277.75
+      "price": 2600.0
     },
     "CFW500-0.75kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 0.75kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1045.0
+      "price": 2800.0
     },
-    "CFW500-0.75kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 0.75kW CFW500 380V",
+    "CFW500-0.75kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 0.75kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1201.75
-    },
-    "CFW500-0.75kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 0.75kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 1306.25
+      "price": 3000.0
     },
     "CFW500-1.5kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 1.5kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1090.0
+      "price": 3200.0
     },
-    "CFW500-1.5kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 1.5kW CFW500 380V",
+    "CFW500-1.5kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 1.5kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1253.5
-    },
-    "CFW500-1.5kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 1.5kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 1362.5
+      "price": 3400.0
     },
     "CFW500-2.2kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 2.2kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1132.0
+      "price": 3600.0
     },
-    "CFW500-2.2kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 2.2kW CFW500 380V",
+    "CFW500-2.2kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 2.2kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1301.8
-    },
-    "CFW500-2.2kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 2.2kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 1415.0
+      "price": 3800.0
     },
     "CFW500-3.0kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 3.0kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1180.0
+      "price": 4000.0
     },
-    "CFW500-3.0kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 3.0kW CFW500 380V",
+    "CFW500-3.0kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 3.0kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1357.0
-    },
-    "CFW500-3.0kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 3.0kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 1475.0
+      "price": 4200.0
     },
     "CFW500-4.0kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 4.0kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1240.0
+      "price": 4400.0
     },
-    "CFW500-4.0kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 4.0kW CFW500 380V",
+    "CFW500-4.0kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 4.0kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1426.0
-    },
-    "CFW500-4.0kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 4.0kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 1550.0
+      "price": 4600.0
     },
     "CFW500-5.5kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 5.5kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1330.0
+      "price": 4800.0
     },
-    "CFW500-5.5kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 5.5kW CFW500 380V",
+    "CFW500-5.5kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 5.5kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1529.5
-    },
-    "CFW500-5.5kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 5.5kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 1662.5
+      "price": 5000.0
     },
     "CFW500-7.5kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 7.5kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1450.0
+      "price": 5200.0
     },
-    "CFW500-7.5kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 7.5kW CFW500 380V",
+    "CFW500-7.5kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 7.5kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1667.5
-    },
-    "CFW500-7.5kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 7.5kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 1812.5
+      "price": 5400.0
     },
     "CFW500-11kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 11kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1660.0
+      "price": 5600.0
     },
-    "CFW500-11kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 11kW CFW500 380V",
+    "CFW500-11kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 11kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1909.0
-    },
-    "CFW500-11kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 11kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 2075.0
+      "price": 5800.0
     },
     "CFW500-15kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 15kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 1900.0
+      "price": 6000.0
     },
-    "CFW500-15kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 15kW CFW500 380V",
+    "CFW500-15kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 15kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2185.0
-    },
-    "CFW500-15kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 15kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 2375.0
+      "price": 6200.0
     },
     "CFW500-18.5kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 18.5kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2110.0
+      "price": 6400.0
     },
-    "CFW500-18.5kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 18.5kW CFW500 380V",
+    "CFW500-18.5kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 18.5kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2426.5
-    },
-    "CFW500-18.5kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 18.5kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 2637.5
+      "price": 6600.0
     },
     "CFW500-22kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 22kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2320.0
+      "price": 6800.0
     },
-    "CFW500-22kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 22kW CFW500 380V",
+    "CFW500-22kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 22kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2668.0
-    },
-    "CFW500-22kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 22kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 2900.0
+      "price": 7000.0
     },
     "CFW500-30kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 30kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2800.0
+      "price": 7200.0
     },
-    "CFW500-30kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 30kW CFW500 380V",
+    "CFW500-30kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 30kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3220.0
-    },
-    "CFW500-30kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 30kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 3500.0
+      "price": 7400.0
     },
     "CFW500-37kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 37kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3220.0
+      "price": 7600.0
     },
-    "CFW500-37kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 37kW CFW500 380V",
+    "CFW500-37kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 37kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3703.0
-    },
-    "CFW500-37kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 37kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 4025.0
+      "price": 7800.0
     },
     "CFW500-45kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 45kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3700.0
+      "price": 8000.0
     },
-    "CFW500-45kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 45kW CFW500 380V",
+    "CFW500-45kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 45kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 4255.0
-    },
-    "CFW500-45kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 45kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 4625.0
+      "price": 8200.0
     },
     "CFW500-55kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 55kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 4300.0
+      "price": 8400.0
     },
-    "CFW500-55kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 55kW CFW500 380V",
+    "CFW500-55kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 55kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 4945.0
-    },
-    "CFW500-55kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 55kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 5375.0
+      "price": 8600.0
     },
     "CFW500-75kW-220V": {
       "desc": "INVERSOR DE FRÊQUENCIA 75kW CFW500 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 5500.0
+      "price": 8800.0
     },
-    "CFW500-75kW-380V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 75kW CFW500 380V",
+    "CFW500-75kW-380-440V": {
+      "desc": "INVERSOR DE FRÊQUENCIA 75kW CFW500 380-440V",
       "brand": "WEG",
       "unit": "un",
       "price": 6325.0
-    },
-    "CFW500-75kW-440V": {
-      "desc": "INVERSOR DE FRÊQUENCIA 75kW CFW500 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 6875.0
     },
     "SOFTSTARTER-11kW-220V": {
       "desc": "SOFTSTARTER TRIPOLAR SSW07 11kW 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2440.0
+      "price": 3400.0
     },
-    "SOFTSTARTER-11kW-380V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 11kW 380V",
+    "SOFTSTARTER-11kW-380-440V": {
+      "desc": "SOFTSTARTER TRIPOLAR SSW07 11kW 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2732.8
-    },
-    "SOFTSTARTER-11kW-440V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 11kW 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 2928.0
+      "price": 3400.0
     },
     "SOFTSTARTER-15kW-220V": {
       "desc": "SOFTSTARTER TRIPOLAR SSW07 15kW 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2600.0
+      "price": 3800.0
     },
-    "SOFTSTARTER-15kW-380V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 15kW 380V",
+    "SOFTSTARTER-15kW-380-440V": {
+      "desc": "SOFTSTARTER TRIPOLAR SSW07 15kW 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2912.0
-    },
-    "SOFTSTARTER-15kW-440V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 15kW 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 3120.0
+      "price": 3800.0
     },
     "SOFTSTARTER-18.5kW-220V": {
       "desc": "SOFTSTARTER TRIPOLAR SSW07 18.5kW 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2740.0
+      "price": 4000.0
     },
-    "SOFTSTARTER-18.5kW-380V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 18.5kW 380V",
+    "SOFTSTARTER-18.5kW-380-440V": {
+      "desc": "SOFTSTARTER TRIPOLAR SSW07 18.5kW 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3068.8
-    },
-    "SOFTSTARTER-18.5kW-440V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 18.5kW 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 3288.0
+      "price": 4160.0
     },
     "SOFTSTARTER-22kW-220V": {
       "desc": "SOFTSTARTER TRIPOLAR SSW07 22kW 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 2880.0
+      "price": 4320.0
     },
-    "SOFTSTARTER-22kW-380V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 22kW 380V",
+    "SOFTSTARTER-22kW-380-440V": {
+      "desc": "SOFTSTARTER TRIPOLAR SSW07 22kW 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3225.6
-    },
-    "SOFTSTARTER-22kW-440V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 22kW 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 3456.0
+      "price": 4480.0
     },
     "SOFTSTARTER-30kW-220V": {
       "desc": "SOFTSTARTER TRIPOLAR SSW07 30kW 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3200.0
+      "price": 4640.0
     },
-    "SOFTSTARTER-30kW-380V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 30kW 380V",
+    "SOFTSTARTER-30kW-380-440V": {
+      "desc": "SOFTSTARTER TRIPOLAR SSW07 30kW 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3584.0
-    },
-    "SOFTSTARTER-30kW-440V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 30kW 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 3840.0
+      "price": 4800.0
     },
     "SOFTSTARTER-37kW-220V": {
       "desc": "SOFTSTARTER TRIPOLAR SSW07 37kW 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3480.0
+      "price": 4960.0
     },
-    "SOFTSTARTER-37kW-380V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 37kW 380V",
+    "SOFTSTARTER-37kW-380-440V": {
+      "desc": "SOFTSTARTER TRIPOLAR SSW07 37kW 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3897.6
-    },
-    "SOFTSTARTER-37kW-440V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 37kW 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 4176.0
+      "price": 5120.0
     },
     "SOFTSTARTER-45kW-220V": {
       "desc": "SOFTSTARTER TRIPOLAR SSW07 45kW 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 3800.0
+      "price": 5280.0
     },
-    "SOFTSTARTER-45kW-380V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 45kW 380V",
+    "SOFTSTARTER-45kW-380-440V": {
+      "desc": "SOFTSTARTER TRIPOLAR SSW07 45kW 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 4256.0
-    },
-    "SOFTSTARTER-45kW-440V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 45kW 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 4560.0
+      "price": 5440.0
     },
     "SOFTSTARTER-55kW-220V": {
       "desc": "SOFTSTARTER TRIPOLAR SSW07 55kW 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 4200.0
+      "price": 5600.0
     },
-    "SOFTSTARTER-55kW-380V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 55kW 380V",
+    "SOFTSTARTER-55kW-380-440V": {
+      "desc": "SOFTSTARTER TRIPOLAR SSW07 55kW 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 4704.0
-    },
-    "SOFTSTARTER-55kW-440V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 55kW 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 5040.0
+      "price": 5760.0
     },
     "SOFTSTARTER-75kW-220V": {
       "desc": "SOFTSTARTER TRIPOLAR SSW07 75kW 220V",
       "brand": "WEG",
       "unit": "un",
-      "price": 5000.0
+      "price": 5920.0
     },
-    "SOFTSTARTER-75kW-380V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 75kW 380V",
+    "SOFTSTARTER-75kW-380-440V": {
+      "desc": "SOFTSTARTER TRIPOLAR SSW07 75kW 380-440V",
       "brand": "WEG",
       "unit": "un",
-      "price": 5600.0
-    },
-    "SOFTSTARTER-75kW-440V": {
-      "desc": "SOFTSTARTER TRIPOLAR SSW07 75kW 440V",
-      "brand": "WEG",
-      "unit": "un",
-      "price": 6000.0
+      "price": 6080.0
     },
     "CLP-CAREL-CPCO-MINI": {
       "desc": "CLP CAREL Cpco MINI HIGHEND PANEL",
@@ -779,64 +617,64 @@ const PRECOS_DATABASE = {
       "desc": "CLP CAREL PCOOEM+ MEDIO (P+100SE00D0M0)",
       "brand": "CAREL",
       "unit": "un",
-      "price": 2600.0
+      "price": 3900.0
     },
     "CONECTORES-PCOOEM-MEDIO": {
       "desc": "KIT DE CONECTORES PARA CLP CAREL PCOOEM+ MEDIUM",
       "brand": "CAREL",
       "unit": "un",
-      "price": 750.0
+      "price": 190.0
     },
     "IHM-4.3": {
       "desc": "TELA IHM TOUCHSCREEN COLORIDA HMI-4.3",
       "brand": "WEG/CAREL",
       "unit": "un",
-      "price": 450.0
+      "price": 1700.0
     },
     "IHM-7.0": {
       "desc": "TELA IHM TOUCHSCREEN COLORIDA HMI-7.0 (PGR07000TCDB0)",
       "brand": "CAREL",
       "unit": "un",
-      "price": 2000.0
+      "price": 3100.0
     },
     "IHM-10.0": {
       "desc": "TELA IHM TOUCHSCREEN COLORIDA HMI-10.0 Pro",
       "brand": "CAREL",
       "unit": "un",
-      "price": 1480.0
+      "price": 9500.0
     },
     "IHM-15.0": {
       "desc": "PAINEL PC INDUSTRIAL TOUCHSCREEN 15.6\"",
       "brand": "GENÉRICO",
       "unit": "un",
-      "price": 3200.0
+      "price": 13000.0
     },
-    "SUP-MODELO-1": {
-      "desc": "SISTEMA SUPERVISÓRIO SCADA MODELO 1 (ATÉ 3 EQUIPAMENTOS)",
-      "brand": "INTEGRADOR",
+    "bossMicro": {
+      "desc": "SISTEMA SUPERVISÓRIO SCADA bossMicro (ATÉ 3 EQUIPAMENTOS)",
+      "brand": "CAREL",
       "unit": "un",
-      "price": 1500.0
+      "price": 3500.0
     },
-    "SUP-MODELO-2": {
-      "desc": "SISTEMA SUPERVISÓRIO SCADA MODELO 2 (4 A 6 EQUIPAMENTOS)",
-      "brand": "INTEGRADOR",
+    "MiniBoss": {
+      "desc": "SISTEMA SUPERVISÓRIO SCADA MiniBoss (4 A 10 EQUIPAMENTOS)",
+      "brand": "CAREL",
       "unit": "un",
-      "price": 2500.0
+      "price": 11000.0
     },
-    "SUP-MODELO-3": {
-      "desc": "SISTEMA SUPERVISÓRIO SCADA MODELO 3 (7 A 10 EQUIPAMENTOS)",
-      "brand": "INTEGRADOR",
+    "Boss 100disp": {
+      "desc": "SISTEMA SUPERVISÓRIO SCADA Boss 100disp (11 A 30 EQUIPAMENTOS)",
+      "brand": "CAREL",
       "unit": "un",
-      "price": 4000.0
+      "price": 15000.0
     },
-    "SUP-MODELO-4": {
-      "desc": "SISTEMA SUPERVISÓRIO SCADA MODELO 4 (ACIMA DE 10 EQUIP.)",
-      "brand": "INTEGRADOR",
+    "Boss 300disp": {
+      "desc": "SISTEMA SUPERVISÓRIO SCADA Boss 300disp (ACIMA DE 30 EQUIPAMENTOS)",
+      "brand": "CAREL",
       "unit": "un",
-      "price": 6000.0
+      "price": 25000.0
     },
     "SENS-TEMP-UMID-DUTO": {
-      "desc": "SENSOR DE TEMPERATURA E UMIDADE PARA DUTO NTC",
+      "desc": "SENSOR DE TEMPERATURA E UMIDADE PARA DUTO",
       "brand": "CAREL",
       "unit": "un",
       "price": 400.0
@@ -857,7 +695,7 @@ const PRECOS_DATABASE = {
       "desc": "TRANSMISSOR DE PRESSÃO DIFERENCIAL 4-20mA SPKD00U5N0",
       "brand": "CAREL",
       "unit": "un",
-      "price": 600.0
+      "price": 1100.0
     },
     "ATUADOR-BELIMO": {
       "desc": "ATUADOR DE DAMPER ON/OFF BELIMO 24V",
@@ -867,19 +705,19 @@ const PRECOS_DATABASE = {
     },
     "SENS-TEMP-IMERSAO": {
       "desc": "SENSOR DE TEMPERATURA Pt100 DE IMERSÃO COM POÇO",
-      "brand": "SIBRATEC",
+      "brand": "CAREL",
       "unit": "un",
-      "price": 340.0
+      "price": 1000.0
     },
     "TRANS-PRESSAO-AGUA": {
       "desc": "TRANSMISSOR DE PRESSÃO DE ÁGUA 4-20mA",
-      "brand": "SIBRATEC",
+      "brand": "CAREL",
       "unit": "un",
       "price": 580.0
     },
     "CHAVE-FLUXO": {
       "desc": "CHAVE DE FLUXO DE LÍQUIDO (FLOW SWITCH)",
-      "brand": "SIBRATEC",
+      "brand": "CAREL",
       "unit": "un",
       "price": 280.0
     },
@@ -895,14 +733,14 @@ const PRECOS_DATABASE = {
       "unit": "un",
       "price": 1450.0
     },
-    "CANALETA-50X50": {
-      "desc": "CANALETA CINZA ESCURO 50X50 BARRA 2M",
+    "CANALETA-50X80": {
+      "desc": "CANALETA CINZA ESCURO 50X80 BARRA 2M",
       "brand": "LUKIMA",
       "unit": "barra",
       "price": 60.0
     },
-    "CANALETA-30X50": {
-      "desc": "CANALETA CINZA ESCURO 30X50 BARRA 2M",
+    "CANALETA-30X80": {
+      "desc": "CANALETA CINZA ESCURO 30X80 BARRA 2M",
       "brand": "LUKIMA",
       "unit": "barra",
       "price": 55.0
@@ -947,25 +785,25 @@ const PRECOS_DATABASE = {
       "desc": "IDENTIFICADOR PLÁSTICO DE BORNE BR 5MM",
       "brand": "DEKAFIX",
       "unit": "un",
-      "price": 10.0
+      "price": 4.0
     },
     "POSTE-FINAL": {
       "desc": "POSTE FINAL PARA BORNE BTW PF3-BTW",
       "brand": "WEG",
       "unit": "un",
-      "price": 10.0
+      "price": 4.0
     },
     "BORNE-TERRA-6.0T": {
       "desc": "BORNE TERRA BTWP 6,0T 6,0mm2",
       "brand": "WEG",
       "unit": "un",
-      "price": 20.0
+      "price": 10.0
     },
     "BORNE-TERRA-2.5T": {
       "desc": "BORNE TERRA BTWP 2,5T 2,5mm2",
       "brand": "WEG",
       "unit": "un",
-      "price": 15.0
+      "price": 5.0
     },
     "BORNE-RELE-BTWR": {
       "desc": "BORNE RELÉ BTWR P16E26 1NAF 6A 24VDC",
@@ -998,13 +836,13 @@ const PRECOS_DATABASE = {
       "price": 85.0
     },
     "CONTROLADOR-PROP-AQUECIMENTO": {
-      "desc": "CONTROLADOR PROPORCIONAL DE AQUECIMENTO / SCR 24V",
+      "desc": "CONVERSOR DE POTÊNCIA AQUECIMENTO 0 À 10V",
       "brand": "WEG/INTEGRADOR",
       "unit": "un",
       "price": 800.0
     },
     "CONTROLADOR-PROP-UMIDIFICACAO": {
-      "desc": "CONTROLADOR PROPORCIONAL DE UMIDIFICAÇÃO 24V",
+      "desc": "CONVERSOR DE POTÊNCIA UMIDIFICAÇÃO 0 À 10V",
       "brand": "CAREL/INTEGRADOR",
       "unit": "un",
       "price": 800.0
@@ -1146,6 +984,582 @@ const PRECOS_DATABASE = {
       "brand": "WEG",
       "unit": "un",
       "price": 220.0
+    },
+    "MINIDISJ-MDW-C10-3": {
+      "desc": "MINIDISJUNTOR TRIPOLAR 10A CURVA C MDW-C10-3",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 95.0
+    },
+    "MINIDISJ-MDW-C16-3": {
+      "desc": "MINIDISJUNTOR TRIPOLAR 16A CURVA C MDW-C16-3",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 95.0
+    },
+    "MINIDISJ-MDW-C20-3": {
+      "desc": "MINIDISJUNTOR TRIPOLAR 20A CURVA C MDW-C20-3",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 95.0
+    },
+    "MINIDISJ-MDW-C25-3": {
+      "desc": "MINIDISJUNTOR TRIPOLAR 25A CURVA C MDW-C25-3",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 95.0
+    },
+    "MINIDISJ-MDW-C32-3": {
+      "desc": "MINIDISJUNTOR TRIPOLAR 32A CURVA C MDW-C32-3",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 105.0
+    },
+    "MINIDISJ-MDW-C40-3": {
+      "desc": "MINIDISJUNTOR TRIPOLAR 40A CURVA C MDW-C40-3",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 115.0
+    },
+    "MINIDISJ-MDW-C50-3": {
+      "desc": "MINIDISJUNTOR TRIPOLAR 50A CURVA C MDW-C50-3",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 125.0
+    },
+    "MINIDISJ-MDW-C63-3": {
+      "desc": "MINIDISJUNTOR TRIPOLAR 63A CURVA C MDW-C63-3",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 135.0
+    },
+    "QMON-600x500x250": {
+      "desc": "QUADRO DE MONTAGEM METÁLICO 600X500X250",
+      "brand": "STECK",
+      "unit": "un",
+      "price": 720.0
+    },
+    "QMON-1700x600x400": {
+      "desc": "QUADRO DE MONTAGEM METÁLICO 1700X600X400",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 4000.0
+    },
+    "KIT-VOLT-BRUM-400A": {
+      "desc": "KIT VOLT EX BARRAMENTO BRUM 400A - 3M BRUM",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 1200.0
+    },
+    "KIT-CONEXAO-BRUM-400A": {
+      "desc": "KIT DE CONEXÃO 400A KIT 3.2 BRUM",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 300.0
+    },
+    "CABO-1.0-VERMELHO": {
+      "desc": "CABO FLEXÍVEL VERMELHO 1,0mm2 PVC",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 2.0
+    },
+    "CABO-1.0-AZUL": {
+      "desc": "CABO FLEXÍVEL AZUL 1,0mm2 PVC",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 2.0
+    },
+    "CABO-1.0-CINZA": {
+      "desc": "CABO FLEXÍVEL CINZA 1,0mm2 PVC",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 2.0
+    },
+    "CABO-POT-2.5-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 2.5mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 3.0
+    },
+    "CABO-POT-2.5-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 2.5mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 3.0
+    },
+    "CABO-POT-4.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 4.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 5.0
+    },
+    "CABO-POT-4.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 4.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 5.0
+    },
+    "CABO-POT-6.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 6.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 8.0
+    },
+    "CABO-POT-6.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 6.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 8.0
+    },
+    "CABO-POT-10.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 10.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 12.0
+    },
+    "CABO-POT-10.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 10.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 12.0
+    },
+    "CABO-POT-16.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 16.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 18.0
+    },
+    "CABO-POT-16.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 16.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 18.0
+    },
+    "CABO-POT-25.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 25.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 26.0
+    },
+    "CABO-POT-25.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 25.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 26.0
+    },
+    "CABO-POT-35.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 35.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 36.0
+    },
+    "CABO-POT-35.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 35.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 36.0
+    },
+    "CABO-POT-50.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 50.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 52.0
+    },
+    "CABO-POT-50.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 50.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 52.0
+    },
+    "CABO-POT-70.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 70.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 72.0
+    },
+    "CABO-POT-70.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 70.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 72.0
+    },
+    "CABO-POT-95.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 95.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 98.0
+    },
+    "CABO-POT-95.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 95.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 98.0
+    },
+    "CABO-POT-120.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 120.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 124.0
+    },
+    "CABO-POT-120.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 120.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 124.0
+    },
+    "CABO-POT-150.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 150.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 155.0
+    },
+    "CABO-POT-150.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 150.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 155.0
+    },
+    "CABO-POT-185.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 185.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 190.0
+    },
+    "CABO-POT-185.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 185.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 190.0
+    },
+    "CABO-POT-240.0-PRETO": {
+      "desc": "CABO FLEXÍVEL PRETO 240.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 250.0
+    },
+    "CABO-POT-240.0-VERDE": {
+      "desc": "CABO FLEXÍVEL VERDE 240.0mm2 PVC 750V",
+      "brand": "SIL",
+      "unit": "m",
+      "price": 250.0
+    },
+    "CABO-PP-2X0.75": {
+      "desc": "CABO PP 2x0,75mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 3.0
+    },
+    "CABO-PP-3X0.75": {
+      "desc": "CABO PP 3x0,75mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 4.0
+    },
+    "CABO-PP-3X1.5": {
+      "desc": "CABO PP 3x1,5mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 5.0
+    },
+    "CABO-PP-3X2.5": {
+      "desc": "CABO PP 3x2,5mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 7.5
+    },
+    "CABO-PP-3X4.0": {
+      "desc": "CABO PP 3x4,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 11.0
+    },
+    "CABO-PP-3X6.0": {
+      "desc": "CABO PP 3x6,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 16.0
+    },
+    "CABO-PP-3X10.0": {
+      "desc": "CABO PP 3x10,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 26.5
+    },
+    "CABO-PP-3X16.0": {
+      "desc": "CABO PP 3x16,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 42.0
+    },
+    "CABO-PP-3X25.0": {
+      "desc": "CABO PP 3x25,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 64.0
+    },
+    "CABO-PP-4X1.5": {
+      "desc": "CABO PP 4x1,5mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 6.5
+    },
+    "CABO-PP-4X2.5": {
+      "desc": "CABO PP 4x2,5mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 10.0
+    },
+    "CABO-PP-4X4.0": {
+      "desc": "CABO PP 4x4,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 15.0
+    },
+    "CABO-PP-4X6.0": {
+      "desc": "CABO PP 4x6,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 22.0
+    },
+    "CABO-PP-4X10.0": {
+      "desc": "CABO PP 4x10,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 35.0
+    },
+    "CABO-PP-4X16.0": {
+      "desc": "CABO PP 4x16,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 55.0
+    },
+    "CABO-PP-4X25.0": {
+      "desc": "CABO PP 4x25,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 85.0
+    },
+    "CABO-PP-4X35.0": {
+      "desc": "CABO PP 4x35,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 115.0
+    },
+    "CABO-PP-4X50.0": {
+      "desc": "CABO PP 4x50,0mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 165.0
+    },
+    "CABO-PP-5X1.5": {
+      "desc": "CABO PP 5x1,5mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 8.0
+    },
+    "CABO-PP-6X1.5": {
+      "desc": "CABO PP 6x1,5mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 10.0
+    },
+    "CABO-SHIELD-2X0.75": {
+      "desc": "CABO SHIELD 2x0,75mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 4.5
+    },
+    "CABO-SHIELD-3X0.75": {
+      "desc": "CABO SHIELD 3x0,75mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 5.5
+    },
+    "CABO-SHIELD-4X0.75": {
+      "desc": "CABO SHIELD 4x0,75mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 7.0
+    },
+    "CABO-SHIELD-5X0.75": {
+      "desc": "CABO SHIELD 5x0,75mm²",
+      "brand": "CORFIO",
+      "unit": "m",
+      "price": 8.5
+    },
+    "CONDULETE-GALV-1/2": {
+      "desc": "CONDULETE MÚLTIPLO X 1/2 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 15.0
+    },
+    "CONDULETE-GALV-3/4": {
+      "desc": "CONDULETE MÚLTIPLO X 3/4 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 18.0
+    },
+    "CONDULETE-GALV-1": {
+      "desc": "CONDULETE MÚLTIPLO X 1 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 25.0
+    },
+    "CONDULETE-GALV-1.1/4": {
+      "desc": "CONDULETE MÚLTIPLO X 1 1/4 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 35.0
+    },
+    "CONDULETE-GALV-1.1/2": {
+      "desc": "CONDULETE MÚLTIPLO X 1 1/2 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 45.0
+    },
+    "CONDULETE-GALV-2": {
+      "desc": "CONDULETE MÚLTIPLO X 2 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 65.0
+    },
+    "ELETRODUTO-GALV-1/2": {
+      "desc": "ELETRODUTO ZINCADO LEVE 1/2",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 10.0
+    },
+    "ELETRODUTO-GALV-3/4": {
+      "desc": "ELETRODUTO ZINCADO LEVE 3/4",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 12.0
+    },
+    "ELETRODUTO-GALV-1": {
+      "desc": "ELETRODUTO ZINCADO LEVE 1",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 16.0
+    },
+    "ELETRODUTO-GALV-1.1/4": {
+      "desc": "ELETRODUTO ZINCADO LEVE 1 1/4",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 22.0
+    },
+    "ELETRODUTO-GALV-1.1/2": {
+      "desc": "ELETRODUTO ZINCADO LEVE 1 1/2",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 28.0
+    },
+    "ELETRODUTO-GALV-2": {
+      "desc": "ELETRODUTO ZINCADO LEVE 2",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 38.0
+    },
+    "UNIDUT-GALV-1/2": {
+      "desc": "UNIDUT CÔNICO ZINCADO 1/2",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 5.0
+    },
+    "UNIDUT-GALV-3/4": {
+      "desc": "UNIDUT CÔNICO ZINCADO 3/4",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 6.0
+    },
+    "UNIDUT-GALV-1": {
+      "desc": "UNIDUT CÔNICO ZINCADO 1",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 8.0
+    },
+    "UNIDUT-GALV-1.1/4": {
+      "desc": "UNIDUT CÔNICO ZINCADO 1 1/4",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 12.0
+    },
+    "UNIDUT-GALV-1.1/2": {
+      "desc": "UNIDUT CÔNICO ZINCADO 1 1/2",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 16.0
+    },
+    "UNIDUT-GALV-2": {
+      "desc": "UNIDUT CÔNICO ZINCADO 2",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 24.0
+    },
+    "PRENSA-CABO-1/2": {
+      "desc": "PRENSA CABOS ROSCA BSP 1/2",
+      "brand": "STECK",
+      "unit": "un",
+      "price": 8.0
+    },
+    "PRENSA-CABO-3/4": {
+      "desc": "PRENSA CABOS ROSCA BSP 3/4",
+      "brand": "STECK",
+      "unit": "un",
+      "price": 10.0
+    },
+    "PRENSA-CABO-1": {
+      "desc": "PRENSA CABOS ROSCA BSP 1",
+      "brand": "STECK",
+      "unit": "un",
+      "price": 15.0
+    },
+    "PRENSA-CABO-1.1/4": {
+      "desc": "PRENSA CABOS ROSCA BSP 1 1/4",
+      "brand": "STECK",
+      "unit": "un",
+      "price": 22.0
+    },
+    "PRENSA-CABO-1.1/2": {
+      "desc": "PRENSA CABOS ROSCA BSP 1 1/2",
+      "brand": "STECK",
+      "unit": "un",
+      "price": 28.0
+    },
+    "PRENSA-CABO-2": {
+      "desc": "PRENSA CABOS ROSCA BSP 2",
+      "brand": "STECK",
+      "unit": "un",
+      "price": 38.0
+    },
+    "ELETROCALHA-100x50": {
+      "desc": "ELETROCALHA PERFURADA ZINCADA 100x50mm",
+      "brand": "MAMUTE",
+      "unit": "m",
+      "price": 25.0
+    },
+    "ELETROCALHA-200x50": {
+      "desc": "ELETROCALHA PERFURADA ZINCADA 200x50mm",
+      "brand": "MAMUTE",
+      "unit": "m",
+      "price": 40.0
+    },
+    "ELETROCALHA-300x50": {
+      "desc": "ELETROCALHA PERFURADA ZINCADA 300x50mm",
+      "brand": "MAMUTE",
+      "unit": "m",
+      "price": 60.0
+    },
+    "SUPORTE-ABRACADEIRA": {
+      "desc": "SUPORTE DE FIXAÇÃO ABRAÇADEIRA E PARAFUSO",
+      "brand": "MAMUTE",
+      "unit": "un",
+      "price": 5.0
+    },
+    "SUPORTE-TIRANTE": {
+      "desc": "SUPORTE SUSPENSO TIRANTE E PERFILADO",
+      "brand": "MAMUTE",
+      "unit": "un",
+      "price": 45.0
     }
   },
   "compositions": {
@@ -2573,7 +2987,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_0.18kW_380V": [
       {
-        "code": "CFW500-0.18kW-380V",
+        "code": "CFW500-0.18kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -2591,7 +3005,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_0.18kW_440V": [
       {
-        "code": "CFW500-0.18kW-440V",
+        "code": "CFW500-0.18kW-380-440V",
         "qty": 1.0
       },
       {
@@ -2627,7 +3041,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_0.37kW_380V": [
       {
-        "code": "CFW500-0.37kW-380V",
+        "code": "CFW500-0.37kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -2645,7 +3059,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_0.37kW_440V": [
       {
-        "code": "CFW500-0.37kW-440V",
+        "code": "CFW500-0.37kW-380-440V",
         "qty": 1.0
       },
       {
@@ -2681,7 +3095,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_0.75kW_380V": [
       {
-        "code": "CFW500-0.75kW-380V",
+        "code": "CFW500-0.75kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -2699,7 +3113,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_0.75kW_440V": [
       {
-        "code": "CFW500-0.75kW-440V",
+        "code": "CFW500-0.75kW-380-440V",
         "qty": 1.0
       },
       {
@@ -2735,7 +3149,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_1.5kW_380V": [
       {
-        "code": "CFW500-1.5kW-380V",
+        "code": "CFW500-1.5kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -2753,7 +3167,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_1.5kW_440V": [
       {
-        "code": "CFW500-1.5kW-440V",
+        "code": "CFW500-1.5kW-380-440V",
         "qty": 1.0
       },
       {
@@ -2789,7 +3203,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_2.2kW_380V": [
       {
-        "code": "CFW500-2.2kW-380V",
+        "code": "CFW500-2.2kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -2807,7 +3221,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_2.2kW_440V": [
       {
-        "code": "CFW500-2.2kW-440V",
+        "code": "CFW500-2.2kW-380-440V",
         "qty": 1.0
       },
       {
@@ -2843,7 +3257,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_3.0kW_380V": [
       {
-        "code": "CFW500-3.0kW-380V",
+        "code": "CFW500-3.0kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -2861,7 +3275,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_3.0kW_440V": [
       {
-        "code": "CFW500-3.0kW-440V",
+        "code": "CFW500-3.0kW-380-440V",
         "qty": 1.0
       },
       {
@@ -2897,7 +3311,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_4.0kW_380V": [
       {
-        "code": "CFW500-4.0kW-380V",
+        "code": "CFW500-4.0kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -2915,7 +3329,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_4.0kW_440V": [
       {
-        "code": "CFW500-4.0kW-440V",
+        "code": "CFW500-4.0kW-380-440V",
         "qty": 1.0
       },
       {
@@ -2951,7 +3365,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_5.5kW_380V": [
       {
-        "code": "CFW500-5.5kW-380V",
+        "code": "CFW500-5.5kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -2969,7 +3383,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_5.5kW_440V": [
       {
-        "code": "CFW500-5.5kW-440V",
+        "code": "CFW500-5.5kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3005,7 +3419,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_7.5kW_380V": [
       {
-        "code": "CFW500-7.5kW-380V",
+        "code": "CFW500-7.5kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3023,7 +3437,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_7.5kW_440V": [
       {
-        "code": "CFW500-7.5kW-440V",
+        "code": "CFW500-7.5kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3059,7 +3473,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_11kW_380V": [
       {
-        "code": "CFW500-11kW-380V",
+        "code": "CFW500-11kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3077,7 +3491,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_11kW_440V": [
       {
-        "code": "CFW500-11kW-440V",
+        "code": "CFW500-11kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3113,7 +3527,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_15kW_380V": [
       {
-        "code": "CFW500-15kW-380V",
+        "code": "CFW500-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3131,7 +3545,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_15kW_440V": [
       {
-        "code": "CFW500-15kW-440V",
+        "code": "CFW500-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3167,7 +3581,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_18.5kW_380V": [
       {
-        "code": "CFW500-18.5kW-380V",
+        "code": "CFW500-18.5kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3185,7 +3599,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_18.5kW_440V": [
       {
-        "code": "CFW500-18.5kW-440V",
+        "code": "CFW500-18.5kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3221,7 +3635,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_22kW_380V": [
       {
-        "code": "CFW500-22kW-380V",
+        "code": "CFW500-22kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3239,7 +3653,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_22kW_440V": [
       {
-        "code": "CFW500-22kW-440V",
+        "code": "CFW500-22kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3275,7 +3689,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_30kW_380V": [
       {
-        "code": "CFW500-30kW-380V",
+        "code": "CFW500-30kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3293,7 +3707,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_30kW_440V": [
       {
-        "code": "CFW500-30kW-440V",
+        "code": "CFW500-30kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3329,7 +3743,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_37kW_380V": [
       {
-        "code": "CFW500-37kW-380V",
+        "code": "CFW500-37kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3347,7 +3761,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_37kW_440V": [
       {
-        "code": "CFW500-37kW-440V",
+        "code": "CFW500-37kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3383,7 +3797,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_45kW_380V": [
       {
-        "code": "CFW500-45kW-380V",
+        "code": "CFW500-45kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3401,7 +3815,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_45kW_440V": [
       {
-        "code": "CFW500-45kW-440V",
+        "code": "CFW500-45kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3437,7 +3851,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_55kW_380V": [
       {
-        "code": "CFW500-55kW-380V",
+        "code": "CFW500-55kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3455,7 +3869,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_55kW_440V": [
       {
-        "code": "CFW500-55kW-440V",
+        "code": "CFW500-55kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3491,7 +3905,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_75kW_380V": [
       {
-        "code": "CFW500-75kW-380V",
+        "code": "CFW500-75kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3509,7 +3923,7 @@ const PRECOS_DATABASE = {
     ],
     "Inversor_75kW_440V": [
       {
-        "code": "CFW500-75kW-440V",
+        "code": "CFW500-75kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3549,7 +3963,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_0.18kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3571,7 +3985,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_0.18kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3615,7 +4029,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_0.37kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3637,7 +4051,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_0.37kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3681,7 +4095,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_0.75kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3703,7 +4117,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_0.75kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3747,7 +4161,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_1.5kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3769,7 +4183,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_1.5kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3813,7 +4227,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_2.2kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3835,7 +4249,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_2.2kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3879,7 +4293,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_3.0kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3901,7 +4315,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_3.0kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -3945,7 +4359,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_4.0kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -3967,7 +4381,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_4.0kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4011,7 +4425,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_5.5kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4033,7 +4447,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_5.5kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4077,7 +4491,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_7.5kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4099,7 +4513,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_7.5kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4143,7 +4557,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_11kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4165,7 +4579,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_11kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4209,7 +4623,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_15kW_380V": [
       {
-        "code": "SOFTSTARTER-15kW-380V",
+        "code": "SOFTSTARTER-15kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4231,7 +4645,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_15kW_440V": [
       {
-        "code": "SOFTSTARTER-15kW-440V",
+        "code": "SOFTSTARTER-15kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4275,7 +4689,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_18.5kW_380V": [
       {
-        "code": "SOFTSTARTER-18.5kW-380V",
+        "code": "SOFTSTARTER-18.5kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4297,7 +4711,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_18.5kW_440V": [
       {
-        "code": "SOFTSTARTER-18.5kW-440V",
+        "code": "SOFTSTARTER-18.5kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4341,7 +4755,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_22kW_380V": [
       {
-        "code": "SOFTSTARTER-22kW-380V",
+        "code": "SOFTSTARTER-22kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4363,7 +4777,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_22kW_440V": [
       {
-        "code": "SOFTSTARTER-22kW-440V",
+        "code": "SOFTSTARTER-22kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4407,7 +4821,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_30kW_380V": [
       {
-        "code": "SOFTSTARTER-30kW-380V",
+        "code": "SOFTSTARTER-30kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4429,7 +4843,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_30kW_440V": [
       {
-        "code": "SOFTSTARTER-30kW-440V",
+        "code": "SOFTSTARTER-30kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4473,7 +4887,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_37kW_380V": [
       {
-        "code": "SOFTSTARTER-37kW-380V",
+        "code": "SOFTSTARTER-37kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4495,7 +4909,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_37kW_440V": [
       {
-        "code": "SOFTSTARTER-37kW-440V",
+        "code": "SOFTSTARTER-37kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4539,7 +4953,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_45kW_380V": [
       {
-        "code": "SOFTSTARTER-45kW-380V",
+        "code": "SOFTSTARTER-45kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4561,7 +4975,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_45kW_440V": [
       {
-        "code": "SOFTSTARTER-45kW-440V",
+        "code": "SOFTSTARTER-45kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4605,7 +5019,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_55kW_380V": [
       {
-        "code": "SOFTSTARTER-55kW-380V",
+        "code": "SOFTSTARTER-55kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4627,7 +5041,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_55kW_440V": [
       {
-        "code": "SOFTSTARTER-55kW-440V",
+        "code": "SOFTSTARTER-55kW-380-440V",
         "qty": 1.0
       },
       {
@@ -4671,7 +5085,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_75kW_380V": [
       {
-        "code": "SOFTSTARTER-75kW-380V",
+        "code": "SOFTSTARTER-75kW-380-380-440V",
         "qty": 1.0
       },
       {
@@ -4693,7 +5107,7 @@ const PRECOS_DATABASE = {
     ],
     "SoftStarter_75kW_440V": [
       {
-        "code": "SOFTSTARTER-75kW-440V",
+        "code": "SOFTSTARTER-75kW-380-440V",
         "qty": 1.0
       },
       {

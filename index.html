@@ -42,6 +42,18 @@
           </button>
         </div>
         <div class="nav-item">
+          <button class="nav-link" data-target="infra-view">
+            <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            Infraestrutura
+          </button>
+        </div>
+        <div class="nav-item">
+          <button class="nav-link" data-target="cargas-view">
+            <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Resumo de Cargas
+          </button>
+        </div>
+        <div class="nav-item">
           <button class="nav-link" data-target="help-view">
             <svg viewBox="0 0 24 24"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             Ajuda & Guia
@@ -178,54 +190,57 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
               <div class="form-group">
                 <label class="form-label">Tensão de Alimentação</label>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                  <div class="checkbox-tile" id="panel-voltage-220-tile">
+                  <label class="checkbox-tile" id="panel-voltage-220-tile">
                     <input type="checkbox" name="panel-voltage" id="panel-voltage-220" value="220V">
                     <span>220V</span>
-                  </div>
-                  <div class="checkbox-tile" id="panel-voltage-380-tile">
+                  </label>
+                  <label class="checkbox-tile" id="panel-voltage-380-tile">
                     <input type="checkbox" name="panel-voltage" id="panel-voltage-380" value="380V">
                     <span>380V</span>
-                  </div>
-                  <div class="checkbox-tile" id="panel-voltage-440-tile">
+                  </label>
+                  <label class="checkbox-tile" id="panel-voltage-440-tile">
                     <input type="checkbox" name="panel-voltage" id="panel-voltage-440" value="440V">
                     <span>440V</span>
-                  </div>
+                  </label>
                 </div>
               </div>
             </div>
 
-            <!-- Panel-level HMI Section (Only visible for Automação and Completo) -->
-            <div id="panel-ihm-section" class="hidden-section" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Terá IHM?</label>
-                  <div class="checkbox-tile" id="panel-ihm-checkbox-tile">
-                    <input type="checkbox" id="panel-has-ihm">
-                    <span id="panel-has-ihm-label">Não</span>
+            <!-- Panel-level Automation Extras Section (HMI & SCADA) -->
+            <div id="panel-automation-extras-section" class="hidden-section" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+              <div class="form-row" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                
+                <!-- HMI options container -->
+                <div id="panel-ihm-section" class="hidden-section" style="display: flex; gap: 20px; flex: 2; min-width: 250px; border: none; margin: 0; padding: 0;">
+                  <div class="form-group" style="flex: 1; min-width: 120px;">
+                    <label class="form-label">Terá IHM?</label>
+                    <div class="checkbox-tile" id="panel-ihm-checkbox-tile">
+                      <input type="checkbox" id="panel-has-ihm">
+                      <span id="panel-has-ihm-label">Não</span>
+                    </div>
+                  </div>
+                  <div class="form-group hidden-section" id="panel-ihm-size-group" style="flex: 1; min-width: 120px;">
+                    <label class="form-label" for="panel-ihm-size">Tamanho da IHM</label>
+                    <select class="form-control" id="panel-ihm-size">
+                      <option value="4.3&quot;">4.3"</option>
+                      <option value="7.0&quot;">7.0"</option>
+                      <option value="10&quot;">10"</option>
+                      <option value="15&quot;">15"</option>
+                    </select>
                   </div>
                 </div>
-                <div class="form-group hidden-section" id="panel-ihm-size-group">
-                  <label class="form-label" for="panel-ihm-size">Tamanho da IHM</label>
-                  <select class="form-control" id="panel-ihm-size">
-                    <option value="4.3&quot;">4.3"</option>
-                    <option value="7.0&quot;">7.0"</option>
-                    <option value="10&quot;">10"</option>
-                    <option value="15&quot;">15"</option>
-                  </select>
-                </div>
-              </div>
-            </div>
 
-            <!-- Panel-level SCADA Section (For Automação, Completo and Remoto) -->
-            <div id="panel-supervisorio-section" class="hidden-section" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Sistema Supervisório?</label>
-                  <div class="checkbox-tile" id="panel-supervisorio-checkbox-tile">
-                    <input type="checkbox" id="panel-has-supervisorio">
-                    <span id="panel-has-supervisorio-label">Não</span>
+                <!-- SCADA options container -->
+                <div id="panel-supervisorio-section" class="hidden-section" style="flex: 1; min-width: 150px; border: none; margin: 0; padding: 0;">
+                  <div class="form-group">
+                    <label class="form-label">Sistema Supervisório?</label>
+                    <div class="checkbox-tile" id="panel-supervisorio-checkbox-tile">
+                      <input type="checkbox" id="panel-has-supervisorio">
+                      <span id="panel-has-supervisorio-label">Não</span>
+                    </div>
                   </div>
                 </div>
+
               </div>
             </div>
 
@@ -305,7 +320,7 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
                   <label class="checkbox-tile"><input type="checkbox" name="starting-type" value="Direta"> Direta</label>
                   <label class="checkbox-tile"><input type="checkbox" name="starting-type" value="Inversor"> Inversor</label>
                   <label class="checkbox-tile"><input type="checkbox" name="starting-type" value="SoftStarter"> SoftStarter</label>
-                  <label class="checkbox-tile"><input type="checkbox" name="starting-type" value="EC"> EC</label>
+                  <label class="checkbox-tile" id="starting-type-ec-tile"><input type="checkbox" name="starting-type" value="EC"> EC</label>
                 </div>
               </div>
 
@@ -315,19 +330,14 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
                 <div id="aut-fields-uta" class="hidden-section">
                   <div class="form-group">
                     <label class="form-label">Definir Leituras (UTA)</label>
-                    <div class="checkbox-grid">
-                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="Temperatura"> Temperatura</label>
-                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="Umidade"> Umidade</label>
-                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="CO2"> CO2</label>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Definir Partida (Automação UTA)</label>
-                    <div class="checkbox-grid">
-                      <label class="checkbox-tile"><input type="checkbox" name="uta-starts" value="Direta"> Direta</label>
-                      <label class="checkbox-tile"><input type="checkbox" name="uta-starts" value="Inversor"> Inversor</label>
-                      <label class="checkbox-tile"><input type="checkbox" name="uta-starts" value="SoftStarter"> SoftStarter</label>
-                      <label class="checkbox-tile"><input type="checkbox" name="uta-starts" value="EC"> EC</label>
+                    <div class="checkbox-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="Temp Duto"> Temperatura (Duto)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="Temp Ambiente"> Temperatura (Amb.)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="Umid Duto"> Umidade (Duto)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="Umid Ambiente"> Umidade (Amb.)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="CO2 Duto"> CO2 (Duto)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="CO2 Ambiente"> CO2 (Amb.)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="uta-readings" value="Vazão"> Vazão</label>
                     </div>
                   </div>
                 </div>
@@ -336,23 +346,14 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
                 <div id="aut-fields-excv" class="hidden-section">
                   <div class="form-group">
                     <label class="form-label">Definir Leituras (EX/CV)</label>
-                    <div class="checkbox-grid">
-                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Temperatura"> Temperatura</label>
-                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Umidade"> Umidade</label>
-                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="CO2"> CO2</label>
+                    <div class="checkbox-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Temp Duto"> Temperatura (Duto)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Temp Ambiente"> Temperatura (Amb.)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Umid Duto"> Umidade (Duto)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Umid Ambiente"> Umidade (Amb.)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="CO2 Duto"> CO2 (Duto)</label>
+                      <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="CO2 Ambiente"> CO2 (Amb.)</label>
                       <label class="checkbox-tile"><input type="checkbox" name="excv-readings" value="Vazão"> Vazão</label>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- BOMBAS Option -->
-                <div id="aut-fields-bombas" class="hidden-section">
-                  <div class="form-group">
-                    <label class="form-label">Definir Padrão (BOMBAS)</label>
-                    <div class="checkbox-grid">
-                      <label class="checkbox-tile"><input type="checkbox" name="bombas-standards" value="Partida Direta"> Partida Direta</label>
-                      <label class="checkbox-tile"><input type="checkbox" name="bombas-standards" value="Inversor"> Inversor</label>
-                      <label class="checkbox-tile"><input type="checkbox" name="bombas-standards" value="SoftStarter"> SoftStarter</label>
                     </div>
                   </div>
                 </div>
@@ -398,12 +399,20 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
                 <!-- Painel de Detalhes do Aquecimento (Hidden by default) -->
                 <div id="uta-heating-details-panel" class="hidden-section" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
                   <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Configurações do Aquecimento</h4>
-                  <div class="form-row">
-                    <div class="form-group">
+                  <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 120px;">
                       <label class="form-label" for="uta-heating-power">Potência de Aquecimento (kW)</label>
                       <input class="form-control" type="text" id="uta-heating-power" placeholder="Ex: 3,5">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="flex: 1; min-width: 120px;">
+                      <label class="form-label" for="uta-heating-stages">Quantidade de Estágios</label>
+                      <select class="form-control" id="uta-heating-stages">
+                        <option value="1" selected>1 Estágio</option>
+                        <option value="2">2 Estágios</option>
+                        <option value="3">3 Estágios</option>
+                      </select>
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
                       <label class="form-label">Tipo de Controle (Aquecimento)</label>
                       <div style="display: flex; gap: 15px; align-items: center; height: 38px;">
                         <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
@@ -420,12 +429,20 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
                 <!-- Painel de Detalhes da Umidificação (Hidden by default) -->
                 <div id="uta-humid-details-panel" class="hidden-section" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
                   <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Configurações da Umidificação</h4>
-                  <div class="form-row">
-                    <div class="form-group">
+                  <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 120px;">
                       <label class="form-label" for="uta-humid-power">Potência de Umidificação (kW)</label>
                       <input class="form-control" type="text" id="uta-humid-power" placeholder="Ex: 2,2">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="flex: 1; min-width: 120px;">
+                      <label class="form-label" for="uta-humid-stages">Quantidade de Estágios</label>
+                      <select class="form-control" id="uta-humid-stages">
+                        <option value="1" selected>1 Estágio</option>
+                        <option value="2">2 Estágios</option>
+                        <option value="3">3 Estágios</option>
+                      </select>
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
                       <label class="form-label">Tipo de Controle (Umidificação)</label>
                       <div style="display: flex; gap: 15px; align-items: center; height: 38px;">
                         <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
@@ -516,6 +533,124 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
         </div>
       </section>
 
+      <!-- VIEW 6: INFRAESTRUTURA CONFIGURATION -->
+      <section id="infra-view" class="view-section">
+        <div class="card">
+          <h2 class="card-title" style="margin-bottom: 16px;">Configuração de Infraestrutura Elétrica</h2>
+          <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-secondary);">
+            Selecione um quadro elétrico cadastrado para definir as distâncias (em metros) até cada um de seus equipamentos. O sistema irá calcular automaticamente o dimensionamento de tubulações, cabos PP/Shield, conduletes, prensa-cabos, uniduts e suportações.
+          </p>
+          
+          <div class="form-group" style="max-width: 400px; margin-bottom: 24px;">
+            <label class="form-label" for="infra-panel-select">Selecione o Quadro Elétrico</label>
+            <select class="form-control" id="infra-panel-select">
+              <option value="">-- Escolha um Quadro --</option>
+            </select>
+          </div>
+
+          <div id="infra-config-panel" class="hidden-section">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 16px; color: var(--primary);">Definir Distâncias dos Equipamentos</h3>
+            <div id="infra-equipments-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 30px;">
+              <!-- Dynamically rendered equipment inputs -->
+            </div>
+            
+            <div style="border-top: 1px solid var(--border-color); padding-top: 24px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--primary); margin: 0;">Infraestrutura do Quadro Selecionado</h3>
+                <button class="btn btn-primary" id="btn-add-infra-to-consolidated" type="button" style="height: 36px; padding: 0 16px; font-size: 0.85rem;">
+                  <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; margin-right:4px;"><path d="M12 5v14M5 12h14"/></svg>
+                  Adicionar à Lista Geral
+                </button>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="text-align: left; padding: 12px 16px;">Código</th>
+                      <th style="text-align: left; padding: 12px 16px;">Descrição</th>
+                      <th style="text-align: left; padding: 12px 16px;">Marca</th>
+                      <th style="text-align: right; padding: 12px 16px;">Qtd</th>
+                      <th style="text-align: left; padding: 12px 16px;">Unid</th>
+                      <th style="text-align: right; padding: 12px 16px;">Unitário</th>
+                      <th style="text-align: right; padding: 12px 16px;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="infra-panel-table-body">
+                    <!-- Rendered dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="infra-consolidated-panel" style="border-top: 2px solid var(--border-color); margin-top: 40px; padding-top: 30px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--primary);">Lista Geral de Infraestrutura Consolidada</h3>
+            <p style="margin-bottom: 20px; font-size: 0.85rem; color: var(--text-secondary);">
+              Soma acumulada dos materiais de infraestrutura de quadros selecionados.
+            </p>
+            
+            <div style="margin-bottom: 24px; padding: 16px; background-color: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+              <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">Quadros considerados na lista geral:</h4>
+              <div id="infra-added-panels-list" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <!-- Dynamically populated list of added panels -->
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left; padding: 12px 16px;">Código</th>
+                    <th style="text-align: left; padding: 12px 16px;">Descrição</th>
+                    <th style="text-align: left; padding: 12px 16px;">Marca</th>
+                    <th style="text-align: right; padding: 12px 16px;">Qtd Total</th>
+                    <th style="text-align: left; padding: 12px 16px;">Unid</th>
+                    <th style="text-align: right; padding: 12px 16px;">Unitário</th>
+                    <th style="text-align: right; padding: 12px 16px;">Total Geral</th>
+                  </tr>
+                </thead>
+                <tbody id="infra-consolidated-table-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 5: CARGAS LIST -->
+      <section id="cargas-view" class="view-section">
+        <div class="card">
+          <h2 class="card-title" style="margin-bottom: 16px;">Resumo Geral de Cargas (NBR 541 project specs)</h2>
+          <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-secondary);">
+            Esta aba exibe a relação de cargas de cada quadro cadastrado no orçamento, indicando a potência, a corrente e o cabeamento projetado para o quadro e para cada um de seus equipamentos.
+          </p>
+          
+          <div class="table-responsive" id="cargas-table-wrapper">
+            <table class="data-table" style="width: 100%; border-collapse: collapse;" id="cargas-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; padding: 12px 16px;">Quadro / Equipamento</th>
+                  <th style="text-align: left; padding: 12px 16px;">Tipo</th>
+                  <th style="text-align: left; padding: 12px 16px;">Tensão</th>
+                  <th style="text-align: right; padding: 12px 16px;">Potência (kW)</th>
+                  <th style="text-align: right; padding: 12px 16px;">Corrente (A)</th>
+                  <th style="text-align: left; padding: 12px 16px;">Cabo de Potência</th>
+                </tr>
+              </thead>
+              <tbody id="cargas-table-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="empty-state" id="cargas-empty-state" style="display: none;">
+            <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: none; stroke: currentColor; stroke-width: 2;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <h3>Nenhum Quadro Cadastrado</h3>
+            <p>Você ainda não adicionou nenhum quadro elétrico a este orçamento.</p>
+          </div>
+        </div>
+      </section>
+
       <!-- VIEW 4: HELP & GUIDE -->
       <section id="help-view" class="view-section">
         <div class="card">
@@ -564,7 +699,7 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
       <div class="modal-header">
         <h3 class="card-title" id="edit-modal-title">Editar Quadro Elétrico</h3>
         <button class="btn-icon-only" onclick="closeEditModal()" aria-label="Fechar modal">
-          <svg viewBox="0 0 24 24" style="width:16px; height:16px;"><path d="M6 18L18 6M6 6l12 12"/></svg>
+          <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
       <div class="modal-body">
@@ -580,53 +715,56 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
           <div class="form-group" style="margin-top: 15px; margin-bottom: 15px;">
             <label class="form-label">Tensão de Alimentação</label>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <div class="checkbox-tile" id="edit-voltage-220-tile">
+              <label class="checkbox-tile" id="edit-voltage-220-tile">
                 <input type="checkbox" name="edit-panel-voltage" id="edit-panel-voltage-220" value="220V">
                 <span>220V</span>
-              </div>
-              <div class="checkbox-tile" id="edit-voltage-380-tile">
+              </label>
+              <label class="checkbox-tile" id="edit-voltage-380-tile">
                 <input type="checkbox" name="edit-panel-voltage" id="edit-panel-voltage-380" value="380V">
                 <span>380V</span>
-              </div>
-              <div class="checkbox-tile" id="edit-voltage-440-tile">
+              </label>
+              <label class="checkbox-tile" id="edit-voltage-440-tile">
                 <input type="checkbox" name="edit-panel-voltage" id="edit-panel-voltage-440" value="440V">
                 <span>440V</span>
-              </div>
+              </label>
             </div>
           </div>
 
-          <!-- Conditional: HMI options for automation-related panels -->
-          <div id="edit-panel-ihm-section" class="hidden-section">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Terá IHM?</label>
-                <div class="checkbox-tile" id="edit-ihm-checkbox-tile">
-                  <input type="checkbox" id="edit-panel-has-ihm">
-                  <span id="edit-panel-has-ihm-label">Não</span>
+          <!-- Conditional: HMI & SCADA options for edit modal -->
+          <div id="edit-panel-automation-extras-section" class="hidden-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+            <div class="form-row" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+              
+              <!-- HMI options container -->
+              <div id="edit-panel-ihm-section" class="hidden-section" style="display: flex; gap: 20px; flex: 2; min-width: 250px; border: none; margin: 0; padding: 0;">
+                <div class="form-group" style="flex: 1; min-width: 120px;">
+                  <label class="form-label">Terá IHM?</label>
+                  <div class="checkbox-tile" id="edit-ihm-checkbox-tile">
+                    <input type="checkbox" id="edit-panel-has-ihm">
+                    <span id="edit-panel-has-ihm-label">Não</span>
+                  </div>
+                </div>
+                <div class="form-group hidden-section" id="edit-panel-ihm-size-group" style="flex: 1; min-width: 120px;">
+                  <label class="form-label" for="edit-panel-ihm-size">Tamanho da IHM</label>
+                  <select class="form-control" id="edit-panel-ihm-size">
+                    <option value="4.3&quot;">4.3"</option>
+                    <option value="7.0&quot;">7.0"</option>
+                    <option value="10&quot;">10"</option>
+                    <option value="15&quot;">15"</option>
+                  </select>
                 </div>
               </div>
-              <div class="form-group hidden-section" id="edit-panel-ihm-size-group">
-                <label class="form-label" for="edit-panel-ihm-size">Tamanho da IHM</label>
-                <select class="form-control" id="edit-panel-ihm-size">
-                  <option value="4.3&quot;">4.3"</option>
-                  <option value="7.0&quot;">7.0"</option>
-                  <option value="10&quot;">10"</option>
-                  <option value="15&quot;">15"</option>
-                </select>
-              </div>
-            </div>
-          </div>
 
-          <!-- Conditional: SCADA option for automation-related panels -->
-          <div id="edit-panel-supervisorio-section" class="hidden-section" style="margin-top: 10px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Sistema Supervisório?</label>
-                <div class="checkbox-tile" id="edit-supervisorio-checkbox-tile">
-                  <input type="checkbox" id="edit-panel-has-supervisorio">
-                  <span id="edit-panel-has-supervisorio-label">Não</span>
+              <!-- SCADA options container -->
+              <div id="edit-panel-supervisorio-section" class="hidden-section" style="flex: 1; min-width: 150px; border: none; margin: 0; padding: 0;">
+                <div class="form-group">
+                  <label class="form-label">Sistema Supervisório?</label>
+                  <div class="checkbox-tile" id="edit-supervisorio-checkbox-tile">
+                    <input type="checkbox" id="edit-panel-has-supervisorio">
+                    <span id="edit-panel-has-supervisorio-label">Não</span>
+                  </div>
                 </div>
               </div>
+
             </div>
           </div>
 
@@ -661,6 +799,218 @@ Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
         <button class="btn btn-primary" id="btn-save-edit-panel">Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT EQUIPMENT MODAL -->
+  <div class="modal-overlay" id="edit-equipment-modal">
+    <div class="modal-container" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3 class="card-title">Editar Características do Equipamento</h3>
+        <button class="btn-icon-only" onclick="closeEditEquipmentModal()" aria-label="Fechar modal">
+          <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <form id="edit-equipment-form" onsubmit="event.preventDefault();">
+          <input type="hidden" id="edit-eq-panel-id">
+          <input type="hidden" id="edit-eq-id">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit-eq-name">Tag / Identificação</label>
+              <input class="form-control" type="text" id="edit-eq-name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-eq-type">Tipo de Equipamento</label>
+              <select class="form-control" id="edit-eq-type">
+                <option value="UTA">UTA (Unidade de Tratamento de Ar)</option>
+                <option value="EX/CV">EX/CV (Exaustor / Caixa de Ventilação)</option>
+                <option value="BOMBAS">BOMBAS (Bomba Hidráulica)</option>
+                <option value="CHILLER">CHILLER (Resfriador de Líquido)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="edit-eq-power-group">
+              <label class="form-label" id="edit-eq-power-label" for="edit-eq-power">Potência Principal</label>
+              <select class="form-control" id="edit-eq-power"></select>
+              <input class="form-control hidden-section" type="text" id="edit-eq-power-txt" placeholder="Ex: 150,0">
+            </div>
+            
+            <div class="form-group" id="edit-eq-start-group">
+              <label class="form-label">Tipo de Partida</label>
+              <div class="checkbox-grid">
+                <label class="checkbox-tile"><input type="checkbox" name="edit-eq-start" value="Direta"> Direta</label>
+                <label class="checkbox-tile"><input type="checkbox" name="edit-eq-start" value="Inversor"> Inversor</label>
+                <label class="checkbox-tile"><input type="checkbox" name="edit-eq-start" value="SoftStarter"> SoftStarter</label>
+                <label class="checkbox-tile" id="edit-eq-start-ec-tile"><input type="checkbox" name="edit-eq-start" value="EC"> EC</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Automation fields -->
+          <div id="edit-eq-automation-fields" class="hidden-section" style="padding-top: 15px; border-top: 1px dashed var(--border-color); margin-top: 15px;">
+            <!-- UTA readings -->
+            <div id="edit-aut-fields-uta" class="hidden-section">
+              <div class="form-group">
+                <label class="form-label">Definir Leituras (UTA)</label>
+                <div class="checkbox-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-uta-readings" value="Temp Duto"> Temperatura (Duto)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-uta-readings" value="Temp Ambiente"> Temperatura (Amb.)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-uta-readings" value="Umid Duto"> Umidade (Duto)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-uta-readings" value="Umid Ambiente"> Umidade (Amb.)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-uta-readings" value="CO2 Duto"> CO2 (Duto)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-uta-readings" value="CO2 Ambiente"> CO2 (Amb.)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-uta-readings" value="Vazão"> Vazão</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- EX/CV readings -->
+            <div id="edit-aut-fields-excv" class="hidden-section">
+              <div class="form-group">
+                <label class="form-label">Definir Leituras (EX/CV)</label>
+                <div class="checkbox-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-excv-readings" value="Temp Duto"> Temperatura (Duto)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-excv-readings" value="Temp Ambiente"> Temperatura (Amb.)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-excv-readings" value="Umid Duto"> Umidade (Duto)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-excv-readings" value="Umid Ambiente"> Umidade (Amb.)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-excv-readings" value="CO2 Duto"> CO2 (Duto)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-excv-readings" value="CO2 Ambiente"> CO2 (Amb.)</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-excv-readings" value="Vazão"> Vazão</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chiller readings -->
+            <div id="edit-aut-fields-chiller" class="hidden-section">
+              <div class="form-group">
+                <label class="form-label">Definir Leituras (Chiller)</label>
+                <div class="checkbox-grid">
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-chiller-readings" value="Temp Entrada"> Temp Entrada</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-chiller-readings" value="Temp. Saída"> Temp. Saída</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-chiller-readings" value="Pressão"> Pressão</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-chiller-readings" value="Vazão"> Vazão</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-chiller-readings" value="Val. Bloqueio"> Val. Bloqueio</label>
+                  <label class="checkbox-tile"><input type="checkbox" name="edit-chiller-readings" value="Val. Bypass"> Val. Bypass</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- UTA Additional Configs -->
+          <div id="edit-eq-uta-configs" class="hidden-section" style="padding-top: 15px; border-top: 1px dashed var(--border-color); margin-top: 15px;">
+            <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--primary);">Configurações de Aquecimento / Umidificação / Válvulas (UTA)</h3>
+            
+            <div class="form-row" style="margin-bottom: 15px;">
+              <div class="form-group" style="flex: 1;">
+                <div class="checkbox-tile" id="edit-eq-heating-tile">
+                  <input type="checkbox" id="edit-eq-has-heating">
+                  <span>Aquecimento</span>
+                </div>
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <div class="checkbox-tile" id="edit-eq-humid-tile">
+                  <input type="checkbox" id="edit-eq-has-humid">
+                  <span>Umidificação</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heating details -->
+            <div id="edit-eq-heating-panel" class="hidden-section" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
+              <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">Configurações do Aquecimento</h4>
+              <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 120px;">
+                  <label class="form-label" for="edit-eq-heating-power">Potência de Aquecimento (kW)</label>
+                  <input class="form-control" type="text" id="edit-eq-heating-power" placeholder="Ex: 3,5">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 120px;">
+                  <label class="form-label" for="edit-eq-heating-stages">Quantidade de Estágios</label>
+                  <select class="form-control" id="edit-eq-heating-stages">
+                    <option value="1">1 Estágio</option>
+                    <option value="2">2 Estágios</option>
+                    <option value="3">3 Estágios</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 150px;">
+                  <label class="form-label">Tipo de Controle (Aquecimento)</label>
+                  <div style="display: flex; gap: 15px; align-items: center; height: 38px;">
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="radio" name="edit-eq-heating-control" value="OnOff"> On/Off
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="radio" name="edit-eq-heating-control" value="Proporcional"> Proporcional
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Humid details -->
+            <div id="edit-eq-humid-panel" class="hidden-section" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
+              <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">Configurações da Umidificação</h4>
+              <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 120px;">
+                  <label class="form-label" for="edit-eq-humid-power">Potência de Umidificação (kW)</label>
+                  <input class="form-control" type="text" id="edit-eq-humid-power" placeholder="Ex: 2,2">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 120px;">
+                  <label class="form-label" for="edit-eq-humid-stages">Quantidade de Estágios</label>
+                  <select class="form-control" id="edit-eq-humid-stages">
+                    <option value="1">1 Estágio</option>
+                    <option value="2">2 Estágios</option>
+                    <option value="3">3 Estágios</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 150px;">
+                  <label class="form-label">Tipo de Controle (Umidificação)</label>
+                  <div style="display: flex; gap: 15px; align-items: center; height: 38px;">
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="radio" name="edit-eq-humid-control" value="OnOff"> On/Off
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                      <input type="radio" name="edit-eq-humid-control" value="Proporcional"> Proporcional
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expansion Type -->
+            <div class="form-group" style="margin-bottom: 15px;">
+              <label class="form-label">Tipo de Expansão (UTA)</label>
+              <div style="display: flex; gap: 20px; align-items: center; height: 38px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                  <input type="radio" name="edit-eq-expansion-type" value="Direta"> Expansão Direta
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                  <input type="radio" name="edit-eq-expansion-type" value="Indireta"> Expansão Indireta
+                </label>
+              </div>
+            </div>
+
+            <!-- Valve Type -->
+            <div id="edit-eq-valves-panel" class="hidden-section" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
+              <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">Válvulas (Expansão Indireta)</h4>
+              <div style="display: flex; gap: 20px; align-items: center; height: 38px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                  <input type="radio" name="edit-eq-valve-type" value="OnOff"> Válvula On/Off
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                  <input type="radio" name="edit-eq-valve-type" value="Proporcional"> Válvula Proporcional
+                </label>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditEquipmentModal()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-edit-equipment">Salvar Equipamento</button>
       </div>
     </div>
   </div>
