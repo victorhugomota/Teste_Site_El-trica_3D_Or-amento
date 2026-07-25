@@ -127,6 +127,31 @@ function calculatePanelComponents(panel) {
   const type = panel.type;
   const voltage = panel.voltage || '220V';
   
+  if (type === 'comando') {
+    const qty = parseInt(panel.quantity) || 1;
+    
+    // Fixed items (1x of each)
+    addComp('QMON-400x300x200', 1);
+    addComp('CANALETA-50X80', 1);
+    addComp('CANALETA-30X80', 1);
+    addComp('TOMADA-DIM', 1);
+    addComp('MINIDISJ-MDW-C10', 1);
+    
+    // Multiplied items (Quantity x ...)
+    addComp('CHAVE-SELETORA-3POS', qty * 1);
+    addComp('BORNE-BTWP-2.5', qty * 6);
+    addComp('PORTA-PLAQUETA', qty * 3);
+    addComp('CABO-1.0-VERMELHO', qty * 10);
+    addComp('CABO-1.0-AZUL', qty * 10);
+    addComp('CABO-1.0-CINZA', qty * 10);
+    addComp('TAMPA-BTWMP', qty * 2);
+    addComp('IDENTIFICADOR-BTW', qty * 1);
+    addComp('IDENTIFICADOR-BR5', qty * 1);
+    addComp('POSTE-FINAL', qty * 1);
+    
+    return Object.values(componentsMap);
+  }
+  
   // A) Count total equipments
   let totalEquips = 0;
   if (type === 'comando' || type === 'remoto') {
