@@ -4068,12 +4068,6 @@ function exportToPDF() {
     return;
   }
   
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    alert("Por favor, permita pop-ups para este site para exportar o PDF.");
-    return;
-  }
-  
   const today = new Date();
   const dateStr = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   
@@ -4513,11 +4507,27 @@ function exportToPDF() {
 </html>
   `;
   
-  printWindow.document.write(html);
-  printWindow.document.close();
+  // Create a temporary hidden iframe to perform printing without popups or local file origin SecurityErrors
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  document.body.appendChild(iframe);
   
-  printWindow.focus();
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.write(html);
+  doc.close();
+  
+  // Wait a short duration to ensure styles and font imports are ready before print dialog opens
   setTimeout(() => {
-    printWindow.print();
-  }, 500);
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    // Cleanup the iframe from the DOM
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
+  }, 300);
 }
