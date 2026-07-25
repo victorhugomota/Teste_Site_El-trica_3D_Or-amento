@@ -585,8 +585,10 @@ function calculatePanelComponents(panel) {
         if (motorPowerKw > 0) {
           motorCurrent = (motorPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
           const sec = getNBR5410CableSection(motorCurrent);
-          addComp(`CABO-POT-${sec}-PRETO`, 25);
-          addComp(`CABO-POT-${sec}-VERDE`, 10);
+          if (type !== 'automacao' && type !== 'remoto') {
+        addComp(`CABO-POT-${sec}-PRETO`, 25);
+        addComp(`CABO-POT-${sec}-VERDE`, 10);
+      }
           eq.calculatedCurrent = motorCurrent.toFixed(1).replace('.', ',') + ' A';
           eq.calculatedCable = sec + ' mm²';
         } else {
@@ -838,66 +840,72 @@ function calculatePanelComponents(panel) {
       if (eqType === 'UTA') {
         // Heating components
         if (eq.hasHeating && eq.heatingPower) {
-          const customKw = parsePowerKw(eq.heatingPower);
-          const stages = parseInt(eq.heatingStages) || 1;
-          const stageKw = customKw / stages;
-          
-          const stageCurrent = (stageKw * 1000) / (Math.sqrt(3) * voltageVal);
-          const breakerCode = getTripolarBreakerCode(stageKw, voltage);
-          const sec = getNBR5410CableSection(stageCurrent);
-          
-          // Power cable for heating stages
-          addComp(`CABO-POT-${sec}-PRETO`, stages * 25);
-          addComp(`CABO-POT-${sec}-VERDE`, stages * 10);
-          eq.heatingCalculatedCurrent = stageCurrent.toFixed(1).replace('.', ',') + ' A';
-          eq.heatingCalculatedCable = sec + ' mm²';
-          
-          if (eq.heatingControl === 'OnOff') {
-            const contatorCode = getContatorCodeForCurrent(stageCurrent);
-            addComp(contatorCode, stages);
-            addComp(breakerCode, stages);
-            addComp('PORTA-PLAQUETA', stages);
-          } else if (eq.heatingControl === 'Proporcional') {
-            const powerStr = stageKw % 1 === 0 ? stageKw.toFixed(0) : stageKw.toFixed(1).replace('.', ',');
-            const customName = `CONVERSOR DE POTÊNCIA ${powerStr}kW TENSÃO ${voltage} 0 À 10V`;
-            addComp('CONTROLADOR-PROP-AQUECIMENTO', stages, customName);
-            addComp(breakerCode, stages);
-            addComp('PORTA-PLAQUETA', stages);
-          }
-        } else {
+      const customKw = parsePowerKw(eq.heatingPower);
+      const stages = parseInt(eq.heatingStages) || 1;
+      const stageKw = customKw / stages;
+      
+      const stageCurrent = (stageKw * 1000) / (Math.sqrt(3) * voltageVal);
+      const breakerCode = getTripolarBreakerCode(stageKw, voltage);
+      const sec = getNBR5410CableSection(stageCurrent);
+      
+      if (type !== 'automacao' && type !== 'remoto') {
+        // Power cable for heating stages
+        addComp(`CABO-POT-${sec}-PRETO`, stages * 25);
+        addComp(`CABO-POT-${sec}-VERDE`, stages * 10);
+        
+        if (eq.heatingControl === 'OnOff') {
+          const contatorCode = getContatorCodeForCurrent(stageCurrent);
+          addComp(contatorCode, stages);
+          addComp(breakerCode, stages);
+          addComp('PORTA-PLAQUETA', stages);
+        } else if (eq.heatingControl === 'Proporcional') {
+          const powerStr = stageKw % 1 === 0 ? stageKw.toFixed(0) : stageKw.toFixed(1).replace('.', ',');
+          const customName = `CONVERSOR DE POTÊNCIA ${powerStr}kW TENSÃO ${voltage} 0 À 10V`;
+          addComp('CONTROLADOR-PROP-AQUECIMENTO', stages, customName);
+          addComp(breakerCode, stages);
+          addComp('PORTA-PLAQUETA', stages);
+        }
+      }
+      
+      eq.heatingCalculatedCurrent = stageCurrent.toFixed(1).replace('.', ',') + ' A';
+      eq.heatingCalculatedCable = sec + ' mm²';
+    } else {
           eq.heatingCalculatedCurrent = null;
           eq.heatingCalculatedCable = null;
         }
 
         // Humidification components
         if (eq.hasHumid && eq.humidPower) {
-          const customKw = parsePowerKw(eq.humidPower);
-          const stages = parseInt(eq.humidStages) || 1;
-          const stageKw = customKw / stages;
-          
-          const stageCurrent = (stageKw * 1000) / (Math.sqrt(3) * voltageVal);
-          const breakerCode = getTripolarBreakerCode(stageKw, voltage);
-          const sec = getNBR5410CableSection(stageCurrent);
-          
-          // Power cable for humidification stages
-          addComp(`CABO-POT-${sec}-PRETO`, stages * 25);
-          addComp(`CABO-POT-${sec}-VERDE`, stages * 10);
-          eq.humidCalculatedCurrent = stageCurrent.toFixed(1).replace('.', ',') + ' A';
-          eq.humidCalculatedCable = sec + ' mm²';
-          
-          if (eq.humidControl === 'OnOff') {
-            const contatorCode = getContatorCodeForCurrent(stageCurrent);
-            addComp(contatorCode, stages);
-            addComp(breakerCode, stages);
-            addComp('PORTA-PLAQUETA', stages);
-          } else if (eq.humidControl === 'Proporcional') {
-            const powerStr = stageKw % 1 === 0 ? stageKw.toFixed(0) : stageKw.toFixed(1).replace('.', ',');
-            const customName = `CONVERSOR DE POTÊNCIA ${powerStr}kW TENSÃO ${voltage} 0 À 10V`;
-            addComp('CONTROLADOR-PROP-UMIDIFICACAO', stages, customName);
-            addComp(breakerCode, stages);
-            addComp('PORTA-PLAQUETA', stages);
-          }
-        } else {
+      const customKw = parsePowerKw(eq.humidPower);
+      const stages = parseInt(eq.humidStages) || 1;
+      const stageKw = customKw / stages;
+      
+      const stageCurrent = (stageKw * 1000) / (Math.sqrt(3) * voltageVal);
+      const breakerCode = getTripolarBreakerCode(stageKw, voltage);
+      const sec = getNBR5410CableSection(stageCurrent);
+      
+      if (type !== 'automacao' && type !== 'remoto') {
+        // Power cable for humidification stages
+        addComp(`CABO-POT-${sec}-PRETO`, stages * 25);
+        addComp(`CABO-POT-${sec}-VERDE`, stages * 10);
+        
+        if (eq.humidControl === 'OnOff') {
+          const contatorCode = getContatorCodeForCurrent(stageCurrent);
+          addComp(contatorCode, stages);
+          addComp(breakerCode, stages);
+          addComp('PORTA-PLAQUETA', stages);
+        } else if (eq.humidControl === 'Proporcional') {
+          const powerStr = stageKw % 1 === 0 ? stageKw.toFixed(0) : stageKw.toFixed(1).replace('.', ',');
+          const customName = `CONVERSOR DE POTÊNCIA ${powerStr}kW TENSÃO ${voltage} 0 À 10V`;
+          addComp('CONTROLADOR-PROP-UMIDIFICACAO', stages, customName);
+          addComp(breakerCode, stages);
+          addComp('PORTA-PLAQUETA', stages);
+        }
+      }
+      
+      eq.humidCalculatedCurrent = stageCurrent.toFixed(1).replace('.', ',') + ' A';
+      eq.humidCalculatedCable = sec + ' mm²';
+    } else {
           eq.humidCalculatedCurrent = null;
           eq.humidCalculatedCable = null;
         }
@@ -907,6 +915,10 @@ function calculatePanelComponents(panel) {
     });
     
     // D) CLP and Connector kit rules based on equipment counts
+  if (type === 'automacao' || type === 'remoto' || type === 'completo') {
+    let clpCode = null;
+    let connCode = null;
+
     let selectedClpRule = null;
     if (automationEquipsCount['UTA'] > 0) {
       const count = automationEquipsCount['UTA'];
@@ -918,11 +930,25 @@ function calculatePanelComponents(panel) {
       const count = automationEquipsCount['BOMBAS'];
       selectedClpRule = PRECOS_DATABASE.clpRules.find(r => r.equipType === 'BOMBAS' && count >= r.minQty && count <= r.maxQty);
     }
-    
+
     if (selectedClpRule) {
-      if (selectedClpRule.clpCode) addComp(selectedClpRule.clpCode, selectedClpRule.clpQty);
-      if (selectedClpRule.connCode) addComp(selectedClpRule.connCode, selectedClpRule.connQty);
+      clpCode = selectedClpRule.clpCode;
+      connCode = selectedClpRule.connCode;
+    } else {
+      // Fallback/Virtual equipments based selection for control panels
+      const totalCount = panel.equipments && panel.equipments.length > 0 ? panel.equipments.length : (parseInt(panel.quantity) || 0);
+      if (totalCount >= 3) {
+        clpCode = 'CLP-CAREL-PCOOEM-MEDIO';
+        connCode = 'CONECTORES-PCOOEM-MEDIO';
+      } else {
+        clpCode = 'CLP-CAREL-CPCO-MINI';
+        connCode = 'CONECTORES-CPCO-SMALL';
+      }
     }
+
+    if (clpCode) addComp(clpCode, 1);
+    if (connCode) addComp(connCode, 1);
+  }
   }
   
   // 3. HMI Selection
@@ -2323,6 +2349,15 @@ function renderInfraView() {
     }
   };
 
+  const centralCb = document.getElementById('central-automation-checkbox');
+  if (centralCb) {
+    centralCb.checked = !!budgetState.hasCentralAutomation;
+    centralCb.onchange = (e) => {
+      budgetState.hasCentralAutomation = e.target.checked;
+      saveState();
+    };
+  }
+
   renderConsolidatedInfraTable();
 }
 
@@ -2333,7 +2368,17 @@ function renderInfraEquipmentsInputs(panel) {
   
   panel.infraDistances = panel.infraDistances || {};
   
-  panel.equipments.forEach(eq => {
+  let list = [];
+  if (panel.equipments && panel.equipments.length > 0) {
+    list = panel.equipments.map(eq => ({ id: eq.id, name: eq.name || eq.type, type: eq.type }));
+  } else if (panel.quantity && (panel.type === 'comando' || panel.type === 'remoto')) {
+    const label = panel.type === 'comando' ? 'Ponto de Comando' : 'Ponto de Automação Remota';
+    for (let i = 1; i <= panel.quantity; i++) {
+      list.push({ id: `virtual-${i}`, name: `${label} ${i}`, type: panel.type.toUpperCase() });
+    }
+  }
+  
+  list.forEach(eq => {
     const item = document.createElement('div');
     item.className = 'card';
     item.style.padding = '16px';
@@ -2342,7 +2387,7 @@ function renderInfraEquipmentsInputs(panel) {
     item.style.borderRadius = 'var(--radius-sm)';
     
     item.innerHTML = `
-      <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">${eq.name || eq.type} <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">${eq.type}</span></h4>
+      <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">${eq.name} <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">${eq.type}</span></h4>
       <div class="form-group" style="margin: 0;">
         <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Distância até o Quadro</label>
         <div style="display: flex; align-items: center; gap: 8px;">
