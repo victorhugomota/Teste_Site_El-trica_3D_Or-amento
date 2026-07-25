@@ -4052,8 +4052,21 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEditEquipmentEvents();
 });
 
+function clearAllPanels() {
+  if (confirm("ATENÇÃO: Você tem certeza de que deseja apagar todos os quadros gerados e limpar o orçamento atual? Esta ação não pode ser desfeita.")) {
+    budgetState.panels = [];
+    budgetState.consolidatedInfraPanels = [];
+    saveState();
+    renderDashboard();
+    renderPanelsList();
+    renderCargasView();
+    renderInfraView();
+    alert("Orçamento limpo com sucesso.");
+  }
+}
+
 function generateTestScenarios() {
-  const msg = `ATENÇÃO: Este procedimento irá substituir o orçamento atual por 13 quadros de teste para validação.\n\nSerão adicionados os seguintes quadros:\n1. T01 - UTA Completo (Direta 2.2kW 220V)\n2. T02 - UTA Completo (Inversor 4kW 380V)\n3. T03 - UTA Completo (SoftStarter 15kW 440V)\n4. T04 - UTA Completo (Partida EC 3kW 220V)\n5. T05 - EX/CV Potência (Direta 0.75kW 220V)\n6. T06 - EX/CV Pot. e Com. (Inversor 3kW 380V)\n7. T07 - BOMBAS Completo (Direta 1.5kW 220V)\n8. T08 - BOMBAS Completo (Inversor 4kW 380V)\n9. T09 - BOMBAS Completo (SoftStarter 22kW 440V)\n10. T10 - CHILLER Completo (30kW 380V)\n11. T11 - UTA Completo + Opcionais (Inversor 4kW 380V)\n12. T12 - Comando Exclusivo (3 Equips)\n13. T13 - Remoto com IHM 7.0 (2 Equips)\n\nDeseja prosseguir com a geração dos cenários de teste?`;
+  const msg = `ATENÇÃO: Este procedimento irá substituir o orçamento atual por 5 quadros de teste para validação.\n\nSerão adicionados os seguintes quadros:\n1. T01 - Quadro de Potência (2 Equips: Bomba Inversor 4kW / Exaustor Direta 1.5kW)\n2. T02 - Quadro de Comando (2 Equips)\n3. T03 - Quadro Remoto (2 Equips + IHM 7.0\")\n4. T04 - Quadro de Automação (2 Equips: UTA c/ sensores / Exaustor c/ sensores)\n5. T05 - Quadro Completo (2 Equips: UTA c/ opc. climatiz. / Bomba SoftStarter 15kW)\n\nDeseja prosseguir com a geração dos cenários de teste?`;
   if (!confirm(msg)) {
     return;
   }
@@ -4075,160 +4088,73 @@ function generateTestScenarios() {
   
   const panelsData = [
     {
-      name: "T01 - UTA Completo (Direta 2.2kW 220V)",
-      type: "completo",
-      voltage: "220V",
-      hasIhm: true,
-      ihmSize: '7.0"',
-      hasSupervisorio: true,
-      equips: [
-        createEquip("UTA", "UTA-01", "2.2kW", "Direta", {
-          readings: ["Temp Duto", "Umid Duto"]
-        })
-      ]
-    },
-    {
-      name: "T02 - UTA Completo (Inversor 4kW 380V)",
-      type: "completo",
-      voltage: "380V",
-      hasIhm: true,
-      ihmSize: '7.0"',
-      hasSupervisorio: true,
-      equips: [
-        createEquip("UTA", "UTA-02", "4.0kW", "Inversor", {
-          readings: ["Temp Duto", "Umid Duto"]
-        })
-      ]
-    },
-    {
-      name: "T03 - UTA Completo (SoftStarter 15kW 440V)",
-      type: "completo",
-      voltage: "440V",
-      hasIhm: true,
-      ihmSize: '7.0"',
-      hasSupervisorio: true,
-      equips: [
-        createEquip("UTA", "UTA-03", "15kW", "SoftStarter", {
-          readings: ["Temp Duto", "Umid Duto"]
-        })
-      ]
-    },
-    {
-      name: "T04 - UTA Completo (Partida EC 3kW 220V)",
-      type: "completo",
-      voltage: "220V",
-      hasIhm: true,
-      ihmSize: '7.0"',
-      hasSupervisorio: true,
-      equips: [
-        createEquip("UTA", "UTA-04", "3.0kW", "EC", {
-          readings: ["Temp Duto", "Umid Duto"]
-        })
-      ]
-    },
-    {
-      name: "T05 - EX/CV Potência (Direta 0.75kW 220V)",
+      name: "T01 - Quadro de Potência",
       type: "potencia",
-      voltage: "220V",
-      equips: [
-        createEquip("EX/CV", "EX-01", "0.75kW", "Direta")
-      ]
-    },
-    {
-      name: "T06 - EX/CV Pot. e Com. (Inversor 3kW 380V)",
-      type: "potencia-comando",
       voltage: "380V",
       equips: [
-        createEquip("EX/CV", "EX-02", "3.0kW", "Inversor")
-      ]
-    },
-    {
-      name: "T07 - BOMBAS Completo (Direta 1.5kW 220V)",
-      type: "completo",
-      voltage: "220V",
-      hasIhm: false,
-      hasSupervisorio: false,
-      equips: [
-        createEquip("BOMBAS", "BOMBA-01", "1.5kW", "Direta", {
-          nestedStandards: ["Partida Direta"]
-        })
-      ]
-    },
-    {
-      name: "T08 - BOMBAS Completo (Inversor 4kW 380V)",
-      type: "completo",
-      voltage: "380V",
-      hasIhm: false,
-      hasSupervisorio: false,
-      equips: [
-        createEquip("BOMBAS", "BOMBA-02", "4.0kW", "Inversor", {
+        createEquip("BOMBAS", "BOMBA-01", "4.0kW", "Inversor", {
           nestedStandards: ["Inversor"]
-        })
+        }),
+        createEquip("EX/CV", "EX-01", "1.5kW", "Direta")
       ]
     },
     {
-      name: "T09 - BOMBAS Completo (SoftStarter 22kW 440V)",
-      type: "completo",
-      voltage: "440V",
-      hasIhm: false,
-      hasSupervisorio: false,
-      equips: [
-        createEquip("BOMBAS", "BOMBA-03", "22kW", "SoftStarter", {
-          nestedStandards: ["SoftStarter"]
-        })
-      ]
-    },
-    {
-      name: "T10 - CHILLER Completo (30kW 380V)",
-      type: "completo",
-      voltage: "380V",
-      hasIhm: true,
-      ihmSize: '7.0"',
-      hasSupervisorio: true,
-      equips: [
-        createEquip("CHILLER", "CHILLER-01", "30", [], {
-          readings: ["Temp Entrada", "Temp. Saída", "Pressão", "Vazão"]
-        })
-      ]
-    },
-    {
-      name: "T11 - UTA Completo + Opcionais (Inversor 4kW 380V)",
-      type: "completo",
-      voltage: "380V",
-      hasIhm: true,
-      ihmSize: '7.0"',
-      hasSupervisorio: true,
-      equips: [
-        createEquip("UTA", "UTA-OPC", "4.0kW", "Inversor", {
-          readings: ["Temp Duto", "Umid Duto", "Vazão"],
-          hasHeating: true,
-          heatingPower: "6.0kW",
-          heatingControl: "Proporcional",
-          heatingStages: 2,
-          hasHumid: true,
-          humidPower: "4.0kW",
-          humidControl: "OnOff",
-          humidStages: 2,
-          expansionType: "Indireta",
-          valveType: "Proporcional"
-        })
-      ]
-    },
-    {
-      name: "T12 - Comando Exclusivo (3 Equips)",
+      name: "T02 - Quadro de Comando",
       type: "comando",
       voltage: "220V",
-      quantity: 3,
+      quantity: 2,
       equips: []
     },
     {
-      name: "T13 - Remoto com IHM 7.0 (2 Equips)",
+      name: "T03 - Quadro Remoto",
       type: "remoto",
       voltage: "220V",
       quantity: 2,
       remotoIhmSize: '7.0"',
       hasSupervisorio: true,
       equips: []
+    },
+    {
+      name: "T04 - Quadro de Automação",
+      type: "automacao",
+      voltage: "220V",
+      hasIhm: true,
+      ihmSize: '7.0"',
+      equips: [
+        createEquip("UTA", "UTA-01", "0.75kW", "Direta", {
+          readings: ["Temp Duto", "Umid Duto"]
+        }),
+        createEquip("EX/CV", "EX-02", "1.5kW", "Inversor", {
+          readings: ["Temp Ambiente", "CO2 Ambiente"]
+        })
+      ]
+    },
+    {
+      name: "T05 - Quadro Completo",
+      type: "completo",
+      voltage: "380V",
+      hasIhm: true,
+      ihmSize: '10.0"',
+      hasSupervisorio: true,
+      equips: [
+        createEquip("UTA", "UTA-02", "7.5kW", "Inversor", {
+          readings: ["Temp Duto", "Umid Duto", "Vazão"],
+          hasHeating: true,
+          heatingPower: "6.0kW",
+          heatingControl: "Proporcional",
+          heatingStages: 2,
+          hasHumid: true,
+          humidPower: "3.0kW",
+          humidControl: "OnOff",
+          humidStages: 1,
+          expansionType: "Indireta",
+          valveType: "Proporcional"
+        }),
+        createEquip("BOMBAS", "BOMBA-02", "15kW", "SoftStarter", {
+          readings: ["Vazão"],
+          nestedStandards: ["SoftStarter"]
+        })
+      ]
     }
   ];
   
@@ -4268,7 +4194,7 @@ function generateTestScenarios() {
   renderCargasView();
   renderInfraView();
   
-  alert("13 Cenários de Teste criados com sucesso! Verifique-os nas abas 'Lista de Quadros', 'Resumo de Cargas' e 'Infraestrutura'.");
+  alert("5 Cenários de Teste criados com sucesso! Verifique-os nas abas 'Lista de Quadros', 'Resumo de Cargas' e 'Infraestrutura'.");
 }
 
 function exportToPDF() {
