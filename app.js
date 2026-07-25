@@ -234,7 +234,79 @@ function calculatePanelComponents(panel) {
 
   // Sizing of assembly box
   let boxCode = 'QMON-300x200x250';
-  if (isPureBombas) {
+  
+  if (type === 'potencia') {
+    if (isPureBombas) {
+      boxCode = 'QMON-1700x600x400';
+      addComp('KIT-VOLT-BRUM-400A', 1);
+      addComp('KIT-CONEXAO-BRUM-400A', 1);
+    } else {
+      // New occupancy-based logic for pure power panels
+      let spaceUnits = 0;
+      if (panel.equipments) {
+        panel.equipments.forEach(eq => {
+          // 1. Motor starter space
+          let startType = eq.starts;
+          if (Array.isArray(startType)) {
+            startType = startType[0] || 'Direta';
+          }
+          if (startType === 'Direta') {
+            spaceUnits += 1;
+          } else if (startType === 'Inversor') {
+            const pKw = parsePowerKw(eq.power);
+            if (pKw <= 2.2) spaceUnits += 3;
+            else if (pKw <= 7.5) spaceUnits += 5;
+            else if (pKw <= 22) spaceUnits += 8;
+            else spaceUnits += 15;
+          } else if (startType === 'SoftStarter') {
+            const pKw = parsePowerKw(eq.power);
+            if (pKw <= 7.5) spaceUnits += 3;
+            else if (pKw <= 22) spaceUnits += 5;
+            else spaceUnits += 10;
+          } else if (startType === 'EC') {
+            spaceUnits += 0.5;
+          } else {
+            spaceUnits += 1;
+          }
+
+          // 2. Heating space (contactor vs SCR converter)
+          if (eq.hasHeating) {
+            const stages = parseInt(eq.heatingStages) || 1;
+            if (eq.heatingControl === 'Proporcional') {
+              spaceUnits += 3 * stages; // SCR converter
+            } else {
+              spaceUnits += 1 * stages; // contactor
+            }
+          }
+
+          // 3. Humidification space
+          if (eq.hasHumid) {
+            const stages = parseInt(eq.humidStages) || 1;
+            if (eq.humidControl === 'Proporcional') {
+              spaceUnits += 3 * stages; // SCR converter
+            } else {
+              spaceUnits += 1 * stages; // contactor
+            }
+          }
+        });
+      }
+      
+      // Select box size based on accumulated space units (minimum 500x400x200)
+      const boxes = [
+        { code: 'QMON-500x400x200', cap: 4 },
+        { code: 'QMON-500x500x200', cap: 6 },
+        { code: 'QMON-600x500x250', cap: 9 },
+        { code: 'QMON-600x600x200', cap: 12 },
+        { code: 'QMON-700x600x200', cap: 16 },
+        { code: 'QMON-800x600x200', cap: 22 },
+        { code: 'QMON-1000x600x200', cap: 32 },
+        { code: 'QMON-1200x800x200', cap: 48 },
+        { code: 'QMON-1700x600x400', cap: 999 }
+      ];
+      const matchedBox = boxes.find(b => spaceUnits <= b.cap);
+      boxCode = matchedBox ? matchedBox.code : 'QMON-1700x600x400';
+    }
+  } else if (isPureBombas) {
     boxCode = 'QMON-1700x600x400';
     addComp('KIT-VOLT-BRUM-400A', 1);
     addComp('KIT-CONEXAO-BRUM-400A', 1);
