@@ -99,6 +99,7 @@ function calculatePanelComponents(panel) {
   
   const addComp = (code, qtyMultiplier = 1, customName = null) => {
     if (!code) return;
+    if (code === 'BORNE-RELE-BTWR') return; // Handled separately at the end of the function
     const catItem = PRECOS_DATABASE.catalog[code];
     if (!catItem) {
       console.warn(`Componente não encontrado no catálogo: ${code}`);
@@ -136,6 +137,7 @@ function calculatePanelComponents(panel) {
     addComp('CANALETA-30X80', 1);
     addComp('TOMADA-DIM', 1);
     addComp('MINIDISJ-MDW-C10', 1);
+    addComp('SINALEIRO-BRANCO', 1);
     
     // Multiplied items (Quantity x ...)
     addComp('CHAVE-SELETORA-3POS', qty * 1);
@@ -439,6 +441,7 @@ function calculatePanelComponents(panel) {
       addComp('CABO-1.0-AZUL', 50);
       addComp('CABO-1.0-CINZA', 50);
     }
+    addComp('SINALEIRO-BRANCO', 1);
     if (panel.remotoIhmSize) {
       const ihmSizeStr = panel.remotoIhmSize;
       const ihmConfig = PRECOS_DATABASE.ihmMapping[ihmSizeStr];
@@ -800,15 +803,7 @@ function calculatePanelComponents(panel) {
           eq.humidCalculatedCable = null;
         }
 
-        // Expansion valves
-        if (eq.expansionType === 'Indireta') {
-          if (eq.valveType === 'OnOff') {
-            addComp('VALVULA-BLOQUEIO', 1);
-          } else if (eq.valveType === 'Proporcional') {
-            addComp('VALVULA-BYPASS', 1);
-            addComp('BORNE-RELE-BTWR', 1);
-          }
-        }
+        // Expansion valves removed for UTA (they are only for Chiller)
       }
     });
     
@@ -872,6 +867,40 @@ function calculatePanelComponents(panel) {
   });
   if (totalDisjMotorQty > 0) {
     addComp('CONTATO-AUX-ACBF11', totalDisjMotorQty);
+  }
+  
+  // 7. Manual Additions (Bypassing interceptors)
+  // Add exactly 1 unit of SINALEIRO-BRANCO for all standard panels
+  const sinaleiroCode = 'SINALEIRO-BRANCO';
+  const sinItem = PRECOS_DATABASE.catalog[sinaleiroCode];
+  if (sinItem) {
+    componentsMap[sinaleiroCode] = {
+      code: sinaleiroCode,
+      name: sinItem.desc,
+      brand: sinItem.brand,
+      unit: sinItem.unit,
+      qty: 1,
+      unitPrice: sinItem.price,
+      value: sinItem.price
+    };
+  }
+
+  // Add exactly 2 x BORNE-RELE-BTWR per equipment for standard panels
+  if (panel.equipments && panel.equipments.length > 0) {
+    const totalEquipsCount = panel.equipments.length;
+    const releCode = 'BORNE-RELE-BTWR';
+    const releItem = PRECOS_DATABASE.catalog[releCode];
+    if (releItem) {
+      componentsMap[releCode] = {
+        code: releCode,
+        name: releItem.desc,
+        brand: releItem.brand,
+        unit: releItem.unit,
+        qty: 2 * totalEquipsCount,
+        unitPrice: releItem.price,
+        value: 2 * totalEquipsCount * releItem.price
+      };
+    }
   }
   
   return Object.values(componentsMap);
@@ -1204,14 +1233,10 @@ function getConsolidatedBudget() {
 
 // Render Dashboard
 function renderDashboard() {
-  const consolidatedBox = document.getElementById('budget-consolidated-text');
-  consolidatedBox.textContent = getConsolidatedBudget();
-  
   // Stats
   document.getElementById('stat-total-panels').textContent = budgetState.panels.length;
   
   let totalEquipments = 0;
-  let ihmCount = 0;
   let totalBudgetPrice = 0;
   
   const categoryCounts = {
@@ -1231,12 +1256,6 @@ function renderDashboard() {
     } else {
       totalEquipments += panel.equipments.length;
     }
-    
-    if (panel.type === 'remoto') {
-      ihmCount++;
-    } else if ((panel.type === 'automacao' || panel.type === 'completo') && panel.hasIhm) {
-      ihmCount++;
-    }
 
     // Sum components values
     if (panel.components) {
@@ -1244,9 +1263,86 @@ function renderDashboard() {
     }
   });
   
+  // Calculate total infra price
+  let totalInfraPrice = 0;
+  budgetState.consolidatedInfraPanels = budgetState.consolidatedInfraPanels || [];
+  const addedPanels = budgetState.panels.filter(p => budgetState.consolidatedInfraPanels.includes(p.id));
+  addedPanels.forEach(panel => {
+    const items = calculateInfraComponentsForPanel(panel);
+    totalInfraPrice += items.reduce((sum, item) => sum + (parseFloat(item.value) || 0), 0);
+  });
+  
   document.getElementById('stat-total-equipments').textContent = totalEquipments;
-  document.getElementById('stat-ihm-count').textContent = ihmCount;
   document.getElementById('stat-total-price').textContent = totalBudgetPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('stat-total-infra-price').textContent = totalInfraPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  
+  // Render Panels List in Dashboard
+  const panelsListContainer = document.getElementById('dashboard-panels-list');
+  if (panelsListContainer) {
+    panelsListContainer.innerHTML = '';
+    if (budgetState.panels.length === 0) {
+      panelsListContainer.innerHTML = `
+        <div style="text-align: center; color: var(--text-secondary); padding: 24px;">
+          Nenhum quadro elétrico cadastrado ainda. Vá em "Criar Quadro" para começar.
+        </div>
+      `;
+    } else {
+      budgetState.panels.forEach(p => {
+        const item = document.createElement('div');
+        item.style.padding = '12px';
+        item.style.border = '1px solid var(--border-color)';
+        item.style.borderRadius = 'var(--radius-md)';
+        item.style.backgroundColor = 'var(--bg-secondary)';
+        
+        let label = '';
+        if (p.type === 'potencia') label = 'Potência';
+        else if (p.type === 'comando') label = 'Comando';
+        else if (p.type === 'potencia-comando') label = 'Potência e Comando';
+        else if (p.type === 'automacao') label = 'Automação';
+        else if (p.type === 'completo') label = 'Potência, Comando e Automação';
+        else if (p.type === 'remoto') label = 'Automação Remoto';
+        
+        let details = '';
+        if (p.type === 'comando' || p.type === 'remoto') {
+          details = `Quantidade de equipamentos: ${p.quantity}`;
+          if (p.type === 'remoto') {
+            details += ` | IHM: ${p.remotoIhmSize || 'Não possui'}`;
+            if (p.hasSupervisorio) details += ` | Com Supervisório`;
+          }
+        } else {
+          const eqNames = p.equipments.map(eq => {
+            const startName = eq.starts && eq.starts.length > 0 ? eq.starts.join('/') : 'Sem partida';
+            return `${eq.name} (${eq.type} - ${startName} - ${eq.power})`;
+          }).join(', ');
+          details = `Equipamentos: ${eqNames || 'Nenhum'}`;
+          if (p.type === 'automacao' || p.type === 'completo') {
+            if (p.hasIhm) details += ` | IHM: ${p.ihmSize}`;
+            if (p.hasSupervisorio) details += ` | Com Supervisório`;
+          }
+        }
+        
+        const panelVal = p.components ? p.components.reduce((sum, c) => sum + (parseFloat(c.value) || 0), 0) : 0;
+        
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <strong style="color: var(--primary); font-size: 0.95rem;">${p.name}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">
+                <strong>Tipo:</strong> ${label} | <strong>Tensão:</strong> ${p.voltage}
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+                ${details}
+              </div>
+            </div>
+            <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">
+              ${panelVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </div>
+          </div>
+        `;
+        panelsListContainer.appendChild(item);
+      });
+    }
+  }
   
   // Render Category List
   const categoryList = document.getElementById('dashboard-category-summary');
@@ -1257,8 +1353,8 @@ function renderDashboard() {
     'comando': { label: 'Comando', class: 'type-comando' },
     'potencia-comando': { label: 'Potência e Comando', class: 'type-potencia-comando' },
     'automacao': { label: 'Automação', class: 'type-automacao' },
-    'completo': { label: 'Potência, Comando e Aut.', class: 'type-completo' },
-    'remoto': { label: 'Automação Remoto', class: 'type-remoto' }
+    'completo': { label: 'Pot. Com. Aut.', class: 'type-completo' },
+    'remoto': { label: 'Aut. Remoto', class: 'type-remoto' }
   };
   
   Object.keys(categoryLabels).forEach(key => {
@@ -1269,12 +1365,12 @@ function renderDashboard() {
     item.style.display = 'flex';
     item.style.justify = 'space-between';
     item.style.alignItems = 'center';
-    item.style.padding = '8px 0';
+    item.style.padding = '6px 0';
     item.style.borderBottom = '1px solid var(--border-color)';
     
     item.innerHTML = `
-      <span class="panel-type-tag ${info.class}" style="font-size: 0.75rem;">${info.label}</span>
-      <span style="font-weight: 600; font-size: 1rem;">${count}</span>
+      <span class="panel-type-tag ${info.class}" style="font-size: 0.72rem; padding: 2px 6px;">${info.label}</span>
+      <span style="font-weight: 600; font-size: 0.85rem;">${count}</span>
     `;
     categoryList.appendChild(item);
   });
@@ -3728,19 +3824,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Clipboard buttons
-  const btnCopyBudget = document.getElementById('btn-copy-budget');
-  if (btnCopyBudget) {
-    btnCopyBudget.addEventListener('click', copyBudgetToClipboard);
-  }
-  const btnClearBudget = document.getElementById('btn-clear-budget');
-  if (btnClearBudget) {
-    btnClearBudget.addEventListener('click', clearBudget);
-  }
-  
   const btnGenTest = document.getElementById('btn-generate-test-scenarios');
   if (btnGenTest) {
     btnGenTest.addEventListener('click', generateTestScenarios);
+  }
+  
+  const btnExportPdf = document.getElementById('btn-export-pdf');
+  if (btnExportPdf) {
+    btnExportPdf.addEventListener('click', exportToPDF);
   }
   
   // Save Edit modal changes
@@ -3753,7 +3844,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function generateTestScenarios() {
-  if (!confirm("Isso apagará o orçamento atual para gerar os quadros de teste de validação. Deseja continuar?")) {
+  const msg = `ATENÇÃO: Este procedimento irá substituir o orçamento atual por 13 quadros de teste para validação.\n\nSerão adicionados os seguintes quadros:\n1. T01 - UTA Completo (Direta 2.2kW 220V)\n2. T02 - UTA Completo (Inversor 4kW 380V)\n3. T03 - UTA Completo (SoftStarter 15kW 440V)\n4. T04 - UTA Completo (Partida EC 3kW 220V)\n5. T05 - EX/CV Potência (Direta 0.75kW 220V)\n6. T06 - EX/CV Pot. e Com. (Inversor 3kW 380V)\n7. T07 - BOMBAS Completo (Direta 1.5kW 220V)\n8. T08 - BOMBAS Completo (Inversor 4kW 380V)\n9. T09 - BOMBAS Completo (SoftStarter 22kW 440V)\n10. T10 - CHILLER Completo (30kW 380V)\n11. T11 - UTA Completo + Opcionais (Inversor 4kW 380V)\n12. T12 - Comando Exclusivo (3 Equips)\n13. T13 - Remoto com IHM 7.0 (2 Equips)\n\nDeseja prosseguir com a geração dos cenários de teste?`;
+  if (!confirm(msg)) {
     return;
   }
   
@@ -3968,4 +4060,464 @@ function generateTestScenarios() {
   renderInfraView();
   
   alert("13 Cenários de Teste criados com sucesso! Verifique-os nas abas 'Lista de Quadros', 'Resumo de Cargas' e 'Infraestrutura'.");
+}
+
+function exportToPDF() {
+  if (budgetState.panels.length === 0) {
+    alert("Nenhum quadro cadastrado para exportar.");
+    return;
+  }
+  
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert("Por favor, permita pop-ups para este site para exportar o PDF.");
+    return;
+  }
+  
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  
+  let html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Relatório de Orçamento - Quadros Elétricos e Infraestrutura</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #1e293b;
+      margin: 0;
+      padding: 30px;
+      font-size: 10.5pt;
+      line-height: 1.4;
+      background-color: #ffffff;
+    }
+    .header {
+      border-bottom: 2px solid #3b82f6;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .header h1 {
+      font-size: 18pt;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin: 0;
+    }
+    .header p {
+      margin: 4px 0 0 0;
+      font-size: 9.5pt;
+      color: #64748b;
+    }
+    .date-info {
+      text-align: right;
+      font-size: 9.5pt;
+      color: #64748b;
+    }
+    .section-title {
+      font-size: 13pt;
+      font-weight: 600;
+      color: #1e3a8a;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      page-break-after: avoid;
+    }
+    .panel-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 15px;
+      background-color: #f8fafc;
+      page-break-inside: avoid;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .panel-title {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .panel-meta {
+      font-size: 8.5pt;
+      color: #64748b;
+    }
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      font-size: 9pt;
+    }
+    .report-table th {
+      background-color: #f1f5f9;
+      color: #475569;
+      text-align: left;
+      padding: 6px 8px;
+      font-weight: 600;
+      border-bottom: 2px solid #cbd5e1;
+    }
+    .report-table td {
+      padding: 5px 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .report-table tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    .num-col {
+      text-align: right;
+    }
+    .summary-card {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 15px;
+      margin-top: 25px;
+      page-break-inside: avoid;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 10pt;
+    }
+    .summary-row.total {
+      font-size: 13pt;
+      font-weight: 700;
+      border-top: 2px solid #3b82f6;
+      padding-top: 10px;
+      margin-top: 6px;
+      color: #1e3a8a;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 8.5pt;
+      color: #94a3b8;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 10px;
+    }
+    @media print {
+      body {
+        padding: 0;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Relatório de Orçamento</h1>
+      <p>Quadros Elétricos e Infraestrutura de HVAC</p>
+    </div>
+    <div class="date-info">
+      <strong>Data:</strong> ${dateStr}<br>
+      <strong>Total de Quadros:</strong> ${budgetState.panels.length}
+    </div>
+  </div>
+  `;
+  
+  html += `<h2 class="section-title">1. Detalhamento dos Quadros Elétricos</h2>`;
+  
+  let grandTotalPanels = 0;
+  
+  budgetState.panels.forEach((p, idx) => {
+    let label = '';
+    if (p.type === 'potencia') label = 'Potência';
+    else if (p.type === 'comando') label = 'Comando';
+    else if (p.type === 'potencia-comando') label = 'Potência e Comando';
+    else if (p.type === 'automacao') label = 'Automação';
+    else if (p.type === 'completo') label = 'Potência, Comando e Automação';
+    else if (p.type === 'remoto') label = 'Automação Remoto';
+    
+    let details = '';
+    if (p.type === 'comando' || p.type === 'remoto') {
+      details = `Quantidade de equipamentos: ${p.quantity}`;
+      if (p.type === 'remoto') {
+        details += ` | IHM: ${p.remotoIhmSize || 'Não possui'}`;
+        if (p.hasSupervisorio) details += ` | Com Supervisório`;
+      }
+    } else {
+      const eqNames = p.equipments.map(eq => {
+        const startName = eq.starts && eq.starts.length > 0 ? eq.starts.join('/') : 'Sem partida';
+        return `${eq.name} (${eq.type} - ${startName} - ${eq.power})`;
+      }).join(', ');
+      details = `Equipamentos: ${eqNames || 'Nenhum'}`;
+      if (p.type === 'automacao' || p.type === 'completo') {
+        if (p.hasIhm) details += ` | IHM: ${p.ihmSize}`;
+        if (p.hasSupervisorio) details += ` | Com Supervisório`;
+      }
+    }
+    
+    const panelVal = p.components ? p.components.reduce((sum, c) => sum + (parseFloat(c.value) || 0), 0) : 0;
+    grandTotalPanels += panelVal;
+    
+    html += `
+    <div class="panel-card">
+      <div class="panel-header">
+        <div class="panel-title">${p.name}</div>
+        <div class="panel-title" style="color: var(--primary);">${panelVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+      </div>
+      <div class="panel-meta">
+        <strong>Tipo:</strong> ${label} | <strong>Tensão:</strong> ${p.voltage}<br>
+        <strong>Características:</strong> ${details}
+      </div>
+      
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descrição</th>
+            <th>Marca</th>
+            <th class="num-col">Qtd</th>
+            <th>Un</th>
+            <th class="num-col">Unitário</th>
+            <th class="num-col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    if (p.components && p.components.length > 0) {
+      p.components.forEach(c => {
+        html += `
+          <tr>
+            <td>${c.code}</td>
+            <td>${c.name}</td>
+            <td>${c.brand}</td>
+            <td class="num-col">${c.qty}</td>
+            <td>${c.unit}</td>
+            <td class="num-col">${c.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td class="num-col">${c.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          </tr>
+        `;
+      });
+    } else {
+      html += `<tr><td colspan="7" style="text-align:center; color: #94a3b8;">Nenhum componente cadastrado neste quadro.</td></tr>`;
+    }
+    
+    html += `
+        </tbody>
+      </table>
+    </div>
+    `;
+  });
+  
+  html += `<div class="page-break"></div>`;
+  html += `<h2 class="section-title">2. Consolidado Geral de Infraestrutura</h2>`;
+  
+  const addedPanels = budgetState.panels.filter(p => (budgetState.consolidatedInfraPanels || []).includes(p.id));
+  
+  if (addedPanels.length === 0) {
+    html += `<p style="color:#64748b; font-style:italic;">Nenhum quadro adicionado ao consolidado de infraestrutura.</p>`;
+  } else {
+    html += `<p style="font-size:9.5pt; color:#64748b; margin-bottom:10px;">Quadros considerados na infraestrutura: ${addedPanels.map(p => p.name).join(', ')}</p>`;
+    
+    const totalInfraMap = {};
+    addedPanels.forEach(panel => {
+      const items = calculateInfraComponentsForPanel(panel);
+      items.forEach(item => {
+        if (totalInfraMap[item.code]) {
+          totalInfraMap[item.code].qty += item.qty;
+          totalInfraMap[item.code].value = totalInfraMap[item.code].qty * totalInfraMap[item.code].unitPrice;
+        } else {
+          totalInfraMap[item.code] = { ...item };
+        }
+      });
+    });
+    
+    const totalItems = Object.values(totalInfraMap);
+    let grandTotalInfra = 0;
+    
+    html += `
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descrição</th>
+          <th>Marca</th>
+          <th class="num-col">Qtd</th>
+          <th>Un</th>
+          <th class="num-col">Unitário</th>
+          <th class="num-col">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+    `;
+    
+    totalItems.forEach(c => {
+      grandTotalInfra += c.value;
+      html += `
+        <tr>
+          <td>${c.code}</td>
+          <td>${c.name}</td>
+          <td>${c.brand}</td>
+          <td class="num-col">${c.qty}</td>
+          <td>${c.unit}</td>
+          <td class="num-col">${c.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          <td class="num-col">${c.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        </tr>
+      `;
+    });
+    
+    html += `
+        <tr style="font-weight: 700; background-color: #f1f5f9;">
+          <td colspan="6">Total Geral Infraestrutura</td>
+          <td class="num-col" style="color: #1e3a8a;">${grandTotalInfra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        </tr>
+      </tbody>
+    </table>
+    `;
+  }
+  
+  html += `<h2 class="section-title">3. Resumo das Cargas Elétricas (NBR 5410)</h2>`;
+  
+  html += `
+  <table class="report-table">
+    <thead>
+      <tr>
+        <th>Quadro / Equipamento</th>
+        <th>Tipo</th>
+        <th>Tensão</th>
+        <th class="num-col">Potência</th>
+        <th class="num-col">Corrente</th>
+        <th>Cabo Geral (NBR 5410)</th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
+  
+  budgetState.panels.forEach(panel => {
+    let typeLabel = 'Potência';
+    switch(panel.type) {
+      case 'potencia': typeLabel = 'Potência'; break;
+      case 'comando': typeLabel = 'Comando'; break;
+      case 'potencia-comando': typeLabel = 'Potência e Comando'; break;
+      case 'automacao': typeLabel = 'Automação'; break;
+      case 'completo': typeLabel = 'Pot., Com. & Aut.'; break;
+      case 'remoto': typeLabel = 'Aut. Remoto'; break;
+    }
+    
+    const panelCable = getNBR5410CableSectionForPanel(panel.calculatedCurrent);
+    
+    html += `
+      <tr style="font-weight: 700; background-color: #f1f5f9;">
+        <td>${panel.name}</td>
+        <td>Quadro - ${typeLabel}</td>
+        <td>${panel.voltage || '220V'}</td>
+        <td class="num-col">${panel.totalPowerKw ? panel.totalPowerKw.toFixed(1).replace('.', ',') : '0,0'} kW</td>
+        <td class="num-col" style="color: #1e3a8a;">${panel.calculatedCurrent ? panel.calculatedCurrent.toFixed(1).replace('.', ',') : '0,0'} A</td>
+        <td>${panelCable ? panelCable + ' mm²' : '-'}</td>
+      </tr>
+    `;
+    
+    if (panel.type === 'comando' || panel.type === 'remoto') {
+      html += `
+        <tr>
+          <td colspan="6" style="padding-left: 25px; color: #64748b; font-style: italic;">
+            ↳ Carga estimada de 2kW Monofásica por equipamento (padrão de comando)
+          </td>
+        </tr>
+      `;
+    } else if (panel.equipments && panel.equipments.length > 0) {
+      panel.equipments.forEach(eq => {
+        const startsStr = eq.starts && eq.starts.length > 0 ? eq.starts.join('/') : '-';
+        
+        html += `
+          <tr>
+            <td style="padding-left: 25px; color: #475569;">↳ ${eq.name} (Motor)</td>
+            <td style="color: #64748b;">Motor - ${startsStr}</td>
+            <td style="color: #64748b;">${panel.voltage}</td>
+            <td class="num-col" style="color: #64748b;">${eq.power}</td>
+            <td class="num-col" style="color: #64748b;">${eq.calculatedCurrent ? eq.calculatedCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
+            <td style="color: #64748b;">${eq.calculatedCable ? eq.calculatedCable + ' mm²' : '-'}</td>
+          </tr>
+        `;
+        
+        if (eq.hasHeating && eq.heatingPower) {
+          html += `
+            <tr>
+              <td style="padding-left: 25px; color: #475569;">↳ ${eq.name} (Aquec.)</td>
+              <td style="color: #64748b;">Resistência - ${eq.heatingControl || 'OnOff'}</td>
+              <td style="color: #64748b;">${panel.voltage}</td>
+              <td class="num-col" style="color: #64748b;">${eq.heatingPower}</td>
+              <td class="num-col" style="color: #64748b;">${eq.heatingCalculatedCurrent ? eq.heatingCalculatedCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
+              <td style="color: #64748b;">${eq.heatingCalculatedCable ? eq.heatingCalculatedCable + ' mm²' : '-'}</td>
+            </tr>
+          `;
+        }
+        
+        if (eq.hasHumid && eq.humidPower) {
+          html += `
+            <tr>
+              <td style="padding-left: 25px; color: #475569;">↳ ${eq.name} (Umid.)</td>
+              <td style="color: #64748b;">Umidificação - ${eq.humidControl || 'OnOff'}</td>
+              <td style="color: #64748b;">${panel.voltage}</td>
+              <td class="num-col" style="color: #64748b;">${eq.humidPower}</td>
+              <td class="num-col" style="color: #64748b;">${eq.humidCalculatedCurrent ? eq.humidCalculatedCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
+              <td style="color: #64748b;">${eq.humidCalculatedCable ? eq.humidCalculatedCable + ' mm²' : '-'}</td>
+            </tr>
+          `;
+        }
+      });
+    }
+  });
+  
+  html += `
+    </tbody>
+  </table>
+  `;
+  
+  let grandTotalInfra = 0;
+  addedPanels.forEach(panel => {
+    const items = calculateInfraComponentsForPanel(panel);
+    grandTotalInfra += items.reduce((sum, item) => sum + (parseFloat(item.value) || 0), 0);
+  });
+  
+  const grandTotal = grandTotalPanels + grandTotalInfra;
+  
+  html += `
+  <div class="summary-card">
+    <h3 style="margin-top:0; color:#1e3a8a; border-bottom:1px solid #bfdbfe; padding-bottom:8px;">Resumo Financeiro do Orçamento</h3>
+    <div class="summary-row">
+      <span>Valor Total dos Quadros Elétricos:</span>
+      <strong>${grandTotalPanels.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
+    </div>
+    <div class="summary-row">
+      <span>Valor Total da Infraestrutura Elétrica:</span>
+      <strong>${grandTotalInfra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
+    </div>
+    <div class="summary-row total">
+      <span>VALOR TOTAL GERAL DO ORÇAMENTO:</span>
+      <span>${grandTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+    </div>
+  </div>
+  
+  <div class="footer">
+    Relatório gerado automaticamente pelo Sistema de Orçamento 3D &copy; ${today.getFullYear()}
+  </div>
+</body>
+</html>
+  `;
+  
+  printWindow.document.write(html);
+  printWindow.document.close();
+  
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+  }, 500);
 }

@@ -40,6 +40,15 @@ def compile_excel_to_js():
                 "price": float(price) if price is not None else 0.0
             }
             
+    # Inject mandatory items if missing
+    if "SINALEIRO-BRANCO" not in database["catalog"]:
+        database["catalog"]["SINALEIRO-BRANCO"] = {
+            "desc": "SINALEIRO LED MONOBLOCO BRANCO 220V/24V (INDICADOR LIGADO)",
+            "brand": "WEG",
+            "unit": "un",
+            "price": 25.0
+        }
+            
     # 2. Compositions
     ws_comp = wb["Composições de Partida"]
     for row in range(2, ws_comp.max_row + 1):

@@ -761,7 +761,7 @@ const PRECOS_DATABASE = {
       "desc": "CONJUNTO PORTA PLAQUETA APP30 + PLAQUETA",
       "brand": "APP30-256",
       "unit": "un",
-      "price": 25.0
+      "price": 10.0
     },
     "BORNE-BTWP-2.5": {
       "desc": "BORNE DE PASSAGEM BTWP 2,5mm",
@@ -779,19 +779,19 @@ const PRECOS_DATABASE = {
       "desc": "IDENTIFICADOR PARA GRUNE BORNES BTW",
       "brand": "WEG",
       "unit": "un",
-      "price": 4.0
+      "price": 1.5
     },
     "IDENTIFICADOR-BR5": {
       "desc": "IDENTIFICADOR PLÁSTICO DE BORNE BR 5MM",
       "brand": "DEKAFIX",
       "unit": "un",
-      "price": 4.0
+      "price": 1.5
     },
     "POSTE-FINAL": {
       "desc": "POSTE FINAL PARA BORNE BTW PF3-BTW",
       "brand": "WEG",
       "unit": "un",
-      "price": 4.0
+      "price": 1.5
     },
     "BORNE-TERRA-6.0T": {
       "desc": "BORNE TERRA BTWP 6,0T 6,0mm2",
@@ -803,7 +803,7 @@ const PRECOS_DATABASE = {
       "desc": "BORNE TERRA BTWP 2,5T 2,5mm2",
       "brand": "WEG",
       "unit": "un",
-      "price": 5.0
+      "price": 3.0
     },
     "BORNE-RELE-BTWR": {
       "desc": "BORNE RELÉ BTWR P16E26 1NAF 6A 24VDC",
@@ -849,43 +849,43 @@ const PRECOS_DATABASE = {
     },
     "SENS-TEMP-DUTO": {
       "desc": "SENSOR DE TEMPERATURA DE DUTO NTC",
-      "brand": "WEG/INTEGRADOR",
+      "brand": "CAREL/INTEGRADOR",
       "unit": "un",
       "price": 250.0
     },
     "SENS-TEMP-AMBIENTE": {
       "desc": "SENSOR DE TEMPERATURA DE AMBIENTE NTC",
-      "brand": "WEG/INTEGRADOR",
+      "brand": "CAREL/INTEGRADOR",
       "unit": "un",
       "price": 220.0
     },
     "SENS-UMIDADE-DUTO": {
       "desc": "SENSOR DE UMIDADE DE DUTO",
-      "brand": "WEG/INTEGRADOR",
+      "brand": "CAREL/INTEGRADOR",
       "unit": "un",
       "price": 480.0
     },
     "SENS-UMIDADE-AMBIENTE": {
       "desc": "SENSOR DE UMIDADE DE AMBIENTE",
-      "brand": "WEG/INTEGRADOR",
+      "brand": "CAREL/INTEGRADOR",
       "unit": "un",
       "price": 450.0
     },
     "SENS-TEMP-UMID-AMBIENTE": {
       "desc": "SENSOR DE TEMPERATURA E UMIDADE DE AMBIENTE",
-      "brand": "WEG/INTEGRADOR",
+      "brand": "CAREL/INTEGRADOR",
       "unit": "un",
       "price": 550.0
     },
     "SENS-CO2-DUTO": {
       "desc": "SENSOR DE QUALIDADE DO AR / CO2 PARA DUTO",
-      "brand": "WEG/INTEGRADOR",
+      "brand": "CAREL/INTEGRADOR",
       "unit": "un",
       "price": 850.0
     },
     "SENS-CO2-AMBIENTE": {
       "desc": "SENSOR DE QUALIDADE DO AR / CO2 DE AMBIENTE",
-      "brand": "WEG/INTEGRADOR",
+      "brand": "CAREL/INTEGRADOR",
       "unit": "un",
       "price": 800.0
     },
@@ -959,79 +959,79 @@ const PRECOS_DATABASE = {
       "desc": "DISJUNTOR EM CAIXA MOLDADA AGW400 3P 315A",
       "brand": "WEG",
       "unit": "un",
-      "price": 1150.0
+      "price": 2000.0
     },
     "DISJ-AGW400-3P-400A": {
       "desc": "DISJUNTOR EM CAIXA MOLDADA AGW400 3P 400A",
       "brand": "WEG",
       "unit": "un",
-      "price": 1350.0
+      "price": 3000.0
     },
     "MANOPLA-ROTATIVA-AGW100": {
       "desc": "MANOPLA ROTATIVA PARA DISJUNTOR AGW100",
       "brand": "WEG",
       "unit": "un",
-      "price": 120.0
+      "price": 400.0
     },
     "MANOPLA-ROTATIVA-AGW250": {
       "desc": "MANOPLA ROTATIVA PARA DISJUNTOR AGW250",
       "brand": "WEG",
       "unit": "un",
-      "price": 150.0
+      "price": 500.0
     },
     "MANOPLA-ROTATIVA-AGW400": {
       "desc": "MANOPLA ROTATIVA PARA DISJUNTOR AGW400",
       "brand": "WEG",
       "unit": "un",
-      "price": 220.0
+      "price": 700.0
     },
     "MINIDISJ-MDW-C10-3": {
       "desc": "MINIDISJUNTOR TRIPOLAR 10A CURVA C MDW-C10-3",
       "brand": "WEG",
       "unit": "un",
-      "price": 95.0
+      "price": 50.0
     },
     "MINIDISJ-MDW-C16-3": {
       "desc": "MINIDISJUNTOR TRIPOLAR 16A CURVA C MDW-C16-3",
       "brand": "WEG",
       "unit": "un",
-      "price": 95.0
+      "price": 50.0
     },
     "MINIDISJ-MDW-C20-3": {
       "desc": "MINIDISJUNTOR TRIPOLAR 20A CURVA C MDW-C20-3",
       "brand": "WEG",
       "unit": "un",
-      "price": 95.0
+      "price": 50.0
     },
     "MINIDISJ-MDW-C25-3": {
       "desc": "MINIDISJUNTOR TRIPOLAR 25A CURVA C MDW-C25-3",
       "brand": "WEG",
       "unit": "un",
-      "price": 95.0
+      "price": 50.0
     },
     "MINIDISJ-MDW-C32-3": {
       "desc": "MINIDISJUNTOR TRIPOLAR 32A CURVA C MDW-C32-3",
       "brand": "WEG",
       "unit": "un",
-      "price": 105.0
+      "price": 50.0
     },
     "MINIDISJ-MDW-C40-3": {
       "desc": "MINIDISJUNTOR TRIPOLAR 40A CURVA C MDW-C40-3",
       "brand": "WEG",
       "unit": "un",
-      "price": 115.0
+      "price": 60.0
     },
     "MINIDISJ-MDW-C50-3": {
       "desc": "MINIDISJUNTOR TRIPOLAR 50A CURVA C MDW-C50-3",
       "brand": "WEG",
       "unit": "un",
-      "price": 125.0
+      "price": 80.0
     },
     "MINIDISJ-MDW-C63-3": {
       "desc": "MINIDISJUNTOR TRIPOLAR 63A CURVA C MDW-C63-3",
       "brand": "WEG",
       "unit": "un",
-      "price": 135.0
+      "price": 80.0
     },
     "QMON-600x500x250": {
       "desc": "QUADRO DE MONTAGEM METÁLICO 600X500X250",
@@ -1560,6 +1560,12 @@ const PRECOS_DATABASE = {
       "brand": "MAMUTE",
       "unit": "un",
       "price": 45.0
+    },
+    "SINALEIRO-BRANCO": {
+      "desc": "SINALEIRO LED MONOBLOCO BRANCO 220V/24V (INDICADOR LIGADO)",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 25.0
     }
   },
   "compositions": {
