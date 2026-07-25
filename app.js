@@ -2790,10 +2790,16 @@ function savePanel() {
 
 // Clear Entire Budget
 function editEquipmentFromPanel(panelId, equipId) {
-  const panel = budgetState.panels.find(p => p.id === panelId);
-  if (!panel) return;
-  const eq = panel.equipments.find(e => e.id === equipId);
-  if (!eq) return;
+  const panel = budgetState.panels.find(p => String(p.id) === String(panelId));
+  if (!panel) {
+    console.error("Painel não encontrado:", panelId);
+    return;
+  }
+  const eq = panel.equipments.find(e => String(e.id) === String(equipId));
+  if (!eq) {
+    console.error("Equipamento não encontrado:", equipId);
+    return;
+  }
 
   // Populate hidden fields
   document.getElementById('edit-eq-panel-id').value = panelId;
@@ -2982,13 +2988,19 @@ function closeEditEquipmentModal() {
 
 function saveEditEquipment() {
   try {
-    const panelId = parseInt(document.getElementById('edit-eq-panel-id').value);
-    const equipId = parseInt(document.getElementById('edit-eq-id').value);
+    const panelId = document.getElementById('edit-eq-panel-id').value;
+    const equipId = document.getElementById('edit-eq-id').value;
     
-    const panel = budgetState.panels.find(p => p.id === panelId);
-    if (!panel) return;
-    const eq = panel.equipments.find(e => e.id === equipId);
-    if (!eq) return;
+    const panel = budgetState.panels.find(p => String(p.id) === String(panelId));
+    if (!panel) {
+      alert("Erro ao salvar: Painel não encontrado (ID: " + panelId + ")");
+      return;
+    }
+    const eq = panel.equipments.find(e => String(e.id) === String(equipId));
+    if (!eq) {
+      alert("Erro ao salvar: Equipamento não encontrado (ID: " + equipId + ")");
+      return;
+    }
 
     const type = document.getElementById('edit-eq-type').value;
     const name = document.getElementById('edit-eq-name').value.trim();
