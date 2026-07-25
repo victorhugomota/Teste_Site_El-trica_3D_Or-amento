@@ -4063,15 +4063,16 @@ function generateTestScenarios() {
 }
 
 function exportToPDF() {
-  if (budgetState.panels.length === 0) {
-    alert("Nenhum quadro cadastrado para exportar.");
-    return;
-  }
-  
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  
-  let html = `
+  try {
+    if (!budgetState || !budgetState.panels || budgetState.panels.length === 0) {
+      alert("Nenhum quadro cadastrado para exportar.");
+      return;
+    }
+    
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    
+    let html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -4223,53 +4224,122 @@ function exportToPDF() {
     </div>
   </div>
   `;
-  
-  html += `<h2 class="section-title">1. Detalhamento dos Quadros Elétricos</h2>`;
-  
-  let grandTotalPanels = 0;
-  
-  budgetState.panels.forEach((p, idx) => {
-    let label = '';
-    if (p.type === 'potencia') label = 'Potência';
-    else if (p.type === 'comando') label = 'Comando';
-    else if (p.type === 'potencia-comando') label = 'Potência e Comando';
-    else if (p.type === 'automacao') label = 'Automação';
-    else if (p.type === 'completo') label = 'Potência, Comando e Automação';
-    else if (p.type === 'remoto') label = 'Automação Remoto';
     
-    let details = '';
-    if (p.type === 'comando' || p.type === 'remoto') {
-      details = `Quantidade de equipamentos: ${p.quantity}`;
-      if (p.type === 'remoto') {
-        details += ` | IHM: ${p.remotoIhmSize || 'Não possui'}`;
-        if (p.hasSupervisorio) details += ` | Com Supervisório`;
-      }
-    } else {
-      const eqNames = p.equipments.map(eq => {
-        const startName = eq.starts && eq.starts.length > 0 ? eq.starts.join('/') : 'Sem partida';
-        return `${eq.name} (${eq.type} - ${startName} - ${eq.power})`;
-      }).join(', ');
-      details = `Equipamentos: ${eqNames || 'Nenhum'}`;
-      if (p.type === 'automacao' || p.type === 'completo') {
-        if (p.hasIhm) details += ` | IHM: ${p.ihmSize}`;
-        if (p.hasSupervisorio) details += ` | Com Supervisório`;
-      }
-    }
+    html += `<h2 class="section-title">1. Detalhamento dos Quadros Elétricos</h2>`;
     
-    const panelVal = p.components ? p.components.reduce((sum, c) => sum + (parseFloat(c.value) || 0), 0) : 0;
-    grandTotalPanels += panelVal;
+    let grandTotalPanels = 0;
     
-    html += `
-    <div class="panel-card">
-      <div class="panel-header">
-        <div class="panel-title">${p.name}</div>
-        <div class="panel-title" style="color: var(--primary);">${panelVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-      </div>
-      <div class="panel-meta">
-        <strong>Tipo:</strong> ${label} | <strong>Tensão:</strong> ${p.voltage}<br>
-        <strong>Características:</strong> ${details}
-      </div>
+    budgetState.panels.forEach((p, idx) => {
+      let label = '';
+      if (p.type === 'potencia') label = 'Potência';
+      else if (p.type === 'comando') label = 'Comando';
+      else if (p.type === 'potencia-comando') label = 'Potência e Comando';
+      else if (p.type === 'automacao') label = 'Automação';
+      else if (p.type === 'completo') label = 'Potência, Comando e Automação';
+      else if (p.type === 'remoto') label = 'Automação Remoto';
       
+      let details = '';
+      if (p.type === 'comando' || p.type === 'remoto') {
+        details = `Quantidade de equipamentos: ${p.quantity || 1}`;
+        if (p.type === 'remoto') {
+          details += ` | IHM: ${p.remotoIhmSize || 'Não possui'}`;
+          if (p.hasSupervisorio) details += ` | Com Supervisório`;
+        }
+      } else {
+        const eqNames = (p.equipments || []).map(eq => {
+          const startName = eq.starts && eq.starts.length > 0 ? eq.starts.join('/') : 'Sem partida';
+          return `${eq.name} (${eq.type} - ${startName} - ${eq.power})`;
+        }).join(', ');
+        details = `Equipamentos: ${eqNames || 'Nenhum'}`;
+        if (p.type === 'automacao' || p.type === 'completo') {
+          if (p.hasIhm) details += ` | IHM: ${p.ihmSize}`;
+          if (p.hasSupervisorio) details += ` | Com Supervisório`;
+        }
+      }
+      
+      const panelVal = p.components ? p.components.reduce((sum, c) => sum + (Number(c.value) || 0), 0) : 0;
+      grandTotalPanels += panelVal;
+      
+      html += `
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">${p.name || 'Quadro sem nome'}</div>
+          <div class="panel-title" style="color: var(--primary);">${(Number(panelVal) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+        </div>
+        <div class="panel-meta">
+          <strong>Tipo:</strong> ${label} | <strong>Tensão:</strong> ${p.voltage || '220V'}<br>
+          <strong>Características:</strong> ${details}
+        </div>
+        
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descrição</th>
+              <th>Marca</th>
+              <th class="num-col">Qtd</th>
+              <th>Un</th>
+              <th class="num-col">Unitário</th>
+              <th class="num-col">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      if (p.components && p.components.length > 0) {
+        p.components.forEach(c => {
+          const uPrice = Number(c.unitPrice) || 0;
+          const val = Number(c.value) || 0;
+          html += `
+            <tr>
+              <td>${c.code || '-'}</td>
+              <td>${c.name || '-'}</td>
+              <td>${c.brand || '-'}</td>
+              <td class="num-col">${c.qty || 0}</td>
+              <td>${c.unit || 'un'}</td>
+              <td class="num-col">${uPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+              <td class="num-col">${val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            </tr>
+          `;
+        });
+      } else {
+        html += `<tr><td colspan="7" style="text-align:center; color: #94a3b8;">Nenhum componente cadastrado neste quadro.</td></tr>`;
+      }
+      
+      html += `
+          </tbody>
+        </table>
+      </div>
+      `;
+    });
+    
+    html += `<div class="page-break"></div>`;
+    html += `<h2 class="section-title">2. Consolidado Geral de Infraestrutura</h2>`;
+    
+    const addedPanels = budgetState.panels.filter(p => (budgetState.consolidatedInfraPanels || []).includes(p.id));
+    
+    if (addedPanels.length === 0) {
+      html += `<p style="color:#64748b; font-style:italic;">Nenhum quadro adicionado ao consolidado de infraestrutura.</p>`;
+    } else {
+      html += `<p style="font-size:9.5pt; color:#64748b; margin-bottom:10px;">Quadros considerados na infraestrutura: ${addedPanels.map(p => p.name).join(', ')}</p>`;
+      
+      const totalInfraMap = {};
+      addedPanels.forEach(panel => {
+        const items = typeof calculateInfraComponentsForPanel === 'function' ? calculateInfraComponentsForPanel(panel) : [];
+        items.forEach(item => {
+          if (totalInfraMap[item.code]) {
+            totalInfraMap[item.code].qty += item.qty;
+            totalInfraMap[item.code].value = totalInfraMap[item.code].qty * totalInfraMap[item.code].unitPrice;
+          } else {
+            totalInfraMap[item.code] = { ...item };
+          }
+        });
+      });
+      
+      const totalItems = Object.values(totalInfraMap);
+      let grandTotalInfra = 0;
+      
+      html += `
       <table class="report-table">
         <thead>
           <tr>
@@ -4283,251 +4353,201 @@ function exportToPDF() {
           </tr>
         </thead>
         <tbody>
-    `;
-    
-    if (p.components && p.components.length > 0) {
-      p.components.forEach(c => {
+      `;
+      
+      totalItems.forEach(c => {
+        const uPrice = Number(c.unitPrice) || 0;
+        const val = Number(c.value) || 0;
+        grandTotalInfra += val;
         html += `
           <tr>
-            <td>${c.code}</td>
-            <td>${c.name}</td>
-            <td>${c.brand}</td>
-            <td class="num-col">${c.qty}</td>
-            <td>${c.unit}</td>
-            <td class="num-col">${c.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-            <td class="num-col">${c.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td>${c.code || '-'}</td>
+            <td>${c.name || '-'}</td>
+            <td>${c.brand || '-'}</td>
+            <td class="num-col">${c.qty || 0}</td>
+            <td>${c.unit || 'un'}</td>
+            <td class="num-col">${uPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td class="num-col">${val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
           </tr>
         `;
       });
-    } else {
-      html += `<tr><td colspan="7" style="text-align:center; color: #94a3b8;">Nenhum componente cadastrado neste quadro.</td></tr>`;
-    }
-    
-    html += `
+      
+      html += `
+          <tr style="font-weight: 700; background-color: #f1f5f9;">
+            <td colspan="6">Total Geral Infraestrutura</td>
+            <td class="num-col" style="color: #1e3a8a;">${(Number(grandTotalInfra) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          </tr>
         </tbody>
       </table>
-    </div>
-    `;
-  });
-  
-  html += `<div class="page-break"></div>`;
-  html += `<h2 class="section-title">2. Consolidado Geral de Infraestrutura</h2>`;
-  
-  const addedPanels = budgetState.panels.filter(p => (budgetState.consolidatedInfraPanels || []).includes(p.id));
-  
-  if (addedPanels.length === 0) {
-    html += `<p style="color:#64748b; font-style:italic;">Nenhum quadro adicionado ao consolidado de infraestrutura.</p>`;
-  } else {
-    html += `<p style="font-size:9.5pt; color:#64748b; margin-bottom:10px;">Quadros considerados na infraestrutura: ${addedPanels.map(p => p.name).join(', ')}</p>`;
+      `;
+    }
     
-    const totalInfraMap = {};
-    addedPanels.forEach(panel => {
-      const items = calculateInfraComponentsForPanel(panel);
-      items.forEach(item => {
-        if (totalInfraMap[item.code]) {
-          totalInfraMap[item.code].qty += item.qty;
-          totalInfraMap[item.code].value = totalInfraMap[item.code].qty * totalInfraMap[item.code].unitPrice;
-        } else {
-          totalInfraMap[item.code] = { ...item };
-        }
-      });
-    });
-    
-    const totalItems = Object.values(totalInfraMap);
-    let grandTotalInfra = 0;
+    html += `<h2 class="section-title">3. Resumo das Cargas Elétricas (NBR 5410)</h2>`;
     
     html += `
     <table class="report-table">
       <thead>
         <tr>
-          <th>Código</th>
-          <th>Descrição</th>
-          <th>Marca</th>
-          <th class="num-col">Qtd</th>
-          <th>Un</th>
-          <th class="num-col">Unitário</th>
-          <th class="num-col">Total</th>
+          <th>Quadro / Equipamento</th>
+          <th>Tipo</th>
+          <th>Tensão</th>
+          <th class="num-col">Potência</th>
+          <th class="num-col">Corrente</th>
+          <th>Cabo Geral (NBR 5410)</th>
         </tr>
       </thead>
       <tbody>
     `;
     
-    totalItems.forEach(c => {
-      grandTotalInfra += c.value;
+    budgetState.panels.forEach(panel => {
+      let typeLabel = 'Potência';
+      switch(panel.type) {
+        case 'potencia': typeLabel = 'Potência'; break;
+        case 'comando': typeLabel = 'Comando'; break;
+        case 'potencia-comando': typeLabel = 'Potência e Comando'; break;
+        case 'automacao': typeLabel = 'Automação'; break;
+        case 'completo': typeLabel = 'Pot., Com. & Aut.'; break;
+        case 'remoto': typeLabel = 'Aut. Remoto'; break;
+      }
+      
+      const panelCable = typeof getNBR5410CableSectionForPanel === 'function' ? getNBR5410CableSectionForPanel(panel.calculatedCurrent) : '-';
+      const pPower = Number(panel.totalPowerKw) || 0;
+      const pCurrent = Number(panel.calculatedCurrent) || 0;
+      
       html += `
-        <tr>
-          <td>${c.code}</td>
-          <td>${c.name}</td>
-          <td>${c.brand}</td>
-          <td class="num-col">${c.qty}</td>
-          <td>${c.unit}</td>
-          <td class="num-col">${c.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-          <td class="num-col">${c.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        <tr style="font-weight: 700; background-color: #f1f5f9;">
+          <td>${panel.name || 'Quadro'}</td>
+          <td>Quadro - ${typeLabel}</td>
+          <td>${panel.voltage || '220V'}</td>
+          <td class="num-col">${pPower.toFixed(1).replace('.', ',')} kW</td>
+          <td class="num-col" style="color: #1e3a8a;">${pCurrent.toFixed(1).replace('.', ',')} A</td>
+          <td>${panelCable ? panelCable + ' mm²' : '-'}</td>
         </tr>
       `;
+      
+      if (panel.type === 'comando' || panel.type === 'remoto') {
+        html += `
+          <tr>
+            <td colspan="6" style="padding-left: 25px; color: #64748b; font-style: italic;">
+              ↳ Carga estimada de 2kW Monofásica por equipamento (padrão de comando)
+            </td>
+          </tr>
+        `;
+      } else if (panel.equipments && panel.equipments.length > 0) {
+        panel.equipments.forEach(eq => {
+          const startsStr = eq.starts && eq.starts.length > 0 ? eq.starts.join('/') : '-';
+          const eqCurrent = Number(eq.calculatedCurrent) || 0;
+          const eqCable = eq.calculatedCable ? eq.calculatedCable.toString() : '-';
+          
+          html += `
+            <tr>
+              <td style="padding-left: 25px; color: #475569;">↳ ${eq.name || 'Equip.'} (Motor)</td>
+              <td style="color: #64748b;">Motor - ${startsStr}</td>
+              <td style="color: #64748b;">${panel.voltage || '220V'}</td>
+              <td class="num-col" style="color: #64748b;">${eq.power || '-'}</td>
+              <td class="num-col" style="color: #64748b;">${eqCurrent > 0 ? eqCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
+              <td style="color: #64748b;">${eqCable !== '-' ? eqCable + ' mm²' : '-'}</td>
+            </tr>
+          `;
+          
+          if (eq.hasHeating && eq.heatingPower) {
+            const hCurrent = Number(eq.heatingCalculatedCurrent) || 0;
+            const hCable = eq.heatingCalculatedCable ? eq.heatingCalculatedCable.toString() : '-';
+            html += `
+              <tr>
+                <td style="padding-left: 25px; color: #475569;">↳ ${eq.name || 'Equip.'} (Aquec.)</td>
+                <td style="color: #64748b;">Resistência - ${eq.heatingControl || 'OnOff'}</td>
+                <td style="color: #64748b;">${panel.voltage || '220V'}</td>
+                <td class="num-col" style="color: #64748b;">${eq.heatingPower || '-'}</td>
+                <td class="num-col" style="color: #64748b;">${hCurrent > 0 ? hCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
+                <td style="color: #64748b;">${hCable !== '-' ? hCable + ' mm²' : '-'}</td>
+              </tr>
+            `;
+          }
+          
+          if (eq.hasHumid && eq.humidPower) {
+            const huCurrent = Number(eq.humidCalculatedCurrent) || 0;
+            const huCable = eq.humidCalculatedCable ? eq.humidCalculatedCable.toString() : '-';
+            html += `
+              <tr>
+                <td style="padding-left: 25px; color: #475569;">↳ ${eq.name || 'Equip.'} (Umid.)</td>
+                <td style="color: #64748b;">Umidificação - ${eq.humidControl || 'OnOff'}</td>
+                <td style="color: #64748b;">${panel.voltage || '220V'}</td>
+                <td class="num-col" style="color: #64748b;">${eq.humidPower || '-'}</td>
+                <td class="num-col" style="color: #64748b;">${huCurrent > 0 ? huCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
+                <td style="color: #64748b;">${huCable !== '-' ? huCable + ' mm²' : '-'}</td>
+              </tr>
+            `;
+          }
+        });
+      }
     });
     
     html += `
-        <tr style="font-weight: 700; background-color: #f1f5f9;">
-          <td colspan="6">Total Geral Infraestrutura</td>
-          <td class="num-col" style="color: #1e3a8a;">${grandTotalInfra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-        </tr>
       </tbody>
     </table>
     `;
-  }
-  
-  html += `<h2 class="section-title">3. Resumo das Cargas Elétricas (NBR 5410)</h2>`;
-  
-  html += `
-  <table class="report-table">
-    <thead>
-      <tr>
-        <th>Quadro / Equipamento</th>
-        <th>Tipo</th>
-        <th>Tensão</th>
-        <th class="num-col">Potência</th>
-        <th class="num-col">Corrente</th>
-        <th>Cabo Geral (NBR 5410)</th>
-      </tr>
-    </thead>
-    <tbody>
-  `;
-  
-  budgetState.panels.forEach(panel => {
-    let typeLabel = 'Potência';
-    switch(panel.type) {
-      case 'potencia': typeLabel = 'Potência'; break;
-      case 'comando': typeLabel = 'Comando'; break;
-      case 'potencia-comando': typeLabel = 'Potência e Comando'; break;
-      case 'automacao': typeLabel = 'Automação'; break;
-      case 'completo': typeLabel = 'Pot., Com. & Aut.'; break;
-      case 'remoto': typeLabel = 'Aut. Remoto'; break;
-    }
     
-    const panelCable = getNBR5410CableSectionForPanel(panel.calculatedCurrent);
+    let grandTotalInfra = 0;
+    addedPanels.forEach(panel => {
+      const items = typeof calculateInfraComponentsForPanel === 'function' ? calculateInfraComponentsForPanel(panel) : [];
+      grandTotalInfra += items.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+    });
+    
+    const grandTotal = grandTotalPanels + grandTotalInfra;
     
     html += `
-      <tr style="font-weight: 700; background-color: #f1f5f9;">
-        <td>${panel.name}</td>
-        <td>Quadro - ${typeLabel}</td>
-        <td>${panel.voltage || '220V'}</td>
-        <td class="num-col">${panel.totalPowerKw ? panel.totalPowerKw.toFixed(1).replace('.', ',') : '0,0'} kW</td>
-        <td class="num-col" style="color: #1e3a8a;">${panel.calculatedCurrent ? panel.calculatedCurrent.toFixed(1).replace('.', ',') : '0,0'} A</td>
-        <td>${panelCable ? panelCable + ' mm²' : '-'}</td>
-      </tr>
+    <div class="summary-card">
+      <h3 style="margin-top:0; color:#1e3a8a; border-bottom:1px solid #bfdbfe; padding-bottom:8px;">Resumo Financeiro do Orçamento</h3>
+      <div class="summary-row">
+        <span>Valor Total dos Quadros Elétricos:</span>
+        <strong>${(Number(grandTotalPanels) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
+      </div>
+      <div class="summary-row">
+        <span>Valor Total da Infraestrutura Elétrica:</span>
+        <strong>${(Number(grandTotalInfra) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
+      </div>
+      <div class="summary-row total">
+        <span>VALOR TOTAL GERAL DO ORÇAMENTO:</span>
+        <span>${(Number(grandTotal) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+      </div>
+    </div>
+    
+    <div class="footer">
+      Relatório gerado automaticamente pelo Sistema de Orçamento 3D &copy; ${today.getFullYear()}
+    </div>
+  </body>
+  </html>
     `;
     
-    if (panel.type === 'comando' || panel.type === 'remoto') {
-      html += `
-        <tr>
-          <td colspan="6" style="padding-left: 25px; color: #64748b; font-style: italic;">
-            ↳ Carga estimada de 2kW Monofásica por equipamento (padrão de comando)
-          </td>
-        </tr>
-      `;
-    } else if (panel.equipments && panel.equipments.length > 0) {
-      panel.equipments.forEach(eq => {
-        const startsStr = eq.starts && eq.starts.length > 0 ? eq.starts.join('/') : '-';
-        
-        html += `
-          <tr>
-            <td style="padding-left: 25px; color: #475569;">↳ ${eq.name} (Motor)</td>
-            <td style="color: #64748b;">Motor - ${startsStr}</td>
-            <td style="color: #64748b;">${panel.voltage}</td>
-            <td class="num-col" style="color: #64748b;">${eq.power}</td>
-            <td class="num-col" style="color: #64748b;">${eq.calculatedCurrent ? eq.calculatedCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
-            <td style="color: #64748b;">${eq.calculatedCable ? eq.calculatedCable + ' mm²' : '-'}</td>
-          </tr>
-        `;
-        
-        if (eq.hasHeating && eq.heatingPower) {
-          html += `
-            <tr>
-              <td style="padding-left: 25px; color: #475569;">↳ ${eq.name} (Aquec.)</td>
-              <td style="color: #64748b;">Resistência - ${eq.heatingControl || 'OnOff'}</td>
-              <td style="color: #64748b;">${panel.voltage}</td>
-              <td class="num-col" style="color: #64748b;">${eq.heatingPower}</td>
-              <td class="num-col" style="color: #64748b;">${eq.heatingCalculatedCurrent ? eq.heatingCalculatedCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
-              <td style="color: #64748b;">${eq.heatingCalculatedCable ? eq.heatingCalculatedCable + ' mm²' : '-'}</td>
-            </tr>
-          `;
-        }
-        
-        if (eq.hasHumid && eq.humidPower) {
-          html += `
-            <tr>
-              <td style="padding-left: 25px; color: #475569;">↳ ${eq.name} (Umid.)</td>
-              <td style="color: #64748b;">Umidificação - ${eq.humidControl || 'OnOff'}</td>
-              <td style="color: #64748b;">${panel.voltage}</td>
-              <td class="num-col" style="color: #64748b;">${eq.humidPower}</td>
-              <td class="num-col" style="color: #64748b;">${eq.humidCalculatedCurrent ? eq.humidCalculatedCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
-              <td style="color: #64748b;">${eq.humidCalculatedCable ? eq.humidCalculatedCable + ' mm²' : '-'}</td>
-            </tr>
-          `;
-        }
-      });
-    }
-  });
-  
-  html += `
-    </tbody>
-  </table>
-  `;
-  
-  let grandTotalInfra = 0;
-  addedPanels.forEach(panel => {
-    const items = calculateInfraComponentsForPanel(panel);
-    grandTotalInfra += items.reduce((sum, item) => sum + (parseFloat(item.value) || 0), 0);
-  });
-  
-  const grandTotal = grandTotalPanels + grandTotalInfra;
-  
-  html += `
-  <div class="summary-card">
-    <h3 style="margin-top:0; color:#1e3a8a; border-bottom:1px solid #bfdbfe; padding-bottom:8px;">Resumo Financeiro do Orçamento</h3>
-    <div class="summary-row">
-      <span>Valor Total dos Quadros Elétricos:</span>
-      <strong>${grandTotalPanels.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
-    </div>
-    <div class="summary-row">
-      <span>Valor Total da Infraestrutura Elétrica:</span>
-      <strong>${grandTotalInfra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
-    </div>
-    <div class="summary-row total">
-      <span>VALOR TOTAL GERAL DO ORÇAMENTO:</span>
-      <span>${grandTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-    </div>
-  </div>
-  
-  <div class="footer">
-    Relatório gerado automaticamente pelo Sistema de Orçamento 3D &copy; ${today.getFullYear()}
-  </div>
-</body>
-</html>
-  `;
-  
-  // Create a temporary hidden iframe to perform printing without popups or local file origin SecurityErrors
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
-  document.body.appendChild(iframe);
-  
-  const doc = iframe.contentDocument || iframe.contentWindow.document;
-  doc.write(html);
-  doc.close();
-  
-  // Wait a short duration to ensure styles and font imports are ready before print dialog opens
-  setTimeout(() => {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    // Cleanup the iframe from the DOM
+    // Create a temporary hidden iframe to perform printing without popups or local file origin SecurityErrors
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+    
     setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 1000);
-  }, 300);
+      if (iframe.contentWindow) {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }
+      setTimeout(() => {
+        if (iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
+      }, 1000);
+    }, 500);
+  } catch (err) {
+    console.error("Erro ao exportar PDF:", err);
+    alert("Ocorreu um erro ao gerar o PDF: " + err.message + "\n\nPor favor, verifique o console do navegador para mais detalhes.");
+  }
 }
