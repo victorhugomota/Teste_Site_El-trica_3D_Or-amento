@@ -1936,7 +1936,7 @@ function getNBR5410CableSectionForPanel(current) {
 
 function calculateInfraComponentsForPanel(panel) {
   const infraMap = {};
-  
+
   const addInfra = (code, qtyMultiplier = 1) => {
     if (!code) return;
     const catItem = PRECOS_DATABASE.catalog[code];
@@ -1958,6 +1958,7 @@ function calculateInfraComponentsForPanel(panel) {
   };
 
   const getCableDiameter = (code) => {
+    if (code === 'CABO-REDE-CAT6') return 6.0;
     if (code === 'CABO-PP-2X0.75' || code === 'CABO-SHIELD-2X0.75') return 6.5;
     if (code === 'CABO-PP-3X0.75' || code === 'CABO-SHIELD-3X0.75') return 7.2;
     if (code === 'CABO-SHIELD-4X0.75') return 7.8;
@@ -2016,94 +2017,111 @@ function calculateInfraComponentsForPanel(panel) {
     return '1/2';
   };
 
-  if (!panel.equipments || panel.equipments.length === 0) {
+  let equips = [];
+  if (panel.equipments && panel.equipments.length > 0) {
+    equips = panel.equipments;
+  } else if ((panel.type === 'comando' || panel.type === 'remoto') && panel.quantity > 0) {
+    for (let i = 1; i <= panel.quantity; i++) {
+      equips.push({ id: `virtual-${i}`, name: panel.type === 'comando' ? `Ponto de Comando ${i}` : `Ponto de Automação Remota ${i}`, type: panel.type.toUpperCase() });
+    }
+  }
+
+  if (equips.length === 0) {
     return [];
   }
 
-  const isEletrocalhaMode = panel.equipments.length > 5;
+  const isEletrocalhaMode = equips.length > 5;
   const distances = panel.infraDistances || {};
   let totalPanelCablesArea = 0;
   let totalEletrocalhaLength = 0;
 
-  panel.equipments.forEach(eq => {
-    const D = parseFloat(distances[eq.id]) || 0;
+  equips.forEach(eq => {
+    const D = (panel.type === 'comando' || panel.type === 'remoto') ? (parseFloat(panel.infraDistances['general']) || 0) : (parseFloat(distances[eq.id]) || 0);
     if (D <= 0) return;
 
     const eqCables = [];
 
-    // 1. Power Cables
-    if (eq.power) {
-      let startType = eq.starts;
-      if (Array.isArray(startType)) startType = startType[0];
-      
-      if (startType === 'EC') {
-        eqCables.push({ code: 'CABO-PP-5X1.5', qty: D });
-        eqCables.push({ code: 'CABO-PP-6X1.5', qty: D });
-      } else if (eq.calculatedCable) {
-        const bitola = eq.calculatedCable.replace("mm²", "").trim();
-        const code = getPPCableCode(4, bitola);
-        if (code) {
-          eqCables.push({ code: code, qty: D });
-        }
-      }
-    }
+    // Virtual panel cable rules
+    if (panel.type === 'comando') {
+      eqCables.push({ code: 'CABO-PP-6X1.5', qty: D });
+    } else if (panel.type === 'remoto') {
+      eqCables.push({ code: 'CABO-SHIELD-3X0.75', qty: D });
+      eqCables.push({ code: 'CABO-REDE-CAT6', qty: D });
+    } else {
+      // 1. Power Cables
+      if (eq.power) {
+        let startType = eq.starts;
+        if (Array.isArray(startType)) startType = startType[0];
 
-    // 2. Automation Cables
-    if (panel.type === 'automacao' || panel.type === 'completo') {
-      if (eq.readings) {
-        const readings = eq.readings;
-        let hasTemp = readings.includes("Temp Duto") || readings.includes("Temp Ambiente");
-        let hasUmid = readings.includes("Umid Duto") || readings.includes("Umid Ambiente");
-        let hasCO2 = readings.includes("CO2 Duto") || readings.includes("CO2 Ambiente");
-        let hasVazao = readings.includes("Vazão");
+        if (startType === 'EC') {
+          eqCables.push({ code: 'CABO-PP-5X1.5', qty: D });
+          eqCables.push({ code: 'CABO-PP-6X1.5', qty: D });
+        } else if (eq.calculatedCable) {
+          const bitola = eq.calculatedCable.replace("mm²", "").trim();
+          const code = getPPCableCode(4, bitola);
+          if (code) {
+            eqCables.push({ code: code, qty: D });
+          }
+        }
+      }
 
-        if (hasTemp && hasUmid && hasCO2) {
-          eqCables.push({ code: 'CABO-SHIELD-5X0.75', qty: D });
-        } else if (hasTemp && hasUmid) {
-          eqCables.push({ code: 'CABO-SHIELD-5X0.75', qty: D });
-        } else if (hasTemp) {
-          eqCables.push({ code: 'CABO-SHIELD-3X0.75', qty: D });
-        } else if (hasUmid) {
-          eqCables.push({ code: 'CABO-SHIELD-3X0.75', qty: D });
-        } else if (hasCO2) {
-          eqCables.push({ code: 'CABO-SHIELD-3X0.75', qty: D });
+      // 2. Automation Cables
+      if (panel.type === 'automacao' || panel.type === 'completo') {
+        if (eq.readings) {
+          const readings = eq.readings;
+          let hasTemp = readings.includes("Temp Duto") || readings.includes("Temp Ambiente");
+          let hasUmid = readings.includes("Umid Duto") || readings.includes("Umid Ambiente");
+          let hasCO2 = readings.includes("CO2 Duto") || readings.includes("CO2 Ambiente");
+          let hasVazao = readings.includes("Vazão");
+
+          if (hasTemp && hasUmid && hasCO2) {
+            eqCables.push({ code: 'CABO-SHIELD-5X0.75', qty: D });
+          } else if (hasTemp && hasUmid) {
+            eqCables.push({ code: 'CABO-SHIELD-5X0.75', qty: D });
+          } else if (hasTemp) {
+            eqCables.push({ code: 'CABO-SHIELD-3X0.75', qty: D });
+          } else if (hasUmid) {
+            eqCables.push({ code: 'CABO-SHIELD-3X0.75', qty: D });
+          } else if (hasCO2) {
+            eqCables.push({ code: 'CABO-SHIELD-3X0.75', qty: D });
+          }
+
+          if (hasVazao) {
+            eqCables.push({ code: 'CABO-SHIELD-2X0.75', qty: D });
+          }
         }
 
-        if (hasVazao) {
-          eqCables.push({ code: 'CABO-SHIELD-2X0.75', qty: D });
+        // Valve
+        if (eq.type === 'UTA' && eq.expansionType === 'Indireta' && eq.valveType === 'Proporcional') {
+          eqCables.push({ code: 'CABO-PP-3X0.75', qty: D });
         }
-      }
-      
-      // Valve
-      if (eq.type === 'UTA' && eq.expansionType === 'Indireta' && eq.valveType === 'Proporcional') {
-        eqCables.push({ code: 'CABO-PP-3X0.75', qty: D });
-      }
-      
-      // Pressostato default rule
-      if (panel.type === 'completo') {
-        if (eq.type === 'UTA' || eq.type === 'EX/CV') {
-          eqCables.push({ code: 'CABO-PP-2X0.75', qty: D });
-          eqCables.push({ code: 'CABO-PP-2X0.75', qty: D });
-        }
-      }
-    }
 
-    // 3. Heating & Humidification stages
-    if (eq.type === 'UTA') {
-      if (eq.hasHeating && eq.heatingPower && eq.heatingCalculatedCable) {
-        const stages = parseInt(eq.heatingStages) || 1;
-        const bitola = eq.heatingCalculatedCable.replace("mm²", "").trim();
-        const code = getPPCableCode(3, bitola);
-        if (code) {
-          eqCables.push({ code: code, qty: D * stages });
+        // Pressostato default rule
+        if (panel.type === 'completo') {
+          if (eq.type === 'UTA' || eq.type === 'EX/CV') {
+            eqCables.push({ code: 'CABO-PP-2X0.75', qty: D });
+            eqCables.push({ code: 'CABO-PP-2X0.75', qty: D });
+          }
         }
       }
-      if (eq.hasHumid && eq.humidPower && eq.humidCalculatedCable) {
-        const stages = parseInt(eq.humidStages) || 1;
-        const bitola = eq.humidCalculatedCable.replace("mm²", "").trim();
-        const code = getPPCableCode(3, bitola);
-        if (code) {
-          eqCables.push({ code: code, qty: D * stages });
+
+      // 3. Heating & Humidification stages
+      if (eq.type === 'UTA') {
+        if (eq.hasHeating && eq.heatingPower && eq.heatingCalculatedCable) {
+          const stages = parseInt(eq.heatingStages) || 1;
+          const bitola = eq.heatingCalculatedCable.replace("mm²", "").trim();
+          const code = getPPCableCode(3, bitola);
+          if (code) {
+            eqCables.push({ code: code, qty: D * stages });
+          }
+        }
+        if (eq.hasHumid && eq.humidPower && eq.humidCalculatedCable) {
+          const stages = parseInt(eq.humidStages) || 1;
+          const bitola = eq.humidCalculatedCable.replace("mm²", "").trim();
+          const code = getPPCableCode(3, bitola);
+          if (code) {
+            eqCables.push({ code: code, qty: D * stages });
+          }
         }
       }
     }
@@ -2125,14 +2143,14 @@ function calculateInfraComponentsForPanel(panel) {
       const trayLen = 0.8 * D;
       const condLen = 0.2 * D;
       totalEletrocalhaLength += trayLen;
-      
+
       if (infraType === 'pesada') {
         addInfra(`ELETRODUTO-PESADO-${redConduitSize}`, condLen);
       } else {
         addInfra(`ELETRODUTO-GALV-${redConduitSize}`, condLen);
       }
       addInfra(`SUPORTE-ABRACADEIRA`, Math.ceil(condLen / 1.5));
-      
+
       let conduleteCount = Math.ceil(condLen);
       let autCount = 0;
       if (panel.type === 'automacao' || panel.type === 'completo') {
@@ -2142,7 +2160,7 @@ function calculateInfraComponentsForPanel(panel) {
         if (eq.type === 'UTA' && eq.expansionType === 'Indireta') autCount++;
       }
       conduleteCount += autCount;
-      
+
       if (conduleteCount > 0) {
         if (infraType === 'pesada') {
           const qT = Math.floor(conduleteCount / 3);
@@ -2156,13 +2174,13 @@ function calculateInfraComponentsForPanel(panel) {
           addInfra(`UNIDUT-GALV-${redConduitSize}`, 3 * conduleteCount);
         }
       }
-      
-      if (eq.power) addInfra(`PRENSA-CABO-3/4`, 1);
+
+      if (eq.power && panel.type !== 'comando' && panel.type !== 'remoto') addInfra(`PRENSA-CABO-3/4`, 1);
       if (autCount > 0) addInfra(`PRENSA-CABO-1/2`, autCount);
     } else {
       const stdLen = 0.7 * D;
       const redLen = 0.3 * D;
-      
+
       if (infraType === 'pesada') {
         addInfra(`ELETRODUTO-PESADO-${stdConduitSize}`, stdLen);
         addInfra(`ELETRODUTO-PESADO-${redConduitSize}`, redLen);
@@ -2170,12 +2188,12 @@ function calculateInfraComponentsForPanel(panel) {
         addInfra(`ELETRODUTO-GALV-${stdConduitSize}`, stdLen);
         addInfra(`ELETRODUTO-GALV-${redConduitSize}`, redLen);
       }
-      
+
       addInfra(`SUPORTE-ABRACADEIRA`, Math.ceil((stdLen + redLen) / 1.5));
-      
+
       let stdCondCount = Math.ceil(stdLen);
       let redCondCount = Math.ceil(redLen);
-      
+
       let autCount = 0;
       if (panel.type === 'automacao' || panel.type === 'completo') {
         if (eq.readings) autCount += eq.readings.length;
@@ -2184,7 +2202,7 @@ function calculateInfraComponentsForPanel(panel) {
         if (eq.type === 'UTA' && eq.expansionType === 'Indireta') autCount++;
       }
       redCondCount += autCount;
-      
+
       if (stdCondCount > 0) {
         if (infraType === 'pesada') {
           const qT = Math.floor(stdCondCount / 3);
@@ -2198,7 +2216,7 @@ function calculateInfraComponentsForPanel(panel) {
           addInfra(`UNIDUT-GALV-${stdConduitSize}`, 3 * stdCondCount);
         }
       }
-      
+
       if (redCondCount > 0) {
         if (infraType === 'pesada') {
           const qT = Math.floor(redCondCount / 3);
@@ -2212,8 +2230,8 @@ function calculateInfraComponentsForPanel(panel) {
           addInfra(`UNIDUT-GALV-${redConduitSize}`, 3 * redCondCount);
         }
       }
-      
-      if (eq.power) addInfra(`PRENSA-CABO-3/4`, 1);
+
+      if (eq.power && panel.type !== 'comando' && panel.type !== 'remoto') addInfra(`PRENSA-CABO-3/4`, 1);
       if (autCount > 0) addInfra(`PRENSA-CABO-1/2`, autCount);
     }
   });
@@ -2225,7 +2243,7 @@ function calculateInfraComponentsForPanel(panel) {
     } else if (totalPanelCablesArea > 2000) {
       trayCode = 'ELETROCALHA-200x50';
     }
-    
+
     addInfra(trayCode, totalEletrocalhaLength);
     addInfra('SUPORTE-TIRANTE', Math.ceil(totalEletrocalhaLength / 1.5));
   }
@@ -2267,7 +2285,8 @@ function renderInfraView() {
   select.innerHTML = '<option value="">-- Escolha um Quadro --</option>';
   
   budgetState.panels.forEach(p => {
-    if (p.equipments && p.equipments.length > 0) {
+    const hasEquips = (p.equipments && p.equipments.length > 0) || ((p.type === 'comando' || p.type === 'remoto') && p.quantity > 0);
+    if (hasEquips) {
       const opt = document.createElement('option');
       opt.value = p.id;
       opt.textContent = p.name;
@@ -2368,17 +2387,7 @@ function renderInfraEquipmentsInputs(panel) {
   
   panel.infraDistances = panel.infraDistances || {};
   
-  let list = [];
-  if (panel.equipments && panel.equipments.length > 0) {
-    list = panel.equipments.map(eq => ({ id: eq.id, name: eq.name || eq.type, type: eq.type }));
-  } else if (panel.quantity && (panel.type === 'comando' || panel.type === 'remoto')) {
-    const label = panel.type === 'comando' ? 'Ponto de Comando' : 'Ponto de Automação Remota';
-    for (let i = 1; i <= panel.quantity; i++) {
-      list.push({ id: `virtual-${i}`, name: `${label} ${i}`, type: panel.type.toUpperCase() });
-    }
-  }
-  
-  list.forEach(eq => {
+  if (panel.type === 'comando' || panel.type === 'remoto') {
     const item = document.createElement('div');
     item.className = 'card';
     item.style.padding = '16px';
@@ -2386,12 +2395,14 @@ function renderInfraEquipmentsInputs(panel) {
     item.style.border = '1px solid var(--border-color)';
     item.style.borderRadius = 'var(--radius-sm)';
     
+    const label = panel.type === 'comando' ? 'Quadro de Comando' : 'Quadro de Automação Remota';
+    
     item.innerHTML = `
-      <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">${eq.name} <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">${eq.type}</span></h4>
+      <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">Distância Geral do Quadro <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">${panel.type.toUpperCase()}</span></h4>
       <div class="form-group" style="margin: 0;">
-        <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Distância até o Quadro</label>
+        <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Distância Geral até os Equipamentos</label>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <input type="number" class="form-control infra-distance-input" data-eq-id="${eq.id}" value="${panel.infraDistances[eq.id] || 0}" min="0" style="height: 36px;">
+          <input type="number" class="form-control infra-distance-input" data-eq-id="general" value="${panel.infraDistances['general'] || 0}" min="0" style="height: 36px;">
           <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">metros</span>
         </div>
       </div>
@@ -2400,7 +2411,7 @@ function renderInfraEquipmentsInputs(panel) {
     const input = item.querySelector('.infra-distance-input');
     input.addEventListener('input', (e) => {
       const dist = parseFloat(e.target.value) || 0;
-      panel.infraDistances[eq.id] = dist;
+      panel.infraDistances['general'] = dist;
       
       localStorage.setItem('panel_builder_state', JSON.stringify(budgetState));
       
@@ -2409,7 +2420,40 @@ function renderInfraEquipmentsInputs(panel) {
     });
     
     container.appendChild(item);
-  });
+  } else {
+    panel.equipments.forEach(eq => {
+      const item = document.createElement('div');
+      item.className = 'card';
+      item.style.padding = '16px';
+      item.style.backgroundColor = 'var(--bg-secondary)';
+      item.style.border = '1px solid var(--border-color)';
+      item.style.borderRadius = 'var(--radius-sm)';
+      
+      item.innerHTML = `
+        <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">${eq.name || eq.type} <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">${eq.type}</span></h4>
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Distância até o Quadro</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="number" class="form-control infra-distance-input" data-eq-id="${eq.id}" value="${panel.infraDistances[eq.id] || 0}" min="0" style="height: 36px;">
+            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">metros</span>
+          </div>
+        </div>
+      `;
+      
+      const input = item.querySelector('.infra-distance-input');
+      input.addEventListener('input', (e) => {
+        const dist = parseFloat(e.target.value) || 0;
+        panel.infraDistances[eq.id] = dist;
+        
+        localStorage.setItem('panel_builder_state', JSON.stringify(budgetState));
+        
+        renderInfraTableForPanel(panel);
+        renderConsolidatedInfraTable();
+      });
+      
+      container.appendChild(item);
+    });
+  }
 }
 
 function renderInfraTableForPanel(panel) {
@@ -2505,7 +2549,7 @@ function getConsolidatedInfraItems() {
       }
       
       equips.forEach(eq => {
-        const D = parseFloat(distances[eq.id]) || 0;
+        const D = (panel.type === 'comando' || panel.type === 'remoto') ? (parseFloat(panel.infraDistances['general']) || 0) : (parseFloat(distances[eq.id]) || 0);
         if (D <= 0) return;
         
         addConsolidated('CABO-REDE-CAT6', D);
@@ -4295,9 +4339,7 @@ function generateTestScenarios() {
         panel.infraDistances[eq.id] = 15;
       });
     } else if (pData.quantity && (pData.type === 'comando' || pData.type === 'remoto')) {
-      for (let i = 1; i <= pData.quantity; i++) {
-        panel.infraDistances[`virtual-${i}`] = 15;
-      }
+      panel.infraDistances['general'] = 15;
     }
     
     panel.components = calculatePanelComponents(panel);
