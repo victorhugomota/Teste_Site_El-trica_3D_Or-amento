@@ -38,6 +38,12 @@ function getNextStandardPower(customKw) {
 }
 
 // Helper to find the tripolar breaker code based on resistive kW power and voltage
+function parsePowerKw(powerStr) {
+  if (!powerStr) return 0;
+  const clean = powerStr.toString().replace("kW", "").trim().replace(",", ".");
+  return parseFloat(clean) || 0;
+}
+
 function getTripolarBreakerCode(kw, voltage) {
   const vVal = parseInt(voltage.replace("V", "")) || 220;
   const current = (kw * 1000) / (Math.sqrt(3) * vVal);
@@ -97,9 +103,28 @@ function calculatePanelComponents(panel) {
 
   const componentsMap = {}; // Key: componentCode -> { code, name, qty, unit, unitPrice, value }
   
+  let currentMotorCurrent = 0;
+  
+  const getDisjMotorCodeByCurrent = (current) => {
+    if (current <= 1.5) return 'DISJ-MOTOR-0.18_0.37kW';
+    if (current <= 2.5) return 'DISJ-MOTOR-0.75kW';
+    if (current <= 4.0) return 'DISJ-MOTOR-1.5kW';
+    if (current <= 6.3) return 'DISJ-MOTOR-2.2kW';
+    if (current <= 10.0) return 'DISJ-MOTOR-3.0_4.0kW';
+    if (current <= 16.0) return 'DISJ-MOTOR-5.5_7.5kW';
+    if (current <= 32.0) return 'DISJ-MOTOR-11_15kW';
+    return 'DISJ-MOTOR-ACIMA-15kW';
+  };
+  
   const addComp = (code, qtyMultiplier = 1, customName = null) => {
     if (!code) return;
     if (code === 'BORNE-RELE-BTWR') return; // Handled separately at the end of the function
+    
+    // Intercept DISJ-MOTOR- and replace with dynamic code if we have active motor context
+    if (code.startsWith('DISJ-MOTOR-') && currentMotorCurrent > 0) {
+      code = getDisjMotorCodeByCurrent(currentMotorCurrent);
+    }
+    
     const catItem = PRECOS_DATABASE.catalog[code];
     if (!catItem) {
       console.warn(`Componente não encontrado no catálogo: ${code}`);
@@ -554,10 +579,11 @@ function calculatePanelComponents(panel) {
       }
 
       // Calculate primary power cable using NBR 5410
+      let motorCurrent = 0;
       if (eq.power) {
         const motorPowerKw = parsePowerKw(eq.power);
         if (motorPowerKw > 0) {
-          const motorCurrent = (motorPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+          motorCurrent = (motorPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
           const sec = getNBR5410CableSection(motorCurrent);
           addComp(`CABO-POT-${sec}-PRETO`, 25);
           addComp(`CABO-POT-${sec}-VERDE`, 10);
@@ -571,6 +597,7 @@ function calculatePanelComponents(panel) {
         eq.calculatedCurrent = null;
         eq.calculatedCable = null;
       }
+      currentMotorCurrent = motorCurrent;
       
       // A) Power starting components
       const hasPowerCol = (type === 'potencia' || type === 'potencia-comando' || type === 'completo');
@@ -1768,61 +1795,97 @@ function renderCargasView() {
       tableBody.appendChild(equipRow);
     } else if (panel.equipments && panel.equipments.length > 0) {
       panel.equipments.forEach((eq, eqIdx) => {
-        const equipRow = document.createElement('tr');
         const eqName = eq.name ? eq.name : `Equipamento ${eqIdx + 1}`;
-        const pStr = eq.power ? eq.power.replace('kW', '').trim().replace('.', ',') : '-';
-        const curStr = eq.calculatedCurrent ? eq.calculatedCurrent.replace('A', '').trim() : '-';
-        const cabStr = eq.calculatedCable ? eq.calculatedCable.trim() : '-';
         
+        // Calculations for total power and current
+        const motorKw = eq.power ? parsePowerKw(eq.power) : 0;
+        const motorCurVal = eq.calculatedCurrent ? parseFloat(eq.calculatedCurrent.replace('A', '').trim().replace(',', '.')) : 0;
+        
+        let heatingKw = 0;
+        let heatingCurVal = 0;
+        let heatingCab = '-';
+        const hStg = eq.heatingStages || 1;
+        if (eq.hasHeating && eq.heatingPower) {
+          heatingKw = parsePowerKw(eq.heatingPower);
+          heatingCurVal = eq.heatingCalculatedCurrent ? parseFloat(eq.heatingCalculatedCurrent.replace('A', '').trim().replace(',', '.')) : 0;
+          heatingCab = eq.heatingCalculatedCable ? eq.heatingCalculatedCable.trim() : '-';
+        }
+        
+        let humidKw = 0;
+        let humidCurVal = 0;
+        let humidCab = '-';
+        const huStg = eq.humidStages || 1;
+        if (eq.hasHumid && eq.humidPower) {
+          humidKw = parsePowerKw(eq.humidPower);
+          humidCurVal = eq.humidCalculatedCurrent ? parseFloat(eq.humidCalculatedCurrent.replace('A', '').trim().replace(',', '.')) : 0;
+          humidCab = eq.humidCalculatedCable ? eq.humidCalculatedCable.trim() : '-';
+        }
+        
+        const totalEqPower = motorKw + heatingKw + humidKw;
+        const totalEqCurrent = motorCurVal + (eq.hasHeating ? (heatingCurVal * hStg) : 0) + (eq.hasHumid ? (humidCurVal * huStg) : 0);
+        
+        // 1. Equipment Summary Row (shows total power and current)
+        const equipRow = document.createElement('tr');
         equipRow.innerHTML = `
-          <td style="padding: 12px 16px 12px 36px; color: var(--text-primary); font-weight: 500;">
+          <td style="padding: 12px 16px 12px 36px; color: var(--text-primary); font-weight: 700;">
             ↳ ${eqName}
           </td>
-          <td style="padding: 12px 16px; font-size: 0.85rem; color: var(--text-secondary);">${eq.type}</td>
+          <td style="padding: 12px 16px; font-weight: 700; font-size: 0.85rem; color: var(--text-secondary);">${eq.type}</td>
           <td style="padding: 12px 16px; font-size: 0.85rem; color: var(--text-secondary);">-</td>
-          <td style="padding: 12px 16px; text-align: right; font-size: 0.85rem; color: var(--text-primary);">${pStr !== '-' ? pStr + ' kW' : '-'}</td>
-          <td style="padding: 12px 16px; text-align: right; font-size: 0.85rem; color: var(--text-primary);">${curStr !== '-' ? curStr + ' A' : '-'}</td>
-          <td style="padding: 12px 16px; font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">${cabStr}</td>
+          <td style="padding: 12px 16px; text-align: right; font-size: 0.85rem; color: var(--text-primary); font-weight: 700;">${totalEqPower.toFixed(1).replace('.', ',')} kW</td>
+          <td style="padding: 12px 16px; text-align: right; font-size: 0.85rem; color: var(--primary); font-weight: 700;">${totalEqCurrent.toFixed(1).replace('.', ',')} A</td>
+          <td style="padding: 12px 16px; font-size: 0.85rem; color: var(--text-secondary);">-</td>
         `;
         tableBody.appendChild(equipRow);
         
-        // Render heating stage if active
+        // 2. Motor Subline Row (always present)
+        const motorRow = document.createElement('tr');
+        const motorPowerStr = eq.power ? eq.power.replace('kW', '').trim().replace('.', ',') : '-';
+        const motorCurStr = eq.calculatedCurrent ? eq.calculatedCurrent.replace('A', '').trim() : '-';
+        const motorCabStr = eq.calculatedCable ? eq.calculatedCable.trim() : '-';
+        motorRow.innerHTML = `
+          <td style="padding: 10px 16px 10px 56px; font-size: 0.8rem; color: var(--text-secondary);">
+            ↳ Motor
+          </td>
+          <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">Motor</td>
+          <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">-</td>
+          <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${motorPowerStr !== '-' ? motorPowerStr + ' kW' : '-'}</td>
+          <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${motorCurStr !== '-' ? motorCurStr + ' A' : '-'}</td>
+          <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">${motorCabStr}</td>
+        `;
+        tableBody.appendChild(motorRow);
+        
+        // 3. Heating Subline Row
         if (eq.type === 'UTA' && eq.hasHeating && eq.heatingPower) {
           const heatRow = document.createElement('tr');
-          const hStg = eq.heatingStages || 1;
-          const heatKw = eq.heatingPower ? eq.heatingPower.replace('kW', '').trim().replace('.', ',') : '-';
-          const heatCur = eq.heatingCalculatedCurrent ? eq.heatingCalculatedCurrent.replace('A', '').trim() : '-';
-          const heatCab = eq.heatingCalculatedCable ? eq.heatingCalculatedCable.trim() : '-';
-          
+          const heatPowerStr = eq.heatingPower.replace('kW', '').trim().replace('.', ',');
+          const heatCurStr = eq.heatingCalculatedCurrent ? eq.heatingCalculatedCurrent.replace('A', '').trim() : '-';
           heatRow.innerHTML = `
             <td style="padding: 10px 16px 10px 56px; font-size: 0.8rem; color: var(--text-secondary);">
               ↳ Aquecimento (${hStg} Est.)
             </td>
             <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">Aquec. UTA</td>
             <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">-</td>
-            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${heatKw !== '-' ? heatKw + ' kW' : '-'}</td>
-            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${heatCur !== '-' ? heatCur + ' A' : '-'} (por est.)</td>
-            <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">${heatCab} (por est.)</td>
+            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${heatPowerStr} kW</td>
+            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${heatCurStr !== '-' ? heatCurStr + ' A' : '-'} (por est.)</td>
+            <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">${heatingCab} (por est.)</td>
           `;
           tableBody.appendChild(heatRow);
         }
         
-        // Render humid stage if active
+        // 4. Humidification Subline Row
         if (eq.type === 'UTA' && eq.hasHumid && eq.humidPower) {
           const humidRow = document.createElement('tr');
-          const huStg = eq.humidStages || 1;
-          const humidKw = eq.humidPower ? eq.humidPower.replace('kW', '').trim().replace('.', ',') : '-';
-          const humidCur = eq.humidCalculatedCurrent ? eq.humidCalculatedCurrent.replace('A', '').trim() : '-';
-          const humidCab = eq.humidCalculatedCable ? eq.humidCalculatedCable.trim() : '-';
-          
+          const humidPowerStr = eq.humidPower.replace('kW', '').trim().replace('.', ',');
+          const humidCurStr = eq.humidCalculatedCurrent ? eq.humidCalculatedCurrent.replace('A', '').trim() : '-';
           humidRow.innerHTML = `
             <td style="padding: 10px 16px 10px 56px; font-size: 0.8rem; color: var(--text-secondary);">
               ↳ Umidificação (${huStg} Est.)
             </td>
             <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">Umid. UTA</td>
             <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">-</td>
-            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${humidKw !== '-' ? humidKw + ' kW' : '-'}</td>
-            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${humidCur !== '-' ? humidCur + ' A' : '-'} (por est.)</td>
+            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${humidPowerStr} kW</td>
+            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${humidCurStr !== '-' ? humidCurStr + ' A' : '-'} (por est.)</td>
             <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">${humidCab} (por est.)</td>
           `;
           tableBody.appendChild(humidRow);
@@ -4519,47 +4582,89 @@ function exportToPDF() {
         `;
       } else if (panel.equipments && panel.equipments.length > 0) {
         panel.equipments.forEach(eq => {
-          const startsStr = eq.starts && eq.starts.length > 0 ? eq.starts.join('/') : '-';
-          const eqCurrent = Number(eq.calculatedCurrent) || 0;
-          const eqCable = eq.calculatedCable ? eq.calculatedCable.toString() : '-';
+          // Calculations for total power and current
+          const motorKw = eq.power ? parsePowerKw(eq.power) : 0;
+          const motorCurVal = eq.calculatedCurrent ? parseFloat(eq.calculatedCurrent.replace('A', '').trim().replace(',', '.')) : 0;
           
+          let heatingKw = 0;
+          let heatingCurVal = 0;
+          let heatingCab = '-';
+          const hStg = eq.heatingStages || 1;
+          if (eq.hasHeating && eq.heatingPower) {
+            heatingKw = parsePowerKw(eq.heatingPower);
+            heatingCurVal = eq.heatingCalculatedCurrent ? parseFloat(eq.heatingCalculatedCurrent.replace('A', '').trim().replace(',', '.')) : 0;
+            heatingCab = eq.heatingCalculatedCable ? eq.heatingCalculatedCable.trim() : '-';
+          }
+          
+          let humidKw = 0;
+          let humidCurVal = 0;
+          let humidCab = '-';
+          const huStg = eq.humidStages || 1;
+          if (eq.hasHumid && eq.humidPower) {
+            humidKw = parsePowerKw(eq.humidPower);
+            humidCurVal = eq.humidCalculatedCurrent ? parseFloat(eq.humidCalculatedCurrent.replace('A', '').trim().replace(',', '.')) : 0;
+            humidCab = eq.humidCalculatedCable ? eq.humidCalculatedCable.trim() : '-';
+          }
+          
+          const totalEqPower = motorKw + heatingKw + humidKw;
+          const totalEqCurrent = motorCurVal + (eq.hasHeating ? (heatingCurVal * hStg) : 0) + (eq.hasHumid ? (humidCurVal * huStg) : 0);
+          const startsStr = eq.starts && eq.starts.length > 0 ? eq.starts.join('/') : '-';
+          const motorPowerStr = eq.power ? eq.power.replace('kW', '').trim().replace('.', ',') : '-';
+          const motorCurStr = eq.calculatedCurrent ? eq.calculatedCurrent.replace('A', '').trim() : '-';
+          const motorCabStr = eq.calculatedCable ? eq.calculatedCable.trim() : '-';
+          
+          // 1. Equipment Summary Row (shows total power and current)
           html += `
-            <tr>
-              <td style="padding-left: 25px; color: #475569;">↳ ${eq.name || 'Equip.'} (Motor)</td>
-              <td style="color: #64748b;">Motor - ${startsStr}</td>
-              <td style="color: #64748b;">${panel.voltage || '220V'}</td>
-              <td class="num-col" style="color: #64748b;">${eq.power || '-'}</td>
-              <td class="num-col" style="color: #64748b;">${eqCurrent > 0 ? eqCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
-              <td style="color: #64748b;">${eqCable !== '-' ? eqCable + ' mm²' : '-'}</td>
+            <tr style="font-weight: 700;">
+              <td style="padding-left: 25px; color: #1e293b;">↳ ${eq.name || 'Equip.'}</td>
+              <td style="color: #475569; font-weight: 700;">${eq.type}</td>
+              <td style="color: #64748b;">-</td>
+              <td class="num-col" style="color: #1e293b; font-weight: 700;">${totalEqPower.toFixed(1).replace('.', ',')} kW</td>
+              <td class="num-col" style="color: #1e3a8a; font-weight: 700;">${totalEqCurrent.toFixed(1).replace('.', ',')} A</td>
+              <td style="color: #64748b;">-</td>
             </tr>
           `;
           
-          if (eq.hasHeating && eq.heatingPower) {
-            const hCurrent = Number(eq.heatingCalculatedCurrent) || 0;
-            const hCable = eq.heatingCalculatedCable ? eq.heatingCalculatedCable.toString() : '-';
+          // 2. Motor Subline Row (always present)
+          html += `
+            <tr>
+              <td style="padding-left: 45px; color: #475569;">↳ Motor</td>
+              <td style="color: #64748b;">Motor - ${startsStr}</td>
+              <td style="color: #64748b;">-</td>
+              <td class="num-col" style="color: #64748b;">${motorPowerStr !== '-' ? motorPowerStr + ' kW' : '-'}</td>
+              <td class="num-col" style="color: #64748b;">${motorCurStr !== '-' ? motorCurStr + ' A' : '-'}</td>
+              <td style="color: #64748b;">${motorCabStr !== '-' ? motorCabStr + ' mm²' : '-'}</td>
+            </tr>
+          `;
+          
+          // 3. Heating Subline Row
+          if (eq.type === 'UTA' && eq.hasHeating && eq.heatingPower) {
+            const heatPowerStr = eq.heatingPower.replace('kW', '').trim().replace('.', ',');
+            const heatCurStr = eq.heatingCalculatedCurrent ? eq.heatingCalculatedCurrent.replace('A', '').trim() : '-';
             html += `
               <tr>
-                <td style="padding-left: 25px; color: #475569;">↳ ${eq.name || 'Equip.'} (Aquec.)</td>
+                <td style="padding-left: 45px; color: #475569;">↳ Aquecimento (${hStg} Est.)</td>
                 <td style="color: #64748b;">Resistência - ${eq.heatingControl || 'OnOff'}</td>
-                <td style="color: #64748b;">${panel.voltage || '220V'}</td>
-                <td class="num-col" style="color: #64748b;">${eq.heatingPower || '-'}</td>
-                <td class="num-col" style="color: #64748b;">${hCurrent > 0 ? hCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
-                <td style="color: #64748b;">${hCable !== '-' ? hCable + ' mm²' : '-'}</td>
+                <td style="color: #64748b;">-</td>
+                <td class="num-col" style="color: #64748b;">${heatPowerStr} kW</td>
+                <td class="num-col" style="color: #64748b;">${heatCurStr !== '-' ? heatCurStr + ' A' : '-'} (por est.)</td>
+                <td style="color: #64748b;">${heatingCab !== '-' ? heatingCab + ' mm²' : '-'} (por est.)</td>
               </tr>
             `;
           }
           
-          if (eq.hasHumid && eq.humidPower) {
-            const huCurrent = Number(eq.humidCalculatedCurrent) || 0;
-            const huCable = eq.humidCalculatedCable ? eq.humidCalculatedCable.toString() : '-';
+          // 4. Humidification Subline Row
+          if (eq.type === 'UTA' && eq.hasHumid && eq.humidPower) {
+            const humidPowerStr = eq.humidPower.replace('kW', '').trim().replace('.', ',');
+            const humidCurStr = eq.humidCalculatedCurrent ? eq.humidCalculatedCurrent.replace('A', '').trim() : '-';
             html += `
               <tr>
-                <td style="padding-left: 25px; color: #475569;">↳ ${eq.name || 'Equip.'} (Umid.)</td>
+                <td style="padding-left: 45px; color: #475569;">↳ Umidificação (${huStg} Est.)</td>
                 <td style="color: #64748b;">Umidificação - ${eq.humidControl || 'OnOff'}</td>
-                <td style="color: #64748b;">${panel.voltage || '220V'}</td>
-                <td class="num-col" style="color: #64748b;">${eq.humidPower || '-'}</td>
-                <td class="num-col" style="color: #64748b;">${huCurrent > 0 ? huCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
-                <td style="color: #64748b;">${huCable !== '-' ? huCable + ' mm²' : '-'}</td>
+                <td style="color: #64748b;">-</td>
+                <td class="num-col" style="color: #64748b;">${humidPowerStr} kW</td>
+                <td class="num-col" style="color: #64748b;">${humidCurStr !== '-' ? humidCurStr + ' A' : '-'} (por est.)</td>
+                <td style="color: #64748b;">${humidCab !== '-' ? humidCab + ' mm²' : '-'} (por est.)</td>
               </tr>
             `;
           }
