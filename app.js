@@ -101,6 +101,37 @@ function calculatePanelComponents(panel) {
     return [];
   }
 
+  const rules = (typeof budgetState !== 'undefined' && budgetState.customRules) ? budgetState.customRules : {
+    brumBarCurrentThreshold: 75,
+    transformerVoltageRequired: '440V',
+    transformerVaRating: '400VA',
+    transformerPrice: 600.0,
+    cables10mm: {
+      potenciaComando: { cinza: 50, vermelho: 25, azul: 25 },
+      completo: { cinza: 50, vermelho: 25, azul: 25 },
+      automacao: { cinza: 50, vermelho: 25, azul: 25 },
+      comando: { vermelho: 10, azul: 10, cinza: 10 },
+      remoto: { vermelho: 50, azul: 50, cinza: 50 }
+    },
+    bornesPerEquip: {
+      comando: 6,
+      remoto: 6,
+      potencia: 4,
+      'potencia-comando': 10,
+      automacao: 15,
+      completo: 20
+    },
+    borneAccessories: {
+      posteFinal: 2,
+      borneTerra: 3,
+      identificadorBr5: 3,
+      identificadorBtw: 3,
+      tampaBtwmp: 3,
+      portaPlaqueta: 3
+    },
+    trilhoDinQty: 1
+  };
+
   const componentsMap = {}; // Key: componentCode -> { code, name, qty, unit, unitPrice, value }
   
   let currentMotorCurrent = 0;
@@ -116,7 +147,7 @@ function calculatePanelComponents(panel) {
     return 'DISJ-MOTOR-ACIMA-15kW';
   };
   
-  const addComp = (code, qtyMultiplier = 1, customName = null) => {
+  const addComp = (code, qtyMultiplier = 1, customName = null, reason = "Adicionado por especificação básica do equipamento") => {
     if (!code) return;
     if (code === 'BORNE-RELE-BTWR') return; // Handled separately at the end of the function
     
@@ -143,6 +174,9 @@ function calculatePanelComponents(panel) {
       if (customName) {
         componentsMap[code].name = customName;
       }
+      if (componentsMap[code].reasons && !componentsMap[code].reasons.includes(reason)) {
+        componentsMap[code].reasons.push(reason);
+      }
     } else {
       componentsMap[code] = {
         code: code,
@@ -151,7 +185,8 @@ function calculatePanelComponents(panel) {
         unit: catItem.unit,
         qty: qtyMultiplier,
         unitPrice: catItem.price,
-        value: qtyMultiplier * catItem.price
+        value: qtyMultiplier * catItem.price,
+        reasons: [reason]
       };
     }
   };
@@ -163,17 +198,19 @@ function calculatePanelComponents(panel) {
     const qty = parseInt(panel.quantity) || 1;
     
     // Fixed items (1x of each)
-    addComp('CANALETA-50X80', 1);
-    addComp('CANALETA-30X80', 1);
-    addComp('TOMADA-DIM', 1);
-    addComp('MINIDISJ-MDW-C10', 1);
-    addComp('SINALEIRO-BRANCO', 1);
+    addComp('CANALETA-50X80', 1, null, "Item fixo do painel tipo Comando: Canaleta 50x80");
+    addComp('CANALETA-30X80', 1, null, "Item fixo do painel tipo Comando: Canaleta 30x80");
+    addComp('TOMADA-DIM', 1, null, "Item fixo do painel tipo Comando: Tomada DIN");
+    addComp('MINIDISJ-MDW-C10', 1, null, "Item fixo do painel tipo Comando: Minidisjuntor MDW C10");
+    addComp('SINALEIRO-BRANCO', 1, null, "Item fixo do painel tipo Comando: Sinaleiro Branco");
     
     // Multiplied items (Quantity x ...)
-    addComp('CHAVE-SELETORA-3POS', qty * 1);
-    addComp('CABO-1.0-VERMELHO', qty * 10);
-    addComp('CABO-1.0-AZUL', qty * 10);
-    addComp('CABO-1.0-CINZA', qty * 10);
+    addComp('CHAVE-SELETORA-3POS', qty * 1, null, "Item de Comando: Chave Seletora de 3 posições");
+    
+    const cabCfg = rules.cables10mm.comando;
+    addComp('CABO-1.0-VERMELHO', qty * cabCfg.vermelho, null, `Regra de Cabos de Controle: ${cabCfg.vermelho}m de cabo Vermelho por equipamento no Comando`);
+    addComp('CABO-1.0-AZUL', qty * cabCfg.azul, null, `Regra de Cabos de Controle: ${cabCfg.azul}m de cabo Azul por equipamento no Comando`);
+    addComp('CABO-1.0-CINZA', qty * cabCfg.cinza, null, `Regra de Cabos de Controle: ${cabCfg.cinza}m de cabo Cinza por equipamento no Comando`);
   }
   
   // A) Count total equipments
@@ -353,21 +390,21 @@ function calculatePanelComponents(panel) {
     boxCode = minBoxCode;
   }
 
-  if (calculatedCurrent > 75) {
+  if (calculatedCurrent > rules.brumBarCurrentThreshold) {
     boxCode = 'QMON-1700x600x400';
-    addComp('KIT-VOLT-BRUM-400A', 1);
-    addComp('KIT-CONEXAO-BRUM-400A', 1);
+    addComp('KIT-VOLT-BRUM-400A', 1, null, `Regra de Corrente Máxima: Corrente calculada (${calculatedCurrent.toFixed(1)}A) maior que o limite de ${rules.brumBarCurrentThreshold}A`);
+    addComp('KIT-CONEXAO-BRUM-400A', 1, null, `Regra de Corrente Máxima: Corrente calculada (${calculatedCurrent.toFixed(1)}A) maior que o limite de ${rules.brumBarCurrentThreshold}A`);
   }
 
-  addComp(boxCode, 1);
+  addComp(boxCode, 1, null, `Regra de Caixa de Montagem: Quadro dimensionado como ${boxCode} devido à ocupação estimada`);
 
   // Transformer for 440V non-potencia panels
-  if (voltage === '440V' && type !== 'potencia') {
-    addComp('TRANSFORMADOR-440-220-400VA', 1);
+  if (voltage === rules.transformerVoltageRequired && type !== 'potencia') {
+    addComp('TRANSFORMADOR-440-220-400VA', 1, null, `Regra de Transformador de Comando: Quadro configurado em ${voltage} e não é do tipo Potência (exige transformador de ${rules.transformerVaRating})`);
   }
 
   // Trilho DIN Brum 1m
-  addComp('TRILHO-DIN-1M', 1);
+  addComp('TRILHO-DIN-1M', rules.trilhoDinQty, null, `Regra Geral do Trilho DIN: Adicionado obrigatoriamente para todos os quadros elétricos (${rules.trilhoDinQty} barra(s) de 1m)`);
   
   // Canaletas based on board size
   let width = 300;
@@ -504,33 +541,35 @@ function calculatePanelComponents(panel) {
   // 2. Equipment-level components
   if (type === 'comando') {
     const qty = parseInt(panel.quantity) || 1;
+    const cabCfg = rules.cables10mm.comando;
     for (let i = 0; i < qty; i++) {
-      addComp('MINIDISJ-MDW-C10', 1);
-      addComp('CONTATOR-CWM9', 1);
-      addComp('CHAVE-SELETORA-3POS', 1);
-      addComp('SINALEIRO-VERDE', 1);
-      addComp('SINALEIRO-VERMELHO', 1);
-      addComp('BORNE-BTWP-2.5', 6);
-      addComp('PORTA-PLAQUETA', 3);
+      addComp('MINIDISJ-MDW-C10', 1, null, "Item de Comando: Minidisjuntor MDW C10 por equipamento");
+      addComp('CONTATOR-CWM9', 1, null, "Item de Comando: Contator CWM9 por equipamento");
+      addComp('CHAVE-SELETORA-3POS', 1, null, "Item de Comando: Chave Seletora de 3 posições por equipamento");
+      addComp('SINALEIRO-VERDE', 1, null, "Item de Comando: Sinaleiro Verde de ligado por equipamento");
+      addComp('SINALEIRO-VERMELHO', 1, null, "Item de Comando: Sinaleiro Vermelho de desligado por equipamento");
+      addComp('BORNE-BTWP-2.5', 6, null, "Regra de Bornes de Passagem: Bornes de passagem por equipamento");
+      addComp('PORTA-PLAQUETA', 3, null, "Regra de Acessórios de Bornes: Porta plaqueta por equipamento");
       // Cabos de comando separados por cor
-      addComp('CABO-1.0-VERMELHO', 50);
-      addComp('CABO-1.0-AZUL', 50);
-      addComp('CABO-1.0-CINZA', 50);
+      addComp('CABO-1.0-VERMELHO', cabCfg.vermelho, null, `Regra de Cabos de Controle: ${cabCfg.vermelho}m de cabo Vermelho por equipamento no Comando`);
+      addComp('CABO-1.0-AZUL', cabCfg.azul, null, `Regra de Cabos de Controle: ${cabCfg.azul}m de cabo Azul por equipamento no Comando`);
+      addComp('CABO-1.0-CINZA', cabCfg.cinza, null, `Regra de Cabos de Controle: ${cabCfg.cinza}m de cabo Cinza por equipamento no Comando`);
     }
   } 
   else if (type === 'remoto') {
     const qty = parseInt(panel.quantity) || 1;
+    const cabCfg = rules.cables10mm.remoto;
     for (let i = 0; i < qty; i++) {
-      addComp('MINIDISJ-MDW-C10', 1);
-      addComp('CHAVE-SELETORA-3POS', 1);
-      addComp('SINALEIRO-VERDE', 1);
-      addComp('SINALEIRO-VERMELHO', 1);
+      addComp('MINIDISJ-MDW-C10', 1, null, "Item de Automação Remota: Minidisjuntor MDW C10 por equipamento");
+      addComp('CHAVE-SELETORA-3POS', 1, null, "Item de Automação Remota: Chave Seletora de 3 posições por equipamento");
+      addComp('SINALEIRO-VERDE', 1, null, "Item de Automação Remota: Sinaleiro Verde de ligado por equipamento");
+      addComp('SINALEIRO-VERMELHO', 1, null, "Item de Automação Remota: Sinaleiro Vermelho de desligado por equipamento");
       // Cabos de comando separados por cor
-      addComp('CABO-1.0-VERMELHO', 50);
-      addComp('CABO-1.0-AZUL', 50);
-      addComp('CABO-1.0-CINZA', 50);
+      addComp('CABO-1.0-VERMELHO', cabCfg.vermelho, null, `Regra de Cabos de Controle: ${cabCfg.vermelho}m de cabo Vermelho por equipamento no Automação Remota`);
+      addComp('CABO-1.0-AZUL', cabCfg.azul, null, `Regra de Cabos de Controle: ${cabCfg.azul}m de cabo Azul por equipamento no Automação Remota`);
+      addComp('CABO-1.0-CINZA', cabCfg.cinza, null, `Regra de Cabos de Controle: ${cabCfg.cinza}m de cabo Cinza por equipamento no Automação Remota`);
     }
-    addComp('SINALEIRO-BRANCO', 1);
+    addComp('SINALEIRO-BRANCO', 1, null, "Item de Automação Remota: Sinaleiro Branco de energizado");
     if (panel.remotoIhmSize) {
       const ihmSizeStr = panel.remotoIhmSize;
       const ihmConfig = PRECOS_DATABASE.ihmMapping[ihmSizeStr];
@@ -551,9 +590,11 @@ function calculatePanelComponents(panel) {
 
       // Control cables rules for potencia-comando, completo, automacao
       if (type === 'potencia-comando' || type === 'completo' || type === 'automacao') {
-        addComp('CABO-1.0-CINZA', 50);
-        addComp('CABO-1.0-VERMELHO', 25);
-        addComp('CABO-1.0-AZUL', 25);
+        const typeKey = type === 'potencia-comando' ? 'potenciaComando' : (type === 'completo' ? 'completo' : 'automacao');
+        const cabCfg = rules.cables10mm[typeKey];
+        addComp('CABO-1.0-CINZA', cabCfg.cinza, null, `Regra de Cabos de Controle: ${cabCfg.cinza}m de cabo Cinza por equipamento no quadro tipo ${type}`);
+        addComp('CABO-1.0-VERMELHO', cabCfg.vermelho, null, `Regra de Cabos de Controle: ${cabCfg.vermelho}m de cabo Vermelho por equipamento no quadro tipo ${type}`);
+        addComp('CABO-1.0-AZUL', cabCfg.azul, null, `Regra de Cabos de Controle: ${cabCfg.azul}m de cabo Azul por equipamento no quadro tipo ${type}`);
       }
 
       // Borne Relé rule:
@@ -977,22 +1018,24 @@ function calculatePanelComponents(panel) {
   const totalEquipsCount = (type === 'comando' || type === 'remoto') ? (panel.quantity || 1) : (panel.equipments ? panel.equipments.length : 0);
   if (totalEquipsCount > 0) {
     let bornesPerEquip = 0;
-    if (type === 'comando' || type === 'remoto') bornesPerEquip = 6;
-    else if (type === 'potencia') bornesPerEquip = 4;
-    else if (type === 'potencia-comando') bornesPerEquip = 10;
-    else if (type === 'automacao') bornesPerEquip = 15;
-    else if (type === 'completo') bornesPerEquip = 20;
+    if (type === 'comando') bornesPerEquip = rules.bornesPerEquip.comando;
+    else if (type === 'remoto') bornesPerEquip = rules.bornesPerEquip.remoto;
+    else if (type === 'potencia') bornesPerEquip = rules.bornesPerEquip.potencia;
+    else if (type === 'potencia-comando') bornesPerEquip = rules.bornesPerEquip['potencia-comando'];
+    else if (type === 'automacao') bornesPerEquip = rules.bornesPerEquip.automacao;
+    else if (type === 'completo') bornesPerEquip = rules.bornesPerEquip.completo;
 
     if (bornesPerEquip > 0) {
-      addComp('BORNE-BTWP-2.5', totalEquipsCount * bornesPerEquip);
+      addComp('BORNE-BTWP-2.5', totalEquipsCount * bornesPerEquip, null, `Regra de Bornes de Passagem: ${bornesPerEquip} bornes de passagem por equipamento no quadro tipo ${type}`);
     }
 
-    addComp('POSTE-FINAL', totalEquipsCount * 2);
-    addComp('BORNE-TERRA-2.5T', totalEquipsCount * 3);
-    addComp('IDENTIFICADOR-BR5', totalEquipsCount * 3);
-    addComp('IDENTIFICADOR-BTW', totalEquipsCount * 3);
-    addComp('TAMPA-BTWMP', totalEquipsCount * 3);
-    addComp('PORTA-PLAQUETA', totalEquipsCount * 3);
+    const acc = rules.borneAccessories;
+    addComp('POSTE-FINAL', totalEquipsCount * acc.posteFinal, null, `Regra de Acessórios de Bornes: ${acc.posteFinal} Poste Final por equipamento`);
+    addComp('BORNE-TERRA-2.5T', totalEquipsCount * acc.borneTerra, null, `Regra de Acessórios de Bornes: ${acc.borneTerra} Borne Terra por equipamento`);
+    addComp('IDENTIFICADOR-BR5', totalEquipsCount * acc.identificadorBr5, null, `Regra de Acessórios de Bornes: ${acc.identificadorBr5} Identificador BR 5mm por equipamento`);
+    addComp('IDENTIFICADOR-BTW', totalEquipsCount * acc.identificadorBtw, null, `Regra de Acessórios de Bornes: ${acc.identificadorBtw} Identificador BTW por equipamento`);
+    addComp('TAMPA-BTWMP', totalEquipsCount * acc.tampaBtwmp, null, `Regra de Acessórios de Bornes: ${acc.tampaBtwmp} Tampa de fechamento por equipamento`);
+    addComp('PORTA-PLAQUETA', totalEquipsCount * acc.portaPlaqueta, null, `Regra de Acessórios de Bornes: ${acc.portaPlaqueta} Porta Plaqueta por equipamento`);
   }
 
   // 6. Contact Auxiliar for Disjuntor Motor rule
@@ -1003,7 +1046,7 @@ function calculatePanelComponents(panel) {
     }
   });
   if (totalDisjMotorQty > 0) {
-    addComp('CONTATO-AUX-ACBF11', totalDisjMotorQty);
+    addComp('CONTATO-AUX-ACBF11', totalDisjMotorQty, null, `Regra de Contato Auxiliar: 1 contato auxiliar ACBF11 para cada disjuntor motor do quadro`);
   }
   
   // 7. Manual Additions (Bypassing interceptors)
@@ -1018,7 +1061,8 @@ function calculatePanelComponents(panel) {
       unit: sinItem.unit,
       qty: 1,
       unitPrice: sinItem.price,
-      value: sinItem.price
+      value: sinItem.price,
+      reasons: ["Regra Geral de Segurança: Adicionado 1 Sinaleiro Branco de painel energizado por padrão"]
     };
   }
 
@@ -1035,12 +1079,221 @@ function calculatePanelComponents(panel) {
         unit: releItem.unit,
         qty: 2 * totalEquipsCount,
         unitPrice: releItem.price,
-        value: 2 * totalEquipsCount * releItem.price
+        value: 2 * totalEquipsCount * releItem.price,
+        reasons: [`Regra de Interface de Revezamento: Adicionado 2 Relés de Interface de Acoplamento por equipamento (${2 * totalEquipsCount} total)`]
       };
     }
   }
   
   return Object.values(componentsMap);
+}
+
+let currentLogicModalState = null; // { panelId, compIdx, ruleKey, subKey }
+
+function openLogicModal(panelId, compIdx) {
+  const panel = budgetState.panels.find(p => p.id === panelId);
+  if (!panel || !panel.components[compIdx]) return;
+  
+  const comp = panel.components[compIdx];
+  const modal = document.getElementById('logic-modal');
+  const body = document.getElementById('logic-modal-body');
+  if (!modal || !body) return;
+
+  currentLogicModalState = { panelId, compIdx };
+
+  const reasonsHTML = comp.reasons && comp.reasons.length > 0 
+    ? comp.reasons.map(r => `<div style="padding: 8px 12px; background: rgba(99, 102, 241, 0.04); border-left: 3px solid var(--primary); margin-bottom: 8px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; line-height: 1.4; color: var(--text-primary); font-size: 0.8rem;">${r}</div>`).join('')
+    : `<div style="padding: 8px 12px; background: rgba(245, 158, 11, 0.04); border-left: 3px solid #f59e0b; margin-bottom: 8px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.8rem; color: var(--text-primary);">Item adicionado por especificação padrão de componentes.</div>`;
+
+  let adjustHTML = '';
+  const code = comp.code;
+  const rules = budgetState.customRules;
+
+  if (code === 'BORNE-BTWP-2.5') {
+    const type = panel.type;
+    adjustHTML = `
+      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Lógica de Bornes de Passagem</h4>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Bornes por Equipamento (Tipo ${type.toUpperCase()})</label>
+          <input type="number" class="form-control" id="edit-logic-value" value="${rules.bornesPerEquip[type] || 6}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        </div>
+      </div>
+    `;
+    currentLogicModalState.ruleKey = 'bornesPerEquip';
+    currentLogicModalState.subKey = type;
+  }
+  else if (code === 'KIT-VOLT-BRUM-400A' || code === 'KIT-CONEXAO-BRUM-400A') {
+    adjustHTML = `
+      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Limite de Corrente do Barramento Brum</h4>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Limite de Corrente para Barramento (Amperes)</label>
+          <input type="number" class="form-control" id="edit-logic-value" value="${rules.brumBarCurrentThreshold}" min="10" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        </div>
+      </div>
+    `;
+    currentLogicModalState.ruleKey = 'brumBarCurrentThreshold';
+  }
+  else if (code === 'TRANSFORMADOR-440-220-400VA') {
+    adjustHTML = `
+      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Preço do Transformador de Comando</h4>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Preço Unitário do Transformador (R$)</label>
+          <input type="number" class="form-control" id="edit-logic-value" value="${rules.transformerPrice}" min="0" step="0.01" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        </div>
+      </div>
+    `;
+    currentLogicModalState.ruleKey = 'transformerPrice';
+  }
+  else if (code === 'TRILHO-DIN-1M') {
+    adjustHTML = `
+      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Quantidade de Trilho DIN</h4>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Barras de 1m por Quadro</label>
+          <input type="number" class="form-control" id="edit-logic-value" value="${rules.trilhoDinQty}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        </div>
+      </div>
+    `;
+    currentLogicModalState.ruleKey = 'trilhoDinQty';
+  }
+  else if (code.startsWith('CABO-1.0-')) {
+    const type = panel.type;
+    const typeKey = type === 'potencia-comando' ? 'potenciaComando' : (type === 'completo' ? 'completo' : (type === 'automacao' ? 'automacao' : (type === 'comando' ? 'comando' : 'remoto')));
+    const color = code.endsWith('CINZA') ? 'cinza' : (code.endsWith('VERMELHO') ? 'vermelho' : 'azul');
+    const cabConfig = rules.cables10mm[typeKey] || { cinza: 50, vermelho: 25, azul: 25 };
+    adjustHTML = `
+      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Metragem do Cabo de Comando 1.0mm²</h4>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Metragem do Cabo ${color.toUpperCase()} por Equipamento (Tipo ${type.toUpperCase()})</label>
+          <input type="number" class="form-control" id="edit-logic-value" value="${cabConfig[color] || 25}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        </div>
+      </div>
+    `;
+    currentLogicModalState.ruleKey = 'cables10mm';
+    currentLogicModalState.subKey = typeKey;
+    currentLogicModalState.color = color;
+  }
+  else if (['POSTE-FINAL', 'BORNE-TERRA-2.5T', 'IDENTIFICADOR-BR5', 'IDENTIFICADOR-BTW', 'TAMPA-BTWMP', 'PORTA-PLAQUETA'].includes(code)) {
+    let key = 'posteFinal';
+    let label = 'Poste Final';
+    if (code === 'BORNE-TERRA-2.5T') { key = 'borneTerra'; label = 'Borne Terra 2.5mm²'; }
+    else if (code === 'IDENTIFICADOR-BR5') { key = 'identificadorBr5'; label = 'Identificador BR 5mm'; }
+    else if (code === 'IDENTIFICADOR-BTW') { key = 'identificadorBtw'; label = 'Identificador BTW'; }
+    else if (code === 'TAMPA-BTWMP') { key = 'tampaBtwmp'; label = 'Tampa de fechamento'; }
+    else if (code === 'PORTA-PLAQUETA') { key = 'portaPlaqueta'; label = 'Porta Plaqueta'; }
+
+    adjustHTML = `
+      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Proporção de Acessórios</h4>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Quantidade de ${label} por Equipamento</label>
+          <input type="number" class="form-control" id="edit-logic-value" value="${rules.borneAccessories[key] || 3}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        </div>
+      </div>
+    `;
+    currentLogicModalState.ruleKey = 'borneAccessories';
+    currentLogicModalState.subKey = key;
+  }
+  else {
+    adjustHTML = `
+      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px; color: var(--text-secondary); text-align: center; font-size: 0.8rem; line-height: 1.4;">
+        A inclusão deste componente é gerada dinamicamente com base nas especificações da planilha de composição ou sensores. Para alterar estes valores, modifique o equipamento na tela de criação/edição.
+      </div>
+    `;
+  }
+
+  body.innerHTML = `
+    <div style="margin-bottom: 15px;">
+      <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Componente</span>
+      <strong style="font-size: 0.95rem; color: var(--text-primary);">${comp.name}</strong>
+      <span style="font-size: 0.7rem; color: var(--text-secondary); display: block; font-family: monospace;">Código: ${comp.code}</span>
+    </div>
+    <div style="margin-bottom: 15px;">
+      <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Por que este item está na lista?</span>
+      ${reasonsHTML}
+    </div>
+    ${adjustHTML}
+  `;
+
+  const saveBtn = document.getElementById('btn-save-custom-logic');
+  if (saveBtn) {
+    if (currentLogicModalState.ruleKey) {
+      saveBtn.style.display = 'inline-block';
+    } else {
+      saveBtn.style.display = 'none';
+    }
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeLogicModal() {
+  const modal = document.getElementById('logic-modal');
+  if (modal) modal.style.display = 'none';
+  currentLogicModalState = null;
+}
+
+function saveCustomLogic() {
+  if (!currentLogicModalState || !currentLogicModalState.ruleKey) {
+    closeLogicModal();
+    return;
+  }
+
+  const input = document.getElementById('edit-logic-value');
+  if (!input) {
+    closeLogicModal();
+    return;
+  }
+
+  const value = parseFloat(input.value);
+  if (isNaN(value) || value < 0) {
+    alert("Por favor, insira um valor válido.");
+    return;
+  }
+
+  const { ruleKey, subKey, color } = currentLogicModalState;
+  
+  if (ruleKey === 'cables10mm') {
+    budgetState.customRules.cables10mm[subKey][color] = value;
+  } else if (ruleKey === 'bornesPerEquip') {
+    budgetState.customRules.bornesPerEquip[subKey] = Math.round(value);
+  } else if (ruleKey === 'borneAccessories') {
+    budgetState.customRules.borneAccessories[subKey] = Math.round(value);
+  } else if (ruleKey === 'brumBarCurrentThreshold') {
+    budgetState.customRules.brumBarCurrentThreshold = value;
+  } else if (ruleKey === 'transformerPrice') {
+    budgetState.customRules.transformerPrice = value;
+    if (typeof PRECOS_DATABASE !== 'undefined' && PRECOS_DATABASE.catalog && PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA']) {
+      PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA'].price = value;
+    }
+  } else if (ruleKey === 'trilhoDinQty') {
+    budgetState.customRules.trilhoDinQty = Math.round(value);
+  }
+
+  // Recalculate components of all panels to apply the updated custom rules!
+  budgetState.panels.forEach(panel => {
+    const customPrices = {};
+    if (panel.components) {
+      panel.components.forEach(c => {
+        customPrices[c.code] = c.value;
+      });
+    }
+    panel.components = calculatePanelComponents(panel);
+    panel.components.forEach(c => {
+      if (customPrices[c.code] !== undefined) {
+        if (c.code !== 'TRANSFORMADOR-440-220-400VA') {
+          c.value = customPrices[c.code];
+        }
+      }
+    });
+  });
+
+  saveState();
+  closeLogicModal();
 }
 
 // Wrapper for backward compatibility / fallback
@@ -1073,6 +1326,44 @@ function loadState() {
     if (!budgetState.panels) budgetState.panels = [];
     if (!budgetState.theme) budgetState.theme = 'dark';
     if (!budgetState.consolidatedInfraPanels) budgetState.consolidatedInfraPanels = [];
+    
+    // Initialize custom rules with default settings if not already present
+    budgetState.customRules = budgetState.customRules || {};
+    budgetState.customRules = {
+      brumBarCurrentThreshold: budgetState.customRules.brumBarCurrentThreshold !== undefined ? budgetState.customRules.brumBarCurrentThreshold : 75,
+      transformerVoltageRequired: budgetState.customRules.transformerVoltageRequired || '440V',
+      transformerVaRating: budgetState.customRules.transformerVaRating || '400VA',
+      transformerPrice: budgetState.customRules.transformerPrice !== undefined ? budgetState.customRules.transformerPrice : 600.0,
+      cables10mm: budgetState.customRules.cables10mm || {
+        potenciaComando: { cinza: 50, vermelho: 25, azul: 25 },
+        completo: { cinza: 50, vermelho: 25, azul: 25 },
+        automacao: { cinza: 50, vermelho: 25, azul: 25 },
+        comando: { vermelho: 10, azul: 10, cinza: 10 },
+        remoto: { vermelho: 50, azul: 50, cinza: 50 }
+      },
+      bornesPerEquip: budgetState.customRules.bornesPerEquip || {
+        comando: 6,
+        remoto: 6,
+        potencia: 4,
+        'potencia-comando': 10,
+        automacao: 15,
+        completo: 20
+      },
+      borneAccessories: budgetState.customRules.borneAccessories || {
+        posteFinal: 2,
+        borneTerra: 3,
+        identificadorBr5: 3,
+        identificadorBtw: 3,
+        tampaBtwmp: 3,
+        portaPlaqueta: 3
+      },
+      trilhoDinQty: budgetState.customRules.trilhoDinQty !== undefined ? budgetState.customRules.trilhoDinQty : 1
+    };
+    
+    // Synergize catalog price for transformer
+    if (typeof PRECOS_DATABASE !== 'undefined' && PRECOS_DATABASE.catalog && PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA']) {
+      PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA'].price = budgetState.customRules.transformerPrice;
+    }
     
     // Migrate/recalculate existing panels to sync with the new catalog and engineering rules
     budgetState.panels.forEach(panel => {
@@ -1646,6 +1937,14 @@ function renderPanelsList() {
               </span>
             </div>
             
+            <!-- Botão de Verificar Lógica -->
+            <button type="button" class="btn btn-info btn-icon-only btn-logic-component" 
+                    data-panel-id="${panel.id}" data-comp-idx="${compIdx}" 
+                    style="padding: 2px; font-size: 0.75rem; border-radius: var(--radius-sm); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background-color: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: var(--primary); margin-right: 4px;"
+                    title="Verificar/Ajustar lógica de inclusão">
+              <svg viewBox="0 0 24 24" style="width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </button>
+            
             <!-- Botão de Excluir -->
             <button type="button" class="btn btn-danger btn-icon-only btn-delete-component" 
                     data-panel-id="${panel.id}" data-comp-idx="${compIdx}" 
@@ -1744,6 +2043,17 @@ function renderPanelsList() {
     });
   });
   
+  // Setup Event Delegation for checking/adjusting logic of components
+  const logicButtons = listGrid.querySelectorAll('.btn-logic-component');
+  logicButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetBtn = e.target.closest('.btn-logic-component');
+      const panelId = parseInt(targetBtn.getAttribute('data-panel-id'));
+      const compIdx = parseInt(targetBtn.getAttribute('data-comp-idx'));
+      openLogicModal(panelId, compIdx);
+    });
+  });
+
   // Setup Event Delegation for deleting components
   const deleteButtons = listGrid.querySelectorAll('.btn-delete-component');
   deleteButtons.forEach(btn => {
@@ -3966,6 +4276,12 @@ document.addEventListener('DOMContentLoaded', () => {
   navLinks = document.querySelectorAll('.nav-link');
   viewTitle = document.getElementById('view-title');
   viewSubtitle = document.getElementById('view-subtitle');
+
+  // Bind Save button for custom rules logic
+  const btnSaveCustomLogic = document.getElementById('btn-save-custom-logic');
+  if (btnSaveCustomLogic) {
+    btnSaveCustomLogic.addEventListener('click', saveCustomLogic);
+  }
 
   // Load Local Storage budget safely
   loadState();

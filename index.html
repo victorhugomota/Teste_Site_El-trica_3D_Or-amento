@@ -712,6 +712,25 @@
     </main>
   </div>
 
+  <!-- LOGIC MODAL -->
+  <div class="modal-overlay" id="logic-modal" style="display: none;">
+    <div class="modal-container" style="max-width: 500px; width: 90%;">
+      <div class="modal-header">
+        <h3 class="card-title" id="logic-modal-title">Ajustar Lógica de Inclusão</h3>
+        <button class="btn-icon-only" onclick="closeLogicModal()" aria-label="Fechar modal">
+          <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="logic-modal-body" style="font-size: 0.85rem;">
+        <!-- Content will be injected dynamically -->
+      </div>
+      <div class="modal-footer" style="margin-top: 15px;">
+        <button type="button" class="btn btn-secondary" onclick="closeLogicModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btn-save-custom-logic">Salvar e Recalcular</button>
+      </div>
+    </div>
+  </div>
+
   <!-- EDIT PANEL MODAL -->
   <div class="modal-overlay" id="edit-panel-modal">
     <div class="modal-container">
