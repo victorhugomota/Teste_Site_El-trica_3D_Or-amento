@@ -2011,7 +2011,11 @@ function calculateInfraComponentsForPanel(panel) {
       { size: '1', area: 572 },
       { size: '1.1/4', area: 962 },
       { size: '1.1/2', area: 1320 },
-      { size: '2', area: 2123 }
+      { size: '2', area: 2123 },
+      { size: '2.1/2', area: 3300 },
+      { size: '3', area: 5000 },
+      { size: '4', area: 8500 },
+      { size: '5', area: 13000 }
     ];
     
     for (let i = 0; i < conduits.length; i++) {
@@ -2019,11 +2023,11 @@ function calculateInfraComponentsForPanel(panel) {
         return conduits[i].size;
       }
     }
-    return '2';
+    return '5';
   };
 
   const getReducedConduitSize = (size) => {
-    const order = ['1/2', '3/4', '1', '1.1/4', '1.1/2', '2'];
+    const order = ['1/2', '3/4', '1', '1.1/4', '1.1/2', '2', '2.1/2', '3', '4', '5'];
     const idx = order.indexOf(size);
     if (idx > 0) return order[idx - 1];
     return '1/2';
@@ -2253,8 +2257,8 @@ function calculateInfraComponentsForPanel(panel) {
 
       addInfra(`SUPORTE-ABRACADEIRA`, Math.ceil((stdLen + redLen) / 1.5));
 
-      let stdCondCount = Math.ceil(stdLen);
-      let redCondCount = Math.ceil(redLen);
+      let stdCondCount = Math.ceil(stdLen / 1.5);
+      let redCondCount = Math.ceil(redLen / 1.5);
 
       let autCount = 0;
       const terminatingEquips = activeEquips.filter(ae => ae.distance === u_s);
@@ -2317,6 +2321,16 @@ function calculateInfraComponentsForPanel(panel) {
     ae.cables.forEach(c => {
       addInfra(c.code, c.qty);
     });
+  });
+
+  // Round up any eletroduto quantities to the next multiple of 3 (for 3m bars)
+  Object.keys(infraMap).forEach(key => {
+    if (key.startsWith('ELETRODUTO-')) {
+      const currentQty = infraMap[key].qty;
+      const bars = Math.ceil(currentQty / 3);
+      infraMap[key].qty = bars * 3;
+      infraMap[key].value = infraMap[key].qty * infraMap[key].unitPrice;
+    }
   });
 
   return Object.values(infraMap);

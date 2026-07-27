@@ -1705,6 +1705,174 @@ const PRECOS_DATABASE = {
       "unit": "un",
       "price": 162.5
     },
+    "ELETRODUTO-PESADO-2.1/2": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 2.1/2 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 165.0
+    },
+    "CONDULETE-PESADO-T-2.1/2": {
+      "desc": "CONDULETE PESADO TIPO T 2.1/2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 237.5
+    },
+    "CONDULETE-PESADO-LR-2.1/2": {
+      "desc": "CONDULETE PESADO TIPO LR 2.1/2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 237.5
+    },
+    "CONDULETE-PESADO-E-2.1/2": {
+      "desc": "CONDULETE PESADO TIPO E 2.1/2 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 237.5
+    },
+    "ELETRODUTO-PESADO-3": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 3 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 225.0
+    },
+    "CONDULETE-PESADO-T-3": {
+      "desc": "CONDULETE PESADO TIPO T 3 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 325.0
+    },
+    "CONDULETE-PESADO-LR-3": {
+      "desc": "CONDULETE PESADO TIPO LR 3 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 325.0
+    },
+    "CONDULETE-PESADO-E-3": {
+      "desc": "CONDULETE PESADO TIPO E 3 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 325.0
+    },
+    "ELETRODUTO-PESADO-4": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 4 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 315.0
+    },
+    "CONDULETE-PESADO-T-4": {
+      "desc": "CONDULETE PESADO TIPO T 4 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 462.5
+    },
+    "CONDULETE-PESADO-LR-4": {
+      "desc": "CONDULETE PESADO TIPO LR 4 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 462.5
+    },
+    "CONDULETE-PESADO-E-4": {
+      "desc": "CONDULETE PESADO TIPO E 4 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 462.5
+    },
+    "ELETRODUTO-PESADO-5": {
+      "desc": "ELETRODUTO GALVANIZADO PESADO 5 (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 435.0
+    },
+    "CONDULETE-PESADO-T-5": {
+      "desc": "CONDULETE PESADO TIPO T 5 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 637.5
+    },
+    "CONDULETE-PESADO-LR-5": {
+      "desc": "CONDULETE PESADO TIPO LR 5 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 637.5
+    },
+    "CONDULETE-PESADO-E-5": {
+      "desc": "CONDULETE PESADO TIPO E 5 COM TAMPA (NBR 5597/5598)",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 637.5
+    },
+    "ELETRODUTO-GALV-2.1/2": {
+      "desc": "ELETRODUTO ZINCADO LEVE 2.1/2",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 55.0
+    },
+    "CONDULETE-GALV-2.1/2": {
+      "desc": "CONDULETE MÚLTIPLO X 2.1/2 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 95.0
+    },
+    "UNIDUT-GALV-2.1/2": {
+      "desc": "UNIDUT CÔNICO ZINCADO 2.1/2",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 36.0
+    },
+    "ELETRODUTO-GALV-3": {
+      "desc": "ELETRODUTO ZINCADO LEVE 3",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 75.0
+    },
+    "CONDULETE-GALV-3": {
+      "desc": "CONDULETE MÚLTIPLO X 3 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 130.0
+    },
+    "UNIDUT-GALV-3": {
+      "desc": "UNIDUT CÔNICO ZINCADO 3",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 50.0
+    },
+    "ELETRODUTO-GALV-4": {
+      "desc": "ELETRODUTO ZINCADO LEVE 4",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 105.0
+    },
+    "CONDULETE-GALV-4": {
+      "desc": "CONDULETE MÚLTIPLO X 4 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 185.0
+    },
+    "UNIDUT-GALV-4": {
+      "desc": "UNIDUT CÔNICO ZINCADO 4",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 72.0
+    },
+    "ELETRODUTO-GALV-5": {
+      "desc": "ELETRODUTO ZINCADO LEVE 5",
+      "brand": "WETZEL",
+      "unit": "m",
+      "price": 145.0
+    },
+    "CONDULETE-GALV-5": {
+      "desc": "CONDULETE MÚLTIPLO X 5 COM TAMPA",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 255.0
+    },
+    "UNIDUT-GALV-5": {
+      "desc": "UNIDUT CÔNICO ZINCADO 5",
+      "brand": "WETZEL",
+      "unit": "un",
+      "price": 100.0
+    },
     "CABO-REDE-CAT6": {
       "desc": "CABO DE REDE ETHERNET CAT-06 (AZUL)",
       "brand": "FURUKAWA",

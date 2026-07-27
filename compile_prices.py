@@ -56,7 +56,11 @@ def compile_excel_to_js():
         '1': 48.0,
         '1.1/4': 66.0,
         '1.1/2': 84.0,
-        '2': 114.0
+        '2': 114.0,
+        '2.1/2': 165.0,
+        '3': 225.0,
+        '4': 315.0,
+        '5': 435.0
     }
     heavy_condulete_prices = {
         '1/2': 37.5,
@@ -64,9 +68,13 @@ def compile_excel_to_js():
         '1': 62.5,
         '1.1/4': 87.5,
         '1.1/2': 112.5,
-        '2': 162.5
+        '2': 162.5,
+        '2.1/2': 237.5,
+        '3': 325.0,
+        '4': 462.5,
+        '5': 637.5
     }
-    for size in ['1/2', '3/4', '1', '1.1/4', '1.1/2', '2']:
+    for size in ['1/2', '3/4', '1', '1.1/4', '1.1/2', '2', '2.1/2', '3', '4', '5']:
         database["catalog"][f"ELETRODUTO-PESADO-{size}"] = {
             "desc": f"ELETRODUTO GALVANIZADO PESADO {size} (NBR 5597/5598)",
             "brand": "WETZEL",
@@ -90,6 +98,45 @@ def compile_excel_to_js():
             "brand": "WETZEL",
             "unit": "un",
             "price": heavy_condulete_prices[size]
+        }
+
+    # Inject Light Line items for sizes > 2" (extrapolated sizes 2.1/2" to 5")
+    light_eletroduto_prices = {
+        '2.1/2': 55.0,
+        '3': 75.0,
+        '4': 105.0,
+        '5': 145.0
+    }
+    light_condulete_prices = {
+        '2.1/2': 95.0,
+        '3': 130.0,
+        '4': 185.0,
+        '5': 255.0
+    }
+    light_unidut_prices = {
+        '2.1/2': 36.0,
+        '3': 50.0,
+        '4': 72.0,
+        '5': 100.0
+    }
+    for size in ['2.1/2', '3', '4', '5']:
+        database["catalog"][f"ELETRODUTO-GALV-{size}"] = {
+            "desc": f"ELETRODUTO ZINCADO LEVE {size}",
+            "brand": "WETZEL",
+            "unit": "m",
+            "price": light_eletroduto_prices[size]
+        }
+        database["catalog"][f"CONDULETE-GALV-{size}"] = {
+            "desc": f"CONDULETE MÚLTIPLO X {size} COM TAMPA",
+            "brand": "WETZEL",
+            "unit": "un",
+            "price": light_condulete_prices[size]
+        }
+        database["catalog"][f"UNIDUT-GALV-{size}"] = {
+            "desc": f"UNIDUT CÔNICO ZINCADO {size}",
+            "brand": "WETZEL",
+            "unit": "un",
+            "price": light_unidut_prices[size]
         }
         
     # Inject Network Cable CAT 6
