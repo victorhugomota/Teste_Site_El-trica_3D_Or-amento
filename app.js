@@ -2017,31 +2017,8 @@ function calculateInfraComponentsForPanel(panel) {
     return '1/2';
   };
 
-  let equips = [];
-  if (panel.equipments && panel.equipments.length > 0) {
-    equips = panel.equipments;
-  } else if ((panel.type === 'comando' || panel.type === 'remoto') && panel.quantity > 0) {
-    for (let i = 1; i <= panel.quantity; i++) {
-      equips.push({ id: `virtual-${i}`, name: panel.type === 'comando' ? `Ponto de Comando ${i}` : `Ponto de Automação Remota ${i}`, type: panel.type.toUpperCase() });
-    }
-  }
-
-  if (equips.length === 0) {
-    return [];
-  }
-
-  const isEletrocalhaMode = equips.length > 5;
-  const distances = panel.infraDistances || {};
-  let totalPanelCablesArea = 0;
-  let totalEletrocalhaLength = 0;
-
-  equips.forEach(eq => {
-    const D = (panel.type === 'comando' || panel.type === 'remoto') ? (parseFloat(panel.infraDistances['general']) || 0) : (parseFloat(distances[eq.id]) || 0);
-    if (D <= 0) return;
-
+  const getCablesForEquipment = (eq, D) => {
     const eqCables = [];
-
-    // Virtual panel cable rules
     if (panel.type === 'comando') {
       eqCables.push({ code: 'CABO-PP-6X1.5', qty: D });
     } else if (panel.type === 'remoto') {
@@ -2057,7 +2034,7 @@ function calculateInfraComponentsForPanel(panel) {
           eqCables.push({ code: 'CABO-PP-5X1.5', qty: D });
           eqCables.push({ code: 'CABO-PP-6X1.5', qty: D });
         } else if (eq.calculatedCable) {
-          const bitola = eq.calculatedCable.replace("mm²", "").trim();
+          const bitola = eq.calculatedCable.replace("mm²", "").replace("mm", "").trim();
           const code = getPPCableCode(4, bitola);
           if (code) {
             eqCables.push({ code: code, qty: D });
@@ -2072,7 +2049,7 @@ function calculateInfraComponentsForPanel(panel) {
           let hasTemp = readings.includes("Temp Duto") || readings.includes("Temp Ambiente");
           let hasUmid = readings.includes("Umid Duto") || readings.includes("Umid Ambiente");
           let hasCO2 = readings.includes("CO2 Duto") || readings.includes("CO2 Ambiente");
-          let hasVazao = readings.includes("Vazão");
+          let hasVazao = readings.includes("Vazão") || readings.includes("Vazao");
 
           if (hasTemp && hasUmid && hasCO2) {
             eqCables.push({ code: 'CABO-SHIELD-5X0.75', qty: D });
@@ -2109,7 +2086,7 @@ function calculateInfraComponentsForPanel(panel) {
       if (eq.type === 'UTA') {
         if (eq.hasHeating && eq.heatingPower && eq.heatingCalculatedCable) {
           const stages = parseInt(eq.heatingStages) || 1;
-          const bitola = eq.heatingCalculatedCable.replace("mm²", "").trim();
+          const bitola = eq.heatingCalculatedCable.replace("mm²", "").replace("mm", "").trim();
           const code = getPPCableCode(3, bitola);
           if (code) {
             eqCables.push({ code: code, qty: D * stages });
@@ -2117,7 +2094,7 @@ function calculateInfraComponentsForPanel(panel) {
         }
         if (eq.hasHumid && eq.humidPower && eq.humidCalculatedCable) {
           const stages = parseInt(eq.humidStages) || 1;
-          const bitola = eq.humidCalculatedCable.replace("mm²", "").trim();
+          const bitola = eq.humidCalculatedCable.replace("mm²", "").replace("mm", "").trim();
           const code = getPPCableCode(3, bitola);
           if (code) {
             eqCables.push({ code: code, qty: D * stages });
@@ -2125,24 +2102,97 @@ function calculateInfraComponentsForPanel(panel) {
         }
       }
     }
+    return eqCables;
+  };
 
-    // Accumulate cables
-    eqCables.forEach(c => {
-      addInfra(c.code, c.qty);
-      const d = getCableDiameter(c.code);
-      const area = (Math.PI * d * d) / 4;
-      totalPanelCablesArea += area;
+  const getAutCountForEquipment = (eq) => {
+    let autCount = 0;
+    if (panel.type === 'automacao' || panel.type === 'completo') {
+      if (eq.readings) autCount += eq.readings.length;
+      if (eq.hasHeating) autCount++;
+      if (eq.hasHumid) autCount++;
+      if (eq.type === 'UTA' && eq.expansionType === 'Indireta') autCount++;
+    }
+    return autCount;
+  };
+
+  let equips = [];
+  if (panel.equipments && panel.equipments.length > 0) {
+    equips = panel.equipments;
+  } else if ((panel.type === 'comando' || panel.type === 'remoto') && panel.quantity > 0) {
+    for (let i = 1; i <= panel.quantity; i++) {
+      equips.push({ id: `virtual-${i}`, name: panel.type === 'comando' ? `Ponto de Comando ${i}` : `Ponto de Automação Remota ${i}`, type: panel.type.toUpperCase() });
+    }
+  }
+
+  if (equips.length === 0) {
+    return [];
+  }
+
+  const distances = panel.infraDistances || {};
+  const activeEquips = [];
+  
+  equips.forEach(eq => {
+    const D = (panel.type === 'comando' || panel.type === 'remoto') ? (parseFloat(panel.infraDistances['general']) || 0) : (parseFloat(distances[eq.id]) || 0);
+    if (D <= 0) return;
+    
+    const cables = getCablesForEquipment(eq, D);
+    const autCount = getAutCountForEquipment(eq);
+    const hasPower = !!eq.power;
+    
+    activeEquips.push({
+      eq: eq,
+      distance: D,
+      cables: cables,
+      autCount: autCount,
+      hasPower: hasPower
+    });
+  });
+
+  if (activeEquips.length === 0) {
+    return [];
+  }
+
+  const isEletrocalhaMode = activeEquips.length > 5;
+  const infraType = panel.infraType || 'leve';
+  const uniqueDistances = Array.from(new Set(activeEquips.map(ae => ae.distance))).sort((a, b) => a - b);
+  
+  let uPrev = 0;
+  let totalPanelCablesArea = 0;
+  let totalEletrocalhaLength = 0;
+
+  uniqueDistances.forEach(u_s => {
+    const L_s = u_s - uPrev;
+    if (L_s <= 0) return;
+
+    // Find all equipment active in this interval
+    const intervalEquips = activeEquips.filter(ae => ae.distance >= u_s);
+
+    // Collect all cables running in this interval
+    const intervalCables = [];
+    intervalEquips.forEach(ae => {
+      ae.cables.forEach(c => {
+        intervalCables.push({ code: c.code });
+      });
     });
 
-    // 4. Conduit and fittings sizing
-    const stdConduitSize = getConduitSizeForCables(eqCables);
+    // Calculate conduit sizes for this interval
+    const stdConduitSize = getConduitSizeForCables(intervalCables);
     const redConduitSize = getReducedConduitSize(stdConduitSize);
-    const infraType = panel.infraType || 'leve';
+
+    // Sum cable areas for eletrocalha sizing
+    let intervalCablesArea = 0;
+    intervalCables.forEach(c => {
+      const d = getCableDiameter(c.code);
+      const area = (Math.PI * d * d) / 4;
+      intervalCablesArea += area;
+    });
 
     if (isEletrocalhaMode) {
-      const trayLen = 0.8 * D;
-      const condLen = 0.2 * D;
+      const trayLen = 0.8 * L_s;
+      const condLen = 0.2 * L_s;
       totalEletrocalhaLength += trayLen;
+      totalPanelCablesArea = Math.max(totalPanelCablesArea, intervalCablesArea);
 
       if (infraType === 'pesada') {
         addInfra(`ELETRODUTO-PESADO-${redConduitSize}`, condLen);
@@ -2153,12 +2203,10 @@ function calculateInfraComponentsForPanel(panel) {
 
       let conduleteCount = Math.ceil(condLen);
       let autCount = 0;
-      if (panel.type === 'automacao' || panel.type === 'completo') {
-        if (eq.readings) autCount += eq.readings.length;
-        if (eq.hasHeating) autCount++;
-        if (eq.hasHumid) autCount++;
-        if (eq.type === 'UTA' && eq.expansionType === 'Indireta') autCount++;
-      }
+      const terminatingEquips = activeEquips.filter(ae => ae.distance === u_s);
+      terminatingEquips.forEach(ae => {
+        autCount += ae.autCount;
+      });
       conduleteCount += autCount;
 
       if (conduleteCount > 0) {
@@ -2175,11 +2223,13 @@ function calculateInfraComponentsForPanel(panel) {
         }
       }
 
-      if (eq.power && panel.type !== 'comando' && panel.type !== 'remoto') addInfra(`PRENSA-CABO-3/4`, 1);
-      if (autCount > 0) addInfra(`PRENSA-CABO-1/2`, autCount);
+      terminatingEquips.forEach(ae => {
+        if (ae.hasPower && panel.type !== 'comando' && panel.type !== 'remoto') addInfra(`PRENSA-CABO-3/4`, 1);
+        if (ae.autCount > 0) addInfra(`PRENSA-CABO-1/2`, ae.autCount);
+      });
     } else {
-      const stdLen = 0.7 * D;
-      const redLen = 0.3 * D;
+      const stdLen = 0.7 * L_s;
+      const redLen = 0.3 * L_s;
 
       if (infraType === 'pesada') {
         addInfra(`ELETRODUTO-PESADO-${stdConduitSize}`, stdLen);
@@ -2195,12 +2245,10 @@ function calculateInfraComponentsForPanel(panel) {
       let redCondCount = Math.ceil(redLen);
 
       let autCount = 0;
-      if (panel.type === 'automacao' || panel.type === 'completo') {
-        if (eq.readings) autCount += eq.readings.length;
-        if (eq.hasHeating) autCount++;
-        if (eq.hasHumid) autCount++;
-        if (eq.type === 'UTA' && eq.expansionType === 'Indireta') autCount++;
-      }
+      const terminatingEquips = activeEquips.filter(ae => ae.distance === u_s);
+      terminatingEquips.forEach(ae => {
+        autCount += ae.autCount;
+      });
       redCondCount += autCount;
 
       if (stdCondCount > 0) {
@@ -2231,9 +2279,13 @@ function calculateInfraComponentsForPanel(panel) {
         }
       }
 
-      if (eq.power && panel.type !== 'comando' && panel.type !== 'remoto') addInfra(`PRENSA-CABO-3/4`, 1);
-      if (autCount > 0) addInfra(`PRENSA-CABO-1/2`, autCount);
+      terminatingEquips.forEach(ae => {
+        if (ae.hasPower && panel.type !== 'comando' && panel.type !== 'remoto') addInfra(`PRENSA-CABO-3/4`, 1);
+        if (ae.autCount > 0) addInfra(`PRENSA-CABO-1/2`, ae.autCount);
+      });
     }
+
+    uPrev = u_s;
   });
 
   if (isEletrocalhaMode && totalEletrocalhaLength > 0) {
@@ -2247,6 +2299,13 @@ function calculateInfraComponentsForPanel(panel) {
     addInfra(trayCode, totalEletrocalhaLength);
     addInfra('SUPORTE-TIRANTE', Math.ceil(totalEletrocalhaLength / 1.5));
   }
+
+  // Add all cables in their full lengths
+  activeEquips.forEach(ae => {
+    ae.cables.forEach(c => {
+      addInfra(c.code, c.qty);
+    });
+  });
 
   return Object.values(infraMap);
 }
