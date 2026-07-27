@@ -101,35 +101,70 @@ function calculatePanelComponents(panel) {
     return [];
   }
 
-  const rules = (typeof budgetState !== 'undefined' && budgetState.customRules) ? budgetState.customRules : {
-    brumBarCurrentThreshold: 75,
-    transformerVoltageRequired: '440V',
-    transformerVaRating: '400VA',
-    transformerPrice: 600.0,
+  const getRule = (pathStr, fallback) => {
+    try {
+      const parts = pathStr.split('.');
+      let obj = (typeof budgetState !== 'undefined') ? budgetState.customRules : null;
+      if (!obj) return fallback;
+      for (const p of parts) {
+        if (obj[p] === undefined) return fallback;
+        obj = obj[p];
+      }
+      return obj;
+    } catch (e) {
+      return fallback;
+    }
+  };
+
+  const rules = {
+    brumBarCurrentThreshold: getRule('brumBarCurrentThreshold', 75),
+    transformerVoltageRequired: getRule('transformerVoltageRequired', '440V'),
+    transformerVaRating: getRule('transformerVaRating', '400VA'),
+    transformerPrice: getRule('transformerPrice', 600.0),
     cables10mm: {
-      potenciaComando: { cinza: 50, vermelho: 25, azul: 25 },
-      completo: { cinza: 50, vermelho: 25, azul: 25 },
-      automacao: { cinza: 50, vermelho: 25, azul: 25 },
-      comando: { vermelho: 10, azul: 10, cinza: 10 },
-      remoto: { vermelho: 50, azul: 50, cinza: 50 }
+      potenciaComando: {
+        cinza: getRule('cables10mm.potenciaComando.cinza', 50),
+        vermelho: getRule('cables10mm.potenciaComando.vermelho', 25),
+        azul: getRule('cables10mm.potenciaComando.azul', 25)
+      },
+      completo: {
+        cinza: getRule('cables10mm.completo.cinza', 50),
+        vermelho: getRule('cables10mm.completo.vermelho', 25),
+        azul: getRule('cables10mm.completo.azul', 25)
+      },
+      automacao: {
+        cinza: getRule('cables10mm.automacao.cinza', 50),
+        vermelho: getRule('cables10mm.automacao.vermelho', 25),
+        azul: getRule('cables10mm.automacao.azul', 25)
+      },
+      comando: {
+        vermelho: getRule('cables10mm.comando.vermelho', 10),
+        azul: getRule('cables10mm.comando.azul', 10),
+        cinza: getRule('cables10mm.comando.cinza', 10)
+      },
+      remoto: {
+        vermelho: getRule('cables10mm.remoto.vermelho', 50),
+        azul: getRule('cables10mm.remoto.azul', 50),
+        cinza: getRule('cables10mm.remoto.cinza', 50)
+      }
     },
     bornesPerEquip: {
-      comando: 6,
-      remoto: 6,
-      potencia: 4,
-      'potencia-comando': 10,
-      automacao: 15,
-      completo: 20
+      comando: getRule('bornesPerEquip.comando', 6),
+      remoto: getRule('bornesPerEquip.remoto', 6),
+      potencia: getRule('bornesPerEquip.potencia', 4),
+      'potencia-comando': getRule('bornesPerEquip.potencia-comando', 10),
+      automacao: getRule('bornesPerEquip.automacao', 15),
+      completo: getRule('bornesPerEquip.completo', 20)
     },
     borneAccessories: {
-      posteFinal: 2,
-      borneTerra: 3,
-      identificadorBr5: 3,
-      identificadorBtw: 3,
-      tampaBtwmp: 3,
-      portaPlaqueta: 3
+      posteFinal: getRule('borneAccessories.posteFinal', 2),
+      borneTerra: getRule('borneAccessories.borneTerra', 3),
+      identificadorBr5: getRule('borneAccessories.identificadorBr5', 3),
+      identificadorBtw: getRule('borneAccessories.identificadorBtw', 3),
+      tampaBtwmp: getRule('borneAccessories.tampaBtwmp', 3),
+      portaPlaqueta: getRule('borneAccessories.portaPlaqueta', 3)
     },
-    trilhoDinQty: 1
+    trilhoDinQty: getRule('trilhoDinQty', 1)
   };
 
   const componentsMap = {}; // Key: componentCode -> { code, name, qty, unit, unitPrice, value }
@@ -1327,38 +1362,47 @@ function loadState() {
     if (!budgetState.theme) budgetState.theme = 'dark';
     if (!budgetState.consolidatedInfraPanels) budgetState.consolidatedInfraPanels = [];
     
-    // Initialize custom rules with default settings if not already present
+    // Defensive deep merge for customRules
     budgetState.customRules = budgetState.customRules || {};
-    budgetState.customRules = {
-      brumBarCurrentThreshold: budgetState.customRules.brumBarCurrentThreshold !== undefined ? budgetState.customRules.brumBarCurrentThreshold : 75,
-      transformerVoltageRequired: budgetState.customRules.transformerVoltageRequired || '440V',
-      transformerVaRating: budgetState.customRules.transformerVaRating || '400VA',
-      transformerPrice: budgetState.customRules.transformerPrice !== undefined ? budgetState.customRules.transformerPrice : 600.0,
-      cables10mm: budgetState.customRules.cables10mm || {
-        potenciaComando: { cinza: 50, vermelho: 25, azul: 25 },
-        completo: { cinza: 50, vermelho: 25, azul: 25 },
-        automacao: { cinza: 50, vermelho: 25, azul: 25 },
-        comando: { vermelho: 10, azul: 10, cinza: 10 },
-        remoto: { vermelho: 50, azul: 50, cinza: 50 }
-      },
-      bornesPerEquip: budgetState.customRules.bornesPerEquip || {
-        comando: 6,
-        remoto: 6,
-        potencia: 4,
-        'potencia-comando': 10,
-        automacao: 15,
-        completo: 20
-      },
-      borneAccessories: budgetState.customRules.borneAccessories || {
-        posteFinal: 2,
-        borneTerra: 3,
-        identificadorBr5: 3,
-        identificadorBtw: 3,
-        tampaBtwmp: 3,
-        portaPlaqueta: 3
-      },
-      trilhoDinQty: budgetState.customRules.trilhoDinQty !== undefined ? budgetState.customRules.trilhoDinQty : 1
+    
+    budgetState.customRules.brumBarCurrentThreshold = budgetState.customRules.brumBarCurrentThreshold !== undefined ? budgetState.customRules.brumBarCurrentThreshold : 75;
+    budgetState.customRules.transformerVoltageRequired = budgetState.customRules.transformerVoltageRequired || '440V';
+    budgetState.customRules.transformerVaRating = budgetState.customRules.transformerVaRating || '400VA';
+    budgetState.customRules.transformerPrice = budgetState.customRules.transformerPrice !== undefined ? budgetState.customRules.transformerPrice : 600.0;
+    budgetState.customRules.trilhoDinQty = budgetState.customRules.trilhoDinQty !== undefined ? budgetState.customRules.trilhoDinQty : 1;
+    
+    budgetState.customRules.cables10mm = budgetState.customRules.cables10mm || {};
+    const dCables = {
+      potenciaComando: { cinza: 50, vermelho: 25, azul: 25 },
+      completo: { cinza: 50, vermelho: 25, azul: 25 },
+      automacao: { cinza: 50, vermelho: 25, azul: 25 },
+      comando: { vermelho: 10, azul: 10, cinza: 10 },
+      remoto: { vermelho: 50, azul: 50, cinza: 50 }
     };
+    Object.keys(dCables).forEach(k => {
+      budgetState.customRules.cables10mm[k] = budgetState.customRules.cables10mm[k] || {};
+      Object.keys(dCables[k]).forEach(cKey => {
+        if (budgetState.customRules.cables10mm[k][cKey] === undefined) {
+          budgetState.customRules.cables10mm[k][cKey] = dCables[k][cKey];
+        }
+      });
+    });
+
+    budgetState.customRules.bornesPerEquip = budgetState.customRules.bornesPerEquip || {};
+    const dBornes = { comando: 6, remoto: 6, potencia: 4, 'potencia-comando': 10, automacao: 15, completo: 20 };
+    Object.keys(dBornes).forEach(k => {
+      if (budgetState.customRules.bornesPerEquip[k] === undefined) {
+        budgetState.customRules.bornesPerEquip[k] = dBornes[k];
+      }
+    });
+
+    budgetState.customRules.borneAccessories = budgetState.customRules.borneAccessories || {};
+    const dAcc = { posteFinal: 2, borneTerra: 3, identificadorBr5: 3, identificadorBtw: 3, tampaBtwmp: 3, portaPlaqueta: 3 };
+    Object.keys(dAcc).forEach(k => {
+      if (budgetState.customRules.borneAccessories[k] === undefined) {
+        budgetState.customRules.borneAccessories[k] = dAcc[k];
+      }
+    });
     
     // Synergize catalog price for transformer
     if (typeof PRECOS_DATABASE !== 'undefined' && PRECOS_DATABASE.catalog && PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA']) {
@@ -2047,7 +2091,7 @@ function renderPanelsList() {
   const logicButtons = listGrid.querySelectorAll('.btn-logic-component');
   logicButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const targetBtn = e.target.closest('.btn-logic-component');
+      const targetBtn = e.currentTarget;
       const panelId = parseInt(targetBtn.getAttribute('data-panel-id'));
       const compIdx = parseInt(targetBtn.getAttribute('data-comp-idx'));
       openLogicModal(panelId, compIdx);
