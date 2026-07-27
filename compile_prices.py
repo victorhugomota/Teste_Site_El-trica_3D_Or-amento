@@ -99,6 +99,25 @@ def compile_excel_to_js():
         "unit": "m",
         "price": 5.0
     }
+    
+    # Inject Transformer 400VA 440/220V
+    database["catalog"]["TRANSFORMADOR-440-220-400VA"] = {
+        "desc": "TRANSFORMADOR MONOFÁSICO 440/220V - 400VA",
+        "brand": "WEG",
+        "unit": "un",
+        "price": 600.0
+    }
+
+    # Inject Trilho DIN Brum 1m
+    database["catalog"]["TRILHO-DIN-1M"] = {
+        "desc": "TRILHO DIN PERFURADO BARRA DE 1M MARCA BRUM",
+        "brand": "BRUM",
+        "unit": "un",
+        "price": 15.0
+    }
+
+    # Remove old CABO-1.0 if present to enforce unique models only
+    database["catalog"].pop("CABO-1.0", None)
             
     # 2. Compositions
     ws_comp = wb["Composições de Partida"]

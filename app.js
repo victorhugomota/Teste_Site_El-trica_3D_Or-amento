@@ -120,6 +120,12 @@ function calculatePanelComponents(panel) {
     if (!code) return;
     if (code === 'BORNE-RELE-BTWR') return; // Handled separately at the end of the function
     
+    // Intercept MANOPLA-MSW-B3
+    if (code === 'MANOPLA-MSW-B3') {
+      const isSingleExCv = (panel.equipments && panel.equipments.length === 1 && panel.equipments[0].type === 'EX/CV');
+      if (!isSingleExCv) return;
+    }
+    
     // Intercept DISJ-MOTOR- and replace with dynamic code if we have active motor context
     if (code.startsWith('DISJ-MOTOR-') && currentMotorCurrent > 0) {
       code = getDisjMotorCodeByCurrent(currentMotorCurrent);
@@ -157,7 +163,6 @@ function calculatePanelComponents(panel) {
     const qty = parseInt(panel.quantity) || 1;
     
     // Fixed items (1x of each)
-    addComp('QMON-400x300x200', 1);
     addComp('CANALETA-50X80', 1);
     addComp('CANALETA-30X80', 1);
     addComp('TOMADA-DIM', 1);
@@ -166,17 +171,9 @@ function calculatePanelComponents(panel) {
     
     // Multiplied items (Quantity x ...)
     addComp('CHAVE-SELETORA-3POS', qty * 1);
-    addComp('BORNE-BTWP-2.5', qty * 6);
-    addComp('PORTA-PLAQUETA', qty * 3);
     addComp('CABO-1.0-VERMELHO', qty * 10);
     addComp('CABO-1.0-AZUL', qty * 10);
     addComp('CABO-1.0-CINZA', qty * 10);
-    addComp('TAMPA-BTWMP', qty * 2);
-    addComp('IDENTIFICADOR-BTW', qty * 1);
-    addComp('IDENTIFICADOR-BR5', qty * 1);
-    addComp('POSTE-FINAL', qty * 1);
-    
-    return Object.values(componentsMap);
   }
   
   // A) Count total equipments
@@ -259,24 +256,23 @@ function calculatePanelComponents(panel) {
 
   // Sizing of assembly box
   let boxCode = 'QMON-300x200x250';
-  
-  if (type === 'potencia') {
-    if (isPureBombas) {
-      boxCode = 'QMON-1700x600x400';
-      addComp('KIT-VOLT-BRUM-400A', 1);
-      addComp('KIT-CONEXAO-BRUM-400A', 1);
-    } else {
-      // New occupancy-based logic for pure power panels
-      let spaceUnits = 0;
-      if (panel.equipments) {
-        panel.equipments.forEach(eq => {
-          // 1. Motor starter space
+  let spaceUnits = 0;
+
+  if (type === 'comando' || type === 'remoto') {
+    const qty = parseInt(panel.quantity) || 1;
+    spaceUnits += qty * 1.5;
+    if (type === 'remoto' && panel.remotoIhmSize) {
+      spaceUnits += 3;
+    }
+  } else {
+    if (panel.equipments) {
+      panel.equipments.forEach(eq => {
+        if (eq.power) {
           let startType = eq.starts;
-          if (Array.isArray(startType)) {
-            startType = startType[0] || 'Direta';
-          }
+          if (Array.isArray(startType)) startType = startType[0];
+          
           if (startType === 'Direta') {
-            spaceUnits += 1;
+            spaceUnits += 1.5;
           } else if (startType === 'Inversor') {
             const pKw = parsePowerKw(eq.power);
             if (pKw <= 2.2) spaceUnits += 3;
@@ -289,91 +285,89 @@ function calculatePanelComponents(panel) {
             else if (pKw <= 22) spaceUnits += 5;
             else spaceUnits += 10;
           } else if (startType === 'EC') {
-            spaceUnits += 0.5;
+            spaceUnits += 0.8;
           } else {
-            spaceUnits += 1;
+            spaceUnits += 1.5;
           }
+        } else {
+          spaceUnits += 1.0;
+        }
 
-          // 2. Heating space (contactor vs SCR converter)
-          if (eq.hasHeating) {
-            const stages = parseInt(eq.heatingStages) || 1;
-            if (eq.heatingControl === 'Proporcional') {
-              spaceUnits += 3 * stages; // SCR converter
-            } else {
-              spaceUnits += 1 * stages; // contactor
-            }
+        if (eq.hasHeating && eq.heatingPower) {
+          const stages = parseInt(eq.heatingStages) || 1;
+          if (eq.heatingControl === 'Proporcional') {
+            spaceUnits += 3.5 * stages;
+          } else {
+            spaceUnits += 1.5 * stages;
           }
+        }
 
-          // 3. Humidification space
-          if (eq.hasHumid) {
-            const stages = parseInt(eq.humidStages) || 1;
-            if (eq.humidControl === 'Proporcional') {
-              spaceUnits += 3 * stages; // SCR converter
-            } else {
-              spaceUnits += 1 * stages; // contactor
-            }
+        if (eq.hasHumid && eq.humidPower) {
+          const stages = parseInt(eq.humidStages) || 1;
+          if (eq.humidControl === 'Proporcional') {
+            spaceUnits += 3.5 * stages;
+          } else {
+            spaceUnits += 1.5 * stages;
           }
-        });
-      }
-      
-      // Select box size based on accumulated space units (minimum 500x400x200)
-      const boxes = [
-        { code: 'QMON-500x400x200', cap: 4 },
-        { code: 'QMON-500x500x200', cap: 6 },
-        { code: 'QMON-600x500x250', cap: 9 },
-        { code: 'QMON-600x600x200', cap: 12 },
-        { code: 'QMON-700x600x200', cap: 16 },
-        { code: 'QMON-800x600x200', cap: 22 },
-        { code: 'QMON-1000x600x200', cap: 32 },
-        { code: 'QMON-1200x800x200', cap: 48 },
-        { code: 'QMON-1700x600x400', cap: 999 }
-      ];
-      const matchedBox = boxes.find(b => spaceUnits <= b.cap);
-      boxCode = matchedBox ? matchedBox.code : 'QMON-1700x600x400';
+        }
+      });
     }
-  } else if (isPureBombas) {
+
+    if (type === 'automacao' || type === 'completo') {
+      spaceUnits += 4;
+    }
+    if (panel.hasIhm && panel.ihmSize) {
+      spaceUnits += 3;
+    }
+  }
+
+  const boxes = [
+    { code: 'QMON-300x200x250', cap: 2 },
+    { code: 'QMON-300x300x200', cap: 3 },
+    { code: 'QMON-400x300x200', cap: 4 },
+    { code: 'QMON-500x400x200', cap: 6 },
+    { code: 'QMON-500x500x200', cap: 8 },
+    { code: 'QMON-600x400x250', cap: 10 },
+    { code: 'QMON-600x500x250', cap: 12 },
+    { code: 'QMON-600x600x200', cap: 16 },
+    { code: 'QMON-700x600x200', cap: 22 },
+    { code: 'QMON-800x600x200', cap: 30 },
+    { code: 'QMON-1000x600x200', cap: 42 },
+    { code: 'QMON-1200x800x200', cap: 60 },
+    { code: 'QMON-1700x600x400', cap: 999 }
+  ];
+
+  let matchedBox = boxes.find(b => spaceUnits <= b.cap);
+  boxCode = matchedBox ? matchedBox.code : 'QMON-1700x600x400';
+
+  let minBoxCode = 'QMON-300x200x250';
+  if (type === 'potencia' || type === 'potencia-comando' || type === 'automacao' || type === 'completo' || type === 'remoto') {
+    minBoxCode = 'QMON-500x400x200';
+  } else if (type === 'comando') {
+    minBoxCode = 'QMON-400x300x200';
+  }
+
+  const matchedIdx = boxes.findIndex(b => b.code === boxCode);
+  const minIdx = boxes.findIndex(b => b.code === minBoxCode);
+  if (matchedIdx < minIdx) {
+    boxCode = minBoxCode;
+  }
+
+  if (calculatedCurrent > 75) {
     boxCode = 'QMON-1700x600x400';
     addComp('KIT-VOLT-BRUM-400A', 1);
     addComp('KIT-CONEXAO-BRUM-400A', 1);
-  } else if (isSingleUta) {
-    let singleUtaStart = 'Direta';
-    if (panel.equipments[0].starts) {
-      const starts = panel.equipments[0].starts;
-      singleUtaStart = Array.isArray(starts) ? starts[0] : starts;
-    }
-    if (singleUtaStart === 'Direta') {
-      boxCode = 'QMON-500x500x200';
-    } else if (singleUtaStart === 'Inversor') {
-      boxCode = 'QMON-600x500x250';
-    } else if (singleUtaStart === 'SoftStarter') {
-      boxCode = 'QMON-600x500x250';
-    } else if (singleUtaStart === 'EC') {
-      boxCode = 'QMON-500x500x200';
-      addComp('MINIDISJ-MDW-C10-3', 1); // 1x Disjuntor Tripolar de proteção 10A
-    } else {
-      boxCode = 'QMON-500x500x200';
-    }
-  } else if (type === 'comando') {
-    boxCode = 'QMON-400x300x200';
-  } else {
-    const hasClpOrIhm = (type === 'automacao' || type === 'completo' || panel.hasIhm || type === 'remoto');
-    if (hasClpOrIhm) {
-      if (totalEquips <= 2) {
-        boxCode = 'QMON-600x400x250';
-      } else {
-        boxCode = 'QMON-600x600x200';
-      }
-    } else {
-      if (totalEquips <= 2) {
-        boxCode = 'QMON-300x200x250';
-      } else if (totalEquips <= 4) {
-        boxCode = 'QMON-600x400x250';
-      } else {
-        boxCode = 'QMON-600x600x200';
-      }
-    }
   }
+
   addComp(boxCode, 1);
+
+  // Transformer for 440V non-potencia panels
+  if (voltage === '440V' && type !== 'potencia') {
+    addComp('TRANSFORMADOR-440-220-400VA', 1);
+  }
+
+  // Trilho DIN Brum 1m
+  addComp('TRILHO-DIN-1M', 1);
   
   // Canaletas based on board size
   let width = 300;
@@ -531,8 +525,6 @@ function calculatePanelComponents(panel) {
       addComp('CHAVE-SELETORA-3POS', 1);
       addComp('SINALEIRO-VERDE', 1);
       addComp('SINALEIRO-VERMELHO', 1);
-      addComp('PORTA-PLAQUETA', 3);
-      addComp('BORNE-BTWP-2.5', 6);
       // Cabos de comando separados por cor
       addComp('CABO-1.0-VERMELHO', 50);
       addComp('CABO-1.0-AZUL', 50);
@@ -557,10 +549,12 @@ function calculatePanelComponents(panel) {
       const eqType = eq.type;
       const voltageVal = parseInt(voltage.replace("V", "")) || 220;
 
-      // 50m of Vermelho, Azul, Cinza control cable per equipment
-      addComp('CABO-1.0-VERMELHO', 50);
-      addComp('CABO-1.0-AZUL', 50);
-      addComp('CABO-1.0-CINZA', 50);
+      // Control cables rules for potencia-comando, completo, automacao
+      if (type === 'potencia-comando' || type === 'completo' || type === 'automacao') {
+        addComp('CABO-1.0-CINZA', 50);
+        addComp('CABO-1.0-VERMELHO', 25);
+        addComp('CABO-1.0-AZUL', 25);
+      }
 
       // Borne Relé rule:
       if (type === 'completo') {
@@ -971,16 +965,34 @@ function calculatePanelComponents(panel) {
     }
   }
 
-  // 5. Borne accessories proportional rule (Tampa, Identificador, Poste Final, Borne Terra)
-  const borneItem = componentsMap['BORNE-BTWP-2.5'];
-  const borneQty = borneItem ? borneItem.qty : 0;
-  const borneFactor = Math.floor(borneQty / 5);
-  if (borneFactor > 0) {
-    addComp('TAMPA-BTWMP', borneFactor);
-    addComp('IDENTIFICADOR-BTW', borneFactor);
-    addComp('IDENTIFICADOR-BR5', borneFactor);
-    addComp('POSTE-FINAL', borneFactor * 2);
-    addComp('BORNE-TERRA-2.5T', borneFactor);
+  // 5. Borne accessories and terminal block calculations (Unified override)
+  delete componentsMap['BORNE-BTWP-2.5'];
+  delete componentsMap['POSTE-FINAL'];
+  delete componentsMap['BORNE-TERRA-2.5T'];
+  delete componentsMap['IDENTIFICADOR-BR5'];
+  delete componentsMap['IDENTIFICADOR-BTW'];
+  delete componentsMap['TAMPA-BTWMP'];
+  delete componentsMap['PORTA-PLAQUETA'];
+
+  const totalEquipsCount = (type === 'comando' || type === 'remoto') ? (panel.quantity || 1) : (panel.equipments ? panel.equipments.length : 0);
+  if (totalEquipsCount > 0) {
+    let bornesPerEquip = 0;
+    if (type === 'comando' || type === 'remoto') bornesPerEquip = 6;
+    else if (type === 'potencia') bornesPerEquip = 4;
+    else if (type === 'potencia-comando') bornesPerEquip = 10;
+    else if (type === 'automacao') bornesPerEquip = 15;
+    else if (type === 'completo') bornesPerEquip = 20;
+
+    if (bornesPerEquip > 0) {
+      addComp('BORNE-BTWP-2.5', totalEquipsCount * bornesPerEquip);
+    }
+
+    addComp('POSTE-FINAL', totalEquipsCount * 2);
+    addComp('BORNE-TERRA-2.5T', totalEquipsCount * 3);
+    addComp('IDENTIFICADOR-BR5', totalEquipsCount * 3);
+    addComp('IDENTIFICADOR-BTW', totalEquipsCount * 3);
+    addComp('TAMPA-BTWMP', totalEquipsCount * 3);
+    addComp('PORTA-PLAQUETA', totalEquipsCount * 3);
   }
 
   // 6. Contact Auxiliar for Disjuntor Motor rule

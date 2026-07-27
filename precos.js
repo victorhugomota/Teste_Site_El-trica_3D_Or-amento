@@ -817,12 +817,6 @@ const PRECOS_DATABASE = {
       "unit": "m",
       "price": 8.0
     },
-    "CABO-1.0": {
-      "desc": "CABO FLEXÍVEL VERMELHO/AZUL/CINZA 1,0mm2 PVC",
-      "brand": "GENÉRICO",
-      "unit": "m",
-      "price": 2.0
-    },
     "VENTILADOR-GRELHA": {
       "desc": "JOGO DE VENTILADOR E GRELHA PARA PAINEL 120x120",
       "brand": "SIBRATEC",
@@ -1716,6 +1710,18 @@ const PRECOS_DATABASE = {
       "brand": "FURUKAWA",
       "unit": "m",
       "price": 5.0
+    },
+    "TRANSFORMADOR-440-220-400VA": {
+      "desc": "TRANSFORMADOR MONOFÁSICO 440/220V - 400VA",
+      "brand": "WEG",
+      "unit": "un",
+      "price": 600.0
+    },
+    "TRILHO-DIN-1M": {
+      "desc": "TRILHO DIN PERFURADO BARRA DE 1M MARCA BRUM",
+      "brand": "BRUM",
+      "unit": "un",
+      "price": 15.0
     }
   },
   "compositions": {
