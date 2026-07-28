@@ -4,6 +4,22 @@ let budgetState = {
   theme: 'dark'
 };
 
+// Global Helper to fetch custom engineering rules safely with fallbacks
+const getRule = (pathStr, fallback) => {
+  try {
+    const parts = pathStr.split('.');
+    let obj = (typeof budgetState !== 'undefined') ? budgetState.customRules : null;
+    if (!obj) return fallback;
+    for (const p of parts) {
+      if (obj[p] === undefined) return fallback;
+      obj = obj[p];
+    }
+    return obj;
+  } catch (e) {
+    return fallback;
+  }
+};
+
 // Draft equipments for the panel currently being created
 let draftEquipments = [];
 
@@ -101,20 +117,7 @@ function calculatePanelComponents(panel) {
     return [];
   }
 
-  const getRule = (pathStr, fallback) => {
-    try {
-      const parts = pathStr.split('.');
-      let obj = (typeof budgetState !== 'undefined') ? budgetState.customRules : null;
-      if (!obj) return fallback;
-      for (const p of parts) {
-        if (obj[p] === undefined) return fallback;
-        obj = obj[p];
-      }
-      return obj;
-    } catch (e) {
-      return fallback;
-    }
-  };
+  // Using global getRule helper
 
   const rules = {
     brumBarCurrentThreshold: getRule('brumBarCurrentThreshold', 75),
@@ -475,7 +478,7 @@ function calculatePanelComponents(panel) {
       hasOtherThanBombasOrChiller = true;
     }
     
-    const mswLimit = hasOtherThanBombasOrChiller ? 160 : 100;
+    const mswLimit = getRule('mswCurrentLimit', hasOtherThanBombasOrChiller ? 160 : 100);
     const forceCaixaMoldada = isPureBombas;
     
     if (calculatedCurrent <= mswLimit && !forceCaixaMoldada) {
@@ -635,7 +638,10 @@ function calculatePanelComponents(panel) {
       // Borne Relé rule:
       if (type === 'completo') {
         if (eqType === 'UTA' || eqType === 'EX/CV') {
-          addComp('PRESSOSTATO-DIF', 2, null, `Segurança de Ventilação: 2 pressostatos diferenciais para monitorar fluxo de ar e filtro sujo na ${eqType}`);
+          const pressQty = getRule('pressostatoQty', 2);
+          if (pressQty > 0) {
+            addComp('PRESSOSTATO-DIF', pressQty, null, `Segurança de Ventilação: ${pressQty} pressostatos diferenciais para monitorar fluxo de ar e filtro sujo na ${eqType} conforme lógica parametrizada`);
+          }
         }
       }
       if (eqType === 'UTA') {
@@ -1088,35 +1094,39 @@ function calculatePanelComponents(panel) {
   // Add exactly 1 unit of SINALEIRO-BRANCO for all standard panels
   const sinaleiroCode = 'SINALEIRO-BRANCO';
   const sinItem = PRECOS_DATABASE.catalog[sinaleiroCode];
-  if (sinItem) {
+  const safetySinQty = getRule('sinaleiroSegurancaQty', 1);
+  if (safetySinQty > 0 && sinItem) {
     componentsMap[sinaleiroCode] = {
       code: sinaleiroCode,
       name: sinItem.desc,
       brand: sinItem.brand,
       unit: sinItem.unit,
-      qty: 1,
+      qty: safetySinQty,
       unitPrice: sinItem.price,
-      value: sinItem.price,
-      reasons: ["Regra Geral de Segurança: Adicionado 1 Sinaleiro Branco de painel energizado por padrão"]
+      value: safetySinQty * sinItem.price,
+      reasons: [`Regra Geral de Segurança (NR-10): Sinalizador luminoso branco na porta do painel indicando presença de tensão externa ativa (${safetySinQty} un)`]
     };
   }
 
-  // Add exactly 2 x BORNE-RELE-BTWR per equipment for standard panels
+  // Add BORNE-RELE-BTWR per equipment for standard panels (customizable)
   if (panel.equipments && panel.equipments.length > 0) {
     const totalEquipsCount = panel.equipments.length;
-    const releCode = 'BORNE-RELE-BTWR';
-    const releItem = PRECOS_DATABASE.catalog[releCode];
-    if (releItem) {
-      componentsMap[releCode] = {
-        code: releCode,
-        name: releItem.desc,
-        brand: releItem.brand,
-        unit: releItem.unit,
-        qty: 2 * totalEquipsCount,
-        unitPrice: releItem.price,
-        value: 2 * totalEquipsCount * releItem.price,
-        reasons: [`Regra de Interface de Revezamento: Adicionado 2 Relés de Interface de Acoplamento por equipamento (${2 * totalEquipsCount} total)`]
-      };
+    const releQtyPerEquip = getRule('releQty', 2);
+    if (releQtyPerEquip > 0) {
+      const releCode = 'BORNE-RELE-BTWR';
+      const releItem = PRECOS_DATABASE.catalog[releCode];
+      if (releItem) {
+        componentsMap[releCode] = {
+          code: releCode,
+          name: releItem.desc,
+          brand: releItem.brand,
+          unit: releItem.unit,
+          qty: releQtyPerEquip * totalEquipsCount,
+          unitPrice: releItem.price,
+          value: releQtyPerEquip * totalEquipsCount * releItem.price,
+          reasons: [`Regra de Interface de Revezamento: Adicionado ${releQtyPerEquip} Relés de Interface de Acoplamento por equipamento (${releQtyPerEquip * totalEquipsCount} total) conforme lógica parametrizada`]
+        };
+      }
     }
   }
   
@@ -1152,17 +1162,18 @@ function openLogicModal(panelId, compIdx) {
       : `<div style="padding: 8px 12px; background: rgba(245, 158, 11, 0.05); border-left: 3px solid #f59e0b; margin-bottom: 8px; border-radius: 4px; font-size: 0.8rem; color: var(--text-primary, #ffffff);">Item adicionado por especificação padrão de componentes.</div>`;
 
     let adjustHTML = '';
+    let ruleDescHTML = '';
     const code = comp.code;
-    const rules = budgetState.customRules;
 
     if (code === 'BORNE-BTWP-2.5') {
       const type = panel.type;
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Bornes de passagem de 2.5mm² para conexões elétricas de comando e automação. O quantitativo é baseado em um valor fixo parametrizado por equipamento de acordo com o tipo de quadro.</div>`;
       adjustHTML = `
         <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
           <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Lógica de Bornes de Passagem</h4>
           <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Bornes por Equipamento (Tipo ${type.toUpperCase()})</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.bornesPerEquip[type] || 6}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule('bornesPerEquip.' + type, 6)}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
@@ -1170,36 +1181,39 @@ function openLogicModal(panelId, compIdx) {
       currentLogicModalState.subKey = type;
     }
     else if (code === 'KIT-VOLT-BRUM-400A' || code === 'KIT-CONEXAO-BRUM-400A') {
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Quando a corrente do quadro ultrapassa o limite parametrizado, o sistema substitui a distribuição por cabo e adiciona um kit de barramento e conexões Brum 400A para garantir robustez e segurança de condução elétrica.</div>`;
       adjustHTML = `
         <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
           <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Limite de Corrente do Barramento Brum</h4>
           <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Limite de Corrente para Barramento (Amperes)</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.brumBarCurrentThreshold}" min="10" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule('brumBarCurrentThreshold', 75)}" min="10" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
       currentLogicModalState.ruleKey = 'brumBarCurrentThreshold';
     }
     else if (code === 'TRANSFORMADOR-440-220-400VA') {
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Sempre que a rede geral for 440V e o painel não for do tipo Potência Pura, é adicionado obrigatoriamente um transformador abaixador 440V/220V de 400VA para isolar e alimentar com segurança o circuito de comando auxiliar e CLP.</div>`;
       adjustHTML = `
         <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
           <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Preço do Transformador de Comando</h4>
           <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Preço Unitário do Transformador (R$)</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.transformerPrice}" min="0" step="0.01" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule('transformerPrice', 600.0)}" min="0" step="0.01" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
       currentLogicModalState.ruleKey = 'transformerPrice';
     }
     else if (code === 'TRILHO-DIN-1M') {
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Barra perfurada em aço zincado para fixação dos bornes, canaletas e dispositivos gerais. A metragem é calculada por unidade de quadro em múltiplos de barra inteira (1m).</div>`;
       adjustHTML = `
         <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
           <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Quantidade de Trilho DIN</h4>
           <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Barras de 1m por Quadro</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.trilhoDinQty}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule('trilhoDinQty', 1)}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
@@ -1209,13 +1223,13 @@ function openLogicModal(panelId, compIdx) {
       const type = panel.type;
       const typeKey = type === 'potencia-comando' ? 'potenciaComando' : (type === 'completo' ? 'completo' : (type === 'automacao' ? 'automacao' : (type === 'comando' ? 'comando' : 'remoto')));
       const color = code.endsWith('CINZA') ? 'cinza' : (code.endsWith('VERMELHO') ? 'vermelho' : 'azul');
-      const cabConfig = rules.cables10mm[typeKey] || { cinza: 50, vermelho: 25, azul: 25 };
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Metragem estimada de condutores de comando e sinais lógicos internos de 1.0mm², calculada de forma acumulada por equipamento conforme o tipo do painel.</div>`;
       adjustHTML = `
         <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
           <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Metragem do Cabo de Comando 1.0mm²</h4>
           <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Metragem do Cabo ${color.toUpperCase()} por Equipamento (Tipo ${type.toUpperCase()})</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${cabConfig[color] || 25}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule(`cables10mm.${typeKey}.${color}`, color === 'cinza' ? 50 : 25)}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
@@ -1232,19 +1246,73 @@ function openLogicModal(panelId, compIdx) {
       else if (code === 'TAMPA-BTWMP') { key = 'tampaBtwmp'; label = 'Tampa de fechamento'; }
       else if (code === 'PORTA-PLAQUETA') { key = 'portaPlaqueta'; label = 'Porta Plaqueta'; }
 
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Elementos acessórios fundamentais para bornagem organizada e identificada, fixados nos trilhos DIN de comando. Quantitativo parametrizável por equipamento.</div>`;
       adjustHTML = `
         <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
           <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Proporção de Acessórios</h4>
           <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Quantidade de ${label} por Equipamento</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.borneAccessories[key] || 3}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule('borneAccessories.' + key, 3)}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
       currentLogicModalState.ruleKey = 'borneAccessories';
       currentLogicModalState.subKey = key;
     }
+    else if (code === 'PRESSOSTATO-DIF') {
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Para quadros do tipo Completo com UTA ou Exaustor/Ventilador, é recomendada a inclusão de pressostatos diferenciais para fins de segurança (alarme de filtro saturado e confirmação física de fluxo de ventilação).</div>`;
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Lógica de Pressostatos</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Quantidade de Pressostatos por Equipamento (UTA/Exaustor)</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule('pressostatoQty', 2)}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+          </div>
+        </div>
+      `;
+      currentLogicModalState.ruleKey = 'pressostatoQty';
+    }
+    else if (code === 'BORNE-RELE-BTWR') {
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Relés acopladores em borne de 6.2mm para interfaceamento e isolamento galvânico entre saídas digitais do CLP e as contatoras de acionamento de campo de cada motor do painel.</div>`;
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Lógica de Relés Acopladores</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Quantidade de Relés por Equipamento no Painel</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule('releQty', 2)}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+          </div>
+        </div>
+      `;
+      currentLogicModalState.ruleKey = 'releQty';
+    }
+    else if (code === 'SINALEIRO-BRANCO') {
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Sinalizador LED branco fixado na porta frontal do quadro que permanece aceso de modo permanente sempre que a alimentação geral do quadro estiver ligada, em observância à norma NR-10.</div>`;
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Sinalização de Painel Energizado</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Sinalizadores Brancos por Quadro</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule('sinaleiroSegurancaQty', 1)}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+          </div>
+        </div>
+      `;
+      currentLogicModalState.ruleKey = 'sinaleiroSegurancaQty';
+    }
+    else if (code.startsWith('MSW') || code.startsWith('DISJ-AGW')) {
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Dimensionamento da Chave Geral Seccionadora Rotativa (MSW) para correntes até o limite estipulado (padrão 160A). Se a corrente total passar do limite, o sistema migra o seccionador para um Disjuntor em Caixa Moldada AGW.</div>`;
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Limite para Chave Geral Rotativa (MSW)</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Corrente Limite Máxima para Uso de Chave MSW (Amperes)</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${getRule('mswCurrentLimit', 160)}" min="10" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
+          </div>
+        </div>
+      `;
+      currentLogicModalState.ruleKey = 'mswCurrentLimit';
+    }
     else {
+      ruleDescHTML = `<div style="margin-bottom:12px; font-size:0.75rem; color:var(--text-secondary, #a0a0b0); line-height:1.4;"><strong>Lógica Aplicada:</strong> Inclusão parametrizada dinamicamente via planilha de composição de carga de acordo com o tipo de partida e potência selecionados (ex: inversores CFW500, contatores CWM9, disjuntores-motor, etc.).</div>`;
       adjustHTML = `
         <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px; color: var(--text-secondary, #a0a0b0); text-align: center; font-size: 0.8rem; line-height: 1.4;">
           A inclusão deste componente é gerada dinamicamente com base nas especificações da planilha de composição ou sensores. Para alterar estes valores, modifique o equipamento na tela de criação/edição.
@@ -1306,8 +1374,11 @@ function openLogicModal(panelId, compIdx) {
         <span style="font-size: 0.7rem; color: var(--text-secondary, #a0a0b0); display: block; font-family: monospace; margin-top:2px;">Código: ${comp.code}</span>
       </div>
       <div style="margin-bottom: 15px;">
-        <span style="font-size: 0.72rem; color: var(--text-secondary, #a0a0b0); display: block; margin-bottom: 6px;">Por que este item está na lista?</span>
+        <span style="font-size: 0.72rem; color: var(--text-secondary, #a0a0b0); display: block; margin-bottom: 6px;">Por que este item está no orçamento?</span>
         ${reasonsHTML}
+      </div>
+      <div style="margin-bottom: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 12px;">
+        ${ruleDescHTML}
       </div>
       ${adjustHTML}
     `;
@@ -1386,12 +1457,27 @@ function saveCustomLogic() {
 
     const { ruleKey, subKey, color } = currentLogicModalState;
     
+    // Ensure customRules and sub-properties exist defensively
+    budgetState.customRules = budgetState.customRules || {};
+
     if (ruleKey === 'cables10mm') {
+      budgetState.customRules.cables10mm = budgetState.customRules.cables10mm || {};
+      budgetState.customRules.cables10mm[subKey] = budgetState.customRules.cables10mm[subKey] || {};
       budgetState.customRules.cables10mm[subKey][color] = value;
     } else if (ruleKey === 'bornesPerEquip') {
+      budgetState.customRules.bornesPerEquip = budgetState.customRules.bornesPerEquip || {};
       budgetState.customRules.bornesPerEquip[subKey] = Math.round(value);
     } else if (ruleKey === 'borneAccessories') {
+      budgetState.customRules.borneAccessories = budgetState.customRules.borneAccessories || {};
       budgetState.customRules.borneAccessories[subKey] = Math.round(value);
+    } else if (ruleKey === 'pressostatoQty') {
+      budgetState.customRules.pressostatoQty = Math.round(value);
+    } else if (ruleKey === 'releQty') {
+      budgetState.customRules.releQty = Math.round(value);
+    } else if (ruleKey === 'sinaleiroSegurancaQty') {
+      budgetState.customRules.sinaleiroSegurancaQty = Math.round(value);
+    } else if (ruleKey === 'mswCurrentLimit') {
+      budgetState.customRules.mswCurrentLimit = value;
     } else if (ruleKey === 'brumBarCurrentThreshold') {
       budgetState.customRules.brumBarCurrentThreshold = value;
     } else if (ruleKey === 'transformerPrice') {
@@ -1469,6 +1555,10 @@ function loadState() {
     budgetState.customRules.transformerVaRating = budgetState.customRules.transformerVaRating || '400VA';
     budgetState.customRules.transformerPrice = budgetState.customRules.transformerPrice !== undefined ? budgetState.customRules.transformerPrice : 600.0;
     budgetState.customRules.trilhoDinQty = budgetState.customRules.trilhoDinQty !== undefined ? budgetState.customRules.trilhoDinQty : 1;
+    budgetState.customRules.pressostatoQty = budgetState.customRules.pressostatoQty !== undefined ? budgetState.customRules.pressostatoQty : 2;
+    budgetState.customRules.releQty = budgetState.customRules.releQty !== undefined ? budgetState.customRules.releQty : 2;
+    budgetState.customRules.sinaleiroSegurancaQty = budgetState.customRules.sinaleiroSegurancaQty !== undefined ? budgetState.customRules.sinaleiroSegurancaQty : 1;
+    budgetState.customRules.mswCurrentLimit = budgetState.customRules.mswCurrentLimit !== undefined ? budgetState.customRules.mswCurrentLimit : 160;
     
     budgetState.customRules.cables10mm = budgetState.customRules.cables10mm || {};
     const dCables = {
