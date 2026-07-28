@@ -450,16 +450,16 @@ function calculatePanelComponents(panel) {
     height = parseInt(dimMatch[2]);
   }
   if (width > 400 || height > 300) {
-    addComp('CANALETA-50X80', 4);
-    addComp('CANALETA-30X80', 2);
+    addComp('CANALETA-50X80', 4, null, 'Organização Interna: Canaletas de PVC 50x80 com furação lateral para passagem e organização dos cabos de potência');
+    addComp('CANALETA-30X80', 2, null, 'Organização Interna: Canaletas de PVC 30x80 com furação lateral para passagem e organização dos cabos de sinal/controle');
   } else {
-    addComp('CANALETA-50X80', 1);
-    addComp('CANALETA-30X80', 1);
+    addComp('CANALETA-50X80', 1, null, 'Organização Interna: Canaleta de PVC 50x80 com furação lateral para organização dos cabos de potência');
+    addComp('CANALETA-30X80', 1, null, 'Organização Interna: Canaleta de PVC 30x80 com furação lateral para organização dos cabos de sinal/controle');
   }
 
   // 50 bornes de passagem for Potência, comando e Automação (completo)
   if (type === 'completo') {
-    addComp('BORNE-BTWP-2.5', 50);
+    addComp('BORNE-BTWP-2.5', 50, null, 'Bornes de Comando: 50 bornes de passagem de 2.5mm² para conexões gerais internas do quadro completo');
   }
 
   // WEG MSW Rotary switch or Disjuntor em Caixa Moldada (AGW) selection based on total three-phase current
@@ -492,7 +492,7 @@ function calculatePanelComponents(panel) {
       else if (calculatedCurrent <= 125) mswCode = 'MSW125F-3P00-3R';
       else mswCode = 'MSW160F-3P00-3R';
       
-      addComp(mswCode, 1);
+      addComp(mswCode, 1, null, `Disjuntor/Chave Geral: Chave seletora rotativa MSW para seccionamento e proteção de entrada baseada na corrente geral do quadro (${calculatedCurrent.toFixed(1)}A)`);
     } else {
       let cbCode = 'DISJ-AGW100-3P-32A';
       let manoplaCode = 'MANOPLA-ROTATIVA-AGW100';
@@ -535,19 +535,19 @@ function calculatePanelComponents(panel) {
         manoplaCode = 'MANOPLA-ROTATIVA-AGW400';
       }
       
-      addComp(cbCode, 1);
-      addComp(manoplaCode, 1);
+      addComp(cbCode, 1, null, `Disjuntor/Chave Geral: Disjuntor em caixa moldada AGW para proteção e seccionamento geral da entrada do quadro devido à corrente calculada (${calculatedCurrent.toFixed(1)}A) exceder o limite de seccionamento rotativo de ${mswLimit}A`);
+      addComp(manoplaCode, 1, null, 'Acessório do Disjuntor Geral: Manopla rotativa externa para operação segura do disjuntor em caixa moldada na porta do painel');
     }
   }
   
   // Common shared items
-  addComp('BARRAMENTO-TERRA', 1);
-  addComp('BARRAMENTO-NEUTRO', 1);
-  addComp('TOMADA-DIM', 1);
+  addComp('BARRAMENTO-TERRA', 1, null, 'Conexão de Aterramento: Barramento de terra geral para interligação das proteções e segurança contra choques elétricos');
+  addComp('BARRAMENTO-NEUTRO', 1, null, 'Conexão de Neutro: Barramento de neutro geral para distribuição do potencial de neutro no circuito de comando/potência');
+  addComp('TOMADA-DIM', 1, null, 'Serviço Interno: Tomada padrão DIN para alimentação de notebooks ou ferramentas de diagnóstico no interior do painel');
   
   // Transformador de comando para 440V
   if (voltage === '440V' && (type === 'automacao' || type === 'completo' || type === 'potencia-comando' || type === 'comando')) {
-    addComp('TRANSFORMADOR-440-220', 1);
+    addComp('TRANSFORMADOR-440-220', 1, null, 'Alimentação de Comando: Transformador abaixador 440V para 220V para alimentar os circuitos auxiliares, CLP e sinalização');
   }
   
   // Ventilação forçada se houver inversor ou aquecimento/umidificação proporcional
@@ -564,13 +564,13 @@ function calculatePanelComponents(panel) {
     });
   }
   if (needsVentilation) {
-    addComp('VENTILADOR-GRELHA', 2);
+    addComp('VENTILADOR-GRELHA', 2, null, 'Climatização do Painel: Sistema de ventilação forçada com grelha de saída para controle de temperatura interna devido à presença de inversores ou alta potência');
   }
   
   // Fonte 24V se houver automação
   const isAutomationPanel = (type === 'automacao' || type === 'completo' || type === 'remoto');
   if (isAutomationPanel) {
-    addComp('FONTE-PSS24-W5', 1);
+    addComp('FONTE-PSS24-W5', 1, null, 'Alimentação de Automação: Fonte chaveada regulada de 24Vcc para alimentar o CLP, sensores e relés auxiliares');
   }
   
   // 2. Equipment-level components
@@ -609,9 +609,9 @@ function calculatePanelComponents(panel) {
       const ihmSizeStr = panel.remotoIhmSize;
       const ihmConfig = PRECOS_DATABASE.ihmMapping[ihmSizeStr];
       if (ihmConfig) {
-        addComp(ihmConfig.code, ihmConfig.qty);
+        addComp(ihmConfig.code, ihmConfig.qty, null, `Interface Homem-Máquina: IHM de ${panel.remotoIhmSize} polegadas para controle local e monitoramento remoto`);
         if (ihmSizeStr === '7.0"') {
-          addComp('MOLDURA-IHM-7', 1);
+          addComp('MOLDURA-IHM-7', 1, null, 'Acessório de IHM: Moldura protetora para montagem da IHM de 7 polegadas na porta do painel');
         }
       }
     }
@@ -635,17 +635,17 @@ function calculatePanelComponents(panel) {
       // Borne Relé rule:
       if (type === 'completo') {
         if (eqType === 'UTA' || eqType === 'EX/CV') {
-          addComp('PRESSOSTATO-DIF', 2);
+          addComp('PRESSOSTATO-DIF', 2, null, `Segurança de Ventilação: 2 pressostatos diferenciais para monitorar fluxo de ar e filtro sujo na ${eqType}`);
         }
       }
       if (eqType === 'UTA') {
-        addComp('BORNE-RELE-BTWR', 5);
-        if (eq.hasHeating) addComp('BORNE-RELE-BTWR', 1);
-        if (eq.hasHumid) addComp('BORNE-RELE-BTWR', 1);
+        addComp('BORNE-RELE-BTWR', 5, null, `Interface de Automação: 5 relés auxiliares acopladores para interface de controle da ${eqType} com o CLP`);
+        if (eq.hasHeating) addComp('BORNE-RELE-BTWR', 1, null, `Interface de Automação: Relé auxiliar acoplador adicional para estágio de aquecimento da ${eqType}`);
+        if (eq.hasHumid) addComp('BORNE-RELE-BTWR', 1, null, `Interface de Automação: Relé auxiliar acoplador adicional para estágio de umidificação da ${eqType}`);
       } else if (eqType === 'EX/CV') {
-        addComp('BORNE-RELE-BTWR', 5);
+        addComp('BORNE-RELE-BTWR', 5, null, `Interface de Automação: 5 relés auxiliares acopladores para interface de controle da ${eqType} com o CLP`);
       } else if (eqType === 'BOMBAS' || eqType === 'CHILLER') {
-        addComp('BORNE-RELE-BTWR', 3);
+        addComp('BORNE-RELE-BTWR', 3, null, `Interface de Automação: 3 relés auxiliares acopladores para interface de comandos da ${eqType} com o CLP`);
       }
 
       // Calculate primary power cable using NBR 5410
@@ -656,8 +656,8 @@ function calculatePanelComponents(panel) {
           motorCurrent = (motorPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
           const sec = getNBR5410CableSection(motorCurrent);
           if (type !== 'automacao' && type !== 'remoto') {
-        addComp(`CABO-POT-${sec}-PRETO`, 25);
-        addComp(`CABO-POT-${sec}-VERDE`, 10);
+        addComp(`CABO-POT-${sec}-PRETO`, 25, null, `Cabos de Potência: 25m de cabo de potência preto ${sec}mm² dimensionado conforme norma NBR 5410 para o motor (${motorCurrent.toFixed(1)}A)`);
+        addComp(`CABO-POT-${sec}-VERDE`, 10, null, `Cabo de Proteção (PE): 10m de condutor de terra verde ${sec}mm² para aterramento do motor (${motorCurrent.toFixed(1)}A)`);
       }
           eq.calculatedCurrent = motorCurrent.toFixed(1).replace('.', ',') + ' A';
           eq.calculatedCable = sec + ' mm²';
@@ -726,9 +726,9 @@ function calculatePanelComponents(panel) {
               manoplaCode = 'MANOPLA-ROTATIVA-AGW400';
             }
             
-            addComp(cbCode, 1);
-            addComp(manoplaCode, 1);
-            addComp('PORTA-PLAQUETA', 1);
+            addComp(cbCode, 1, null, `Disjuntor/Chave Geral: Disjuntor em caixa moldada AGW para proteção e seccionamento geral da entrada do quadro devido à corrente calculada (${calculatedCurrent.toFixed(1)}A) exceder o limite de seccionamento rotativo de ${mswLimit}A`);
+            addComp(manoplaCode, 1, null, 'Acessório do Disjuntor Geral: Manopla rotativa externa para operação segura do disjuntor em caixa moldada na porta do painel');
+            addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Porta plaqueta para identificação do circuito na porta do painel`);
           }
         } else if (startingType && power) {
           if (eqType === 'BOMBAS') {
@@ -741,7 +741,7 @@ function calculatePanelComponents(panel) {
                     addComp(c.code, c.qty);
                   }
                 });
-                addComp('PORTA-PLAQUETA', 1);
+                addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Porta plaqueta para identificação do circuito na porta do painel`);
               }
             } else if (startingType === 'Inversor') {
               const compKey = `Inversor_${power}_${voltage}`;
@@ -762,7 +762,7 @@ function calculatePanelComponents(panel) {
                   }
                 });
               }
-              addComp('PORTA-PLAQUETA', 1);
+              addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Porta plaqueta para identificação do circuito na porta do painel`);
             } else if (startingType === 'SoftStarter') {
               const compKey = `SoftStarter_${power}_${voltage}`;
               const composition = PRECOS_DATABASE.compositions[compKey];
@@ -782,7 +782,7 @@ function calculatePanelComponents(panel) {
                   }
                 });
               }
-              addComp('PORTA-PLAQUETA', 1);
+              addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Porta plaqueta para identificação do circuito na porta do painel`);
             }
           } else {
             const compKey = `${startingType}_${power}_${voltage}`;
@@ -791,10 +791,10 @@ function calculatePanelComponents(panel) {
               composition.forEach(c => {
                 addComp(c.code, c.qty);
               });
-              addComp('PORTA-PLAQUETA', 1);
+              addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Porta plaqueta para identificação do circuito na porta do painel`);
             }
             if (startingType === 'EC') {
-              addComp('MINIDISJ-MDW-C10-3', 1); // 1x Disjuntor Tripolar de proteção 10A
+              addComp('MINIDISJ-MDW-C10-3', 1, null, 'Proteção de Motor EC: Minidisjuntor tripolar de 10A para proteção geral do ventilador eletrônico (EC)');
             }
           }
         }
@@ -803,11 +803,11 @@ function calculatePanelComponents(panel) {
       // B) Command items (signal lights + selector switch + bornes)
       const hasCommandItems = (type === 'potencia-comando' || type === 'completo');
       if (hasCommandItems) {
-        addComp('CHAVE-SELETORA-3POS', 1);
-        addComp('SINALEIRO-VERDE', 1);
-        addComp('SINALEIRO-VERMELHO', 1);
-        addComp('BORNE-BTWP-2.5', 6);
-        addComp('PORTA-PLAQUETA', 3);
+        addComp('CHAVE-SELETORA-3POS', 1, null, `Interface de Operação: Chave seletora rotativa de 3 posições (Manual-Desliga-Automático) para o equipamento ${eq.name || eqType}`);
+        addComp('SINALEIRO-VERDE', 1, null, `Sinalização na Porta: Sinalizador luminoso verde (LED) indicador de equipamento ligado/ativo`);
+        addComp('SINALEIRO-VERMELHO', 1, null, `Sinalização na Porta: Sinalizador luminoso vermelho (LED) indicador de equipamento desligado/inativo`);
+        addComp('BORNE-BTWP-2.5', 6, null, `Bornes de Ligação: 6 bornes de passagem de 2.5mm² para bornagem de sinal de comando do equipamento`);
+        addComp('PORTA-PLAQUETA', 3, null, `Sinalização na Porta: Porta plaquetas de identificação para sinalizadores e chave do equipamento`);
       }
       
       // C) Automation sensors and digital outputs
@@ -1026,9 +1026,9 @@ function calculatePanelComponents(panel) {
     const ihmSizeStr = panel.ihmSize;
     const ihmConfig = PRECOS_DATABASE.ihmMapping[ihmSizeStr];
     if (ihmConfig) {
-      addComp(ihmConfig.code, ihmConfig.qty);
+      addComp(ihmConfig.code, ihmConfig.qty, null, `Interface Homem-Máquina: IHM de ${panel.ihmSize} polegadas para controle local e monitoramento remoto`);
       if (ihmSizeStr === '7.0"') {
-        addComp('MOLDURA-IHM-7', 1);
+        addComp('MOLDURA-IHM-7', 1, null, 'Acessório de IHM: Moldura protetora para montagem da IHM de 7 polegadas na porta do painel');
       }
     }
   }
