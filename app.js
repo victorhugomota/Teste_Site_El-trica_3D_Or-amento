@@ -1125,21 +1125,31 @@ function calculatePanelComponents(panel) {
 
 let currentLogicModalState = null; // { panelId, compIdx, ruleKey, subKey }
 
+function closeLogicModal() {
+  const popup = document.getElementById('dynamic-logic-popup');
+  if (popup) {
+    popup.remove();
+  }
+  currentLogicModalState = null;
+}
+
 function openLogicModal(panelId, compIdx) {
   try {
+    // Clean up any existing popup first
+    const existing = document.getElementById('dynamic-logic-popup');
+    if (existing) {
+      existing.remove();
+    }
+
     const panel = budgetState.panels.find(p => p.id === panelId);
     if (!panel || !panel.components[compIdx]) return;
     
     const comp = panel.components[compIdx];
-    const modal = document.getElementById('logic-modal');
-    const body = document.getElementById('logic-modal-body');
-    if (!modal || !body) return;
-
     currentLogicModalState = { panelId, compIdx };
 
     const reasonsHTML = comp.reasons && comp.reasons.length > 0 
-      ? comp.reasons.map(r => `<div style="padding: 8px 12px; background: rgba(99, 102, 241, 0.04); border-left: 3px solid var(--primary); margin-bottom: 8px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; line-height: 1.4; color: var(--text-primary); font-size: 0.8rem;">${r}</div>`).join('')
-      : `<div style="padding: 8px 12px; background: rgba(245, 158, 11, 0.04); border-left: 3px solid #f59e0b; margin-bottom: 8px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.8rem; color: var(--text-primary);">Item adicionado por especificação padrão de componentes.</div>`;
+      ? comp.reasons.map(r => `<div style="padding: 8px 12px; background: rgba(99, 102, 241, 0.05); border-left: 3px solid var(--primary, #6366f1); margin-bottom: 8px; border-radius: 4px; line-height: 1.4; color: var(--text-primary, #ffffff); font-size: 0.8rem;">${r}</div>`).join('')
+      : `<div style="padding: 8px 12px; background: rgba(245, 158, 11, 0.05); border-left: 3px solid #f59e0b; margin-bottom: 8px; border-radius: 4px; font-size: 0.8rem; color: var(--text-primary, #ffffff);">Item adicionado por especificação padrão de componentes.</div>`;
 
     let adjustHTML = '';
     const code = comp.code;
@@ -1148,11 +1158,11 @@ function openLogicModal(panelId, compIdx) {
     if (code === 'BORNE-BTWP-2.5') {
       const type = panel.type;
       adjustHTML = `
-        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Lógica de Bornes de Passagem</h4>
-          <div class="form-group">
-            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Bornes por Equipamento (Tipo ${type.toUpperCase()})</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.bornesPerEquip[type] || 6}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Lógica de Bornes de Passagem</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Bornes por Equipamento (Tipo ${type.toUpperCase()})</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.bornesPerEquip[type] || 6}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
@@ -1161,11 +1171,11 @@ function openLogicModal(panelId, compIdx) {
     }
     else if (code === 'KIT-VOLT-BRUM-400A' || code === 'KIT-CONEXAO-BRUM-400A') {
       adjustHTML = `
-        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Limite de Corrente do Barramento Brum</h4>
-          <div class="form-group">
-            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Limite de Corrente para Barramento (Amperes)</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.brumBarCurrentThreshold}" min="10" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Limite de Corrente do Barramento Brum</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Limite de Corrente para Barramento (Amperes)</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.brumBarCurrentThreshold}" min="10" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
@@ -1173,11 +1183,11 @@ function openLogicModal(panelId, compIdx) {
     }
     else if (code === 'TRANSFORMADOR-440-220-400VA') {
       adjustHTML = `
-        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Preço do Transformador de Comando</h4>
-          <div class="form-group">
-            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Preço Unitário do Transformador (R$)</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.transformerPrice}" min="0" step="0.01" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Preço do Transformador de Comando</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Preço Unitário do Transformador (R$)</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.transformerPrice}" min="0" step="0.01" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
@@ -1185,11 +1195,11 @@ function openLogicModal(panelId, compIdx) {
     }
     else if (code === 'TRILHO-DIN-1M') {
       adjustHTML = `
-        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Quantidade de Trilho DIN</h4>
-          <div class="form-group">
-            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Barras de 1m por Quadro</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.trilhoDinQty}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Quantidade de Trilho DIN</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Barras de 1m por Quadro</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.trilhoDinQty}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
@@ -1201,11 +1211,11 @@ function openLogicModal(panelId, compIdx) {
       const color = code.endsWith('CINZA') ? 'cinza' : (code.endsWith('VERMELHO') ? 'vermelho' : 'azul');
       const cabConfig = rules.cables10mm[typeKey] || { cinza: 50, vermelho: 25, azul: 25 };
       adjustHTML = `
-        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Metragem do Cabo de Comando 1.0mm²</h4>
-          <div class="form-group">
-            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Metragem do Cabo ${color.toUpperCase()} por Equipamento (Tipo ${type.toUpperCase()})</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${cabConfig[color] || 25}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Metragem do Cabo de Comando 1.0mm²</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Metragem do Cabo ${color.toUpperCase()} por Equipamento (Tipo ${type.toUpperCase()})</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${cabConfig[color] || 25}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
@@ -1223,11 +1233,11 @@ function openLogicModal(panelId, compIdx) {
       else if (code === 'PORTA-PLAQUETA') { key = 'portaPlaqueta'; label = 'Porta Plaqueta'; }
 
       adjustHTML = `
-        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Proporção de Acessórios</h4>
-          <div class="form-group">
-            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Quantidade de ${label} por Equipamento</label>
-            <input type="number" class="form-control" id="edit-logic-value" value="${rules.borneAccessories[key] || 3}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary, #ffffff);">Ajustar Proporção de Acessórios</h4>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary, #a0a0b0); display: block;">Quantidade de ${label} por Equipamento</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.borneAccessories[key] || 3}" min="0" style="height:36px; background: var(--bg-primary, #0f0f1a); border: 1px solid var(--border-color, #3a3a4a); color: var(--text-primary, #ffffff); width: 100%; border-radius: 4px; padding: 0 10px; box-sizing: border-box;">
           </div>
         </div>
       `;
@@ -1236,104 +1246,188 @@ function openLogicModal(panelId, compIdx) {
     }
     else {
       adjustHTML = `
-        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px; color: var(--text-secondary); text-align: center; font-size: 0.8rem; line-height: 1.4;">
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color, #3a3a4a); padding-top: 15px; color: var(--text-secondary, #a0a0b0); text-align: center; font-size: 0.8rem; line-height: 1.4;">
           A inclusão deste componente é gerada dinamicamente com base nas especificações da planilha de composição ou sensores. Para alterar estes valores, modifique o equipamento na tela de criação/edição.
         </div>
       `;
     }
 
-    body.innerHTML = `
+    // Create the Popup Overlay container
+    const overlay = document.createElement('div');
+    overlay.id = 'dynamic-logic-popup';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
+    overlay.style.backdropFilter = 'blur(4px)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '99999';
+
+    // Container card
+    const card = document.createElement('div');
+    card.style.backgroundColor = 'var(--bg-secondary, #1e1e2e)';
+    card.style.border = '1px solid var(--border-color, #3a3a4a)';
+    card.style.borderRadius = '8px';
+    card.style.width = '90%';
+    card.style.maxWidth = '460px';
+    card.style.boxShadow = '0 10px 30px rgba(0,0,0,0.6)';
+    card.style.display = 'flex';
+    card.style.flexDirection = 'column';
+    card.style.overflow = 'hidden';
+    card.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+
+    // Header
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.padding = '14px 18px';
+    header.style.borderBottom = '1px solid var(--border-color, #3a3a4a)';
+    header.innerHTML = `
+      <h3 style="margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-primary, #ffffff);">Ajustar Lógica de Inclusão</h3>
+      <button type="button" id="close-dynamic-logic-btn" style="background: none; border: none; color: var(--text-secondary, #a0a0b0); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
+        <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    `;
+
+    // Body
+    const pBody = document.createElement('div');
+    pBody.style.padding = '18px';
+    pBody.style.overflowY = 'auto';
+    pBody.style.maxHeight = '65vh';
+    pBody.innerHTML = `
       <div style="margin-bottom: 15px;">
-        <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Componente</span>
-        <strong style="font-size: 0.95rem; color: var(--text-primary);">${comp.name}</strong>
-        <span style="font-size: 0.7rem; color: var(--text-secondary); display: block; font-family: monospace;">Código: ${comp.code}</span>
+        <span style="font-size: 0.72rem; color: var(--text-secondary, #a0a0b0); display: block; margin-bottom: 4px;">Componente</span>
+        <strong style="font-size: 0.92rem; color: var(--text-primary, #ffffff);">${comp.name}</strong>
+        <span style="font-size: 0.7rem; color: var(--text-secondary, #a0a0b0); display: block; font-family: monospace; margin-top:2px;">Código: ${comp.code}</span>
       </div>
       <div style="margin-bottom: 15px;">
-        <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Por que este item está na lista?</span>
+        <span style="font-size: 0.72rem; color: var(--text-secondary, #a0a0b0); display: block; margin-bottom: 6px;">Por que este item está na lista?</span>
         ${reasonsHTML}
       </div>
       ${adjustHTML}
     `;
 
-    const saveBtn = document.getElementById('btn-save-custom-logic');
-    if (saveBtn) {
-      if (currentLogicModalState.ruleKey) {
-        saveBtn.style.display = 'inline-block';
-      } else {
-        saveBtn.style.display = 'none';
-      }
-    }
+    // Footer
+    const footer = document.createElement('div');
+    footer.style.display = 'flex';
+    footer.style.justifyContent = 'flex-end';
+    footer.style.gap = '10px';
+    footer.style.padding = '14px 18px';
+    footer.style.borderTop = '1px solid var(--border-color, #3a3a4a)';
 
-    modal.style.display = 'flex';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.style.padding = '8px 16px';
+    cancelBtn.style.fontSize = '0.8rem';
+    cancelBtn.style.borderRadius = '4px';
+    cancelBtn.style.border = '1px solid var(--border-color, #3a3a4a)';
+    cancelBtn.style.backgroundColor = 'transparent';
+    cancelBtn.style.color = 'var(--text-secondary, #a0a0b0)';
+    cancelBtn.style.cursor = 'pointer';
+    cancelBtn.addEventListener('click', closeLogicModal);
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.textContent = 'Salvar e Recalcular';
+    saveBtn.style.padding = '8px 16px';
+    saveBtn.style.fontSize = '0.8rem';
+    saveBtn.style.borderRadius = '4px';
+    saveBtn.style.border = 'none';
+    saveBtn.style.backgroundColor = 'var(--primary, #6366f1)';
+    saveBtn.style.color = '#ffffff';
+    saveBtn.style.cursor = 'pointer';
+    if (!currentLogicModalState.ruleKey) {
+      saveBtn.style.display = 'none';
+    }
+    saveBtn.addEventListener('click', saveCustomLogic);
+
+    footer.appendChild(cancelBtn);
+    footer.appendChild(saveBtn);
+
+    card.appendChild(header);
+    card.appendChild(pBody);
+    card.appendChild(footer);
+    overlay.appendChild(card);
+
+    document.body.appendChild(overlay);
+
+    // Attach close listener to Header button
+    document.getElementById('close-dynamic-logic-btn').addEventListener('click', closeLogicModal);
   } catch (err) {
     console.error("Erro ao abrir modal de lógica:", err);
     alert("Erro ao abrir modal de lógica:\n" + err.message + "\n" + err.stack);
   }
 }
 
-function closeLogicModal() {
-  const modal = document.getElementById('logic-modal');
-  if (modal) modal.style.display = 'none';
-  currentLogicModalState = null;
-}
-
 function saveCustomLogic() {
-  if (!currentLogicModalState || !currentLogicModalState.ruleKey) {
-    closeLogicModal();
-    return;
-  }
-
-  const input = document.getElementById('edit-logic-value');
-  if (!input) {
-    closeLogicModal();
-    return;
-  }
-
-  const value = parseFloat(input.value);
-  if (isNaN(value) || value < 0) {
-    alert("Por favor, insira um valor válido.");
-    return;
-  }
-
-  const { ruleKey, subKey, color } = currentLogicModalState;
-  
-  if (ruleKey === 'cables10mm') {
-    budgetState.customRules.cables10mm[subKey][color] = value;
-  } else if (ruleKey === 'bornesPerEquip') {
-    budgetState.customRules.bornesPerEquip[subKey] = Math.round(value);
-  } else if (ruleKey === 'borneAccessories') {
-    budgetState.customRules.borneAccessories[subKey] = Math.round(value);
-  } else if (ruleKey === 'brumBarCurrentThreshold') {
-    budgetState.customRules.brumBarCurrentThreshold = value;
-  } else if (ruleKey === 'transformerPrice') {
-    budgetState.customRules.transformerPrice = value;
-    if (typeof PRECOS_DATABASE !== 'undefined' && PRECOS_DATABASE.catalog && PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA']) {
-      PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA'].price = value;
+  try {
+    if (!currentLogicModalState || !currentLogicModalState.ruleKey) {
+      closeLogicModal();
+      return;
     }
-  } else if (ruleKey === 'trilhoDinQty') {
-    budgetState.customRules.trilhoDinQty = Math.round(value);
-  }
 
-  // Recalculate components of all panels to apply the updated custom rules!
-  budgetState.panels.forEach(panel => {
-    const customPrices = {};
-    if (panel.components) {
-      panel.components.forEach(c => {
-        customPrices[c.code] = c.value;
-      });
+    const input = document.getElementById('edit-logic-value');
+    if (!input) {
+      closeLogicModal();
+      return;
     }
-    panel.components = calculatePanelComponents(panel);
-    panel.components.forEach(c => {
-      if (customPrices[c.code] !== undefined) {
-        if (c.code !== 'TRANSFORMADOR-440-220-400VA') {
-          c.value = customPrices[c.code];
-        }
+
+    const value = parseFloat(input.value);
+    if (isNaN(value) || value < 0) {
+      alert("Por favor, insira um valor válido.");
+      return;
+    }
+
+    const { ruleKey, subKey, color } = currentLogicModalState;
+    
+    if (ruleKey === 'cables10mm') {
+      budgetState.customRules.cables10mm[subKey][color] = value;
+    } else if (ruleKey === 'bornesPerEquip') {
+      budgetState.customRules.bornesPerEquip[subKey] = Math.round(value);
+    } else if (ruleKey === 'borneAccessories') {
+      budgetState.customRules.borneAccessories[subKey] = Math.round(value);
+    } else if (ruleKey === 'brumBarCurrentThreshold') {
+      budgetState.customRules.brumBarCurrentThreshold = value;
+    } else if (ruleKey === 'transformerPrice') {
+      budgetState.customRules.transformerPrice = value;
+      if (typeof PRECOS_DATABASE !== 'undefined' && PRECOS_DATABASE.catalog && PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA']) {
+        PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA'].price = value;
       }
-    });
-  });
+    } else if (ruleKey === 'trilhoDinQty') {
+      budgetState.customRules.trilhoDinQty = Math.round(value);
+    }
 
-  saveState();
-  closeLogicModal();
+    // Recalculate components of all panels to apply the updated custom rules!
+    budgetState.panels.forEach(panel => {
+      const customPrices = {};
+      if (panel.components) {
+        panel.components.forEach(c => {
+          customPrices[c.code] = c.value;
+        });
+      }
+      panel.components = calculatePanelComponents(panel);
+      panel.components.forEach(c => {
+        if (customPrices[c.code] !== undefined) {
+          if (c.code !== 'TRANSFORMADOR-440-220-400VA') {
+            c.value = customPrices[c.code];
+          }
+        }
+      });
+    });
+
+    saveState();
+    closeLogicModal();
+    renderPanelsList(); // Refresh view
+  } catch (err) {
+    console.error("Erro ao salvar lógica customizada:", err);
+    alert("Erro ao salvar lógica:\n" + err.message + "\n" + err.stack);
+  }
 }
 
 // Wrapper for backward compatibility / fallback
