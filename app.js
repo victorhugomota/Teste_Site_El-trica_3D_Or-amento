@@ -1126,144 +1126,149 @@ function calculatePanelComponents(panel) {
 let currentLogicModalState = null; // { panelId, compIdx, ruleKey, subKey }
 
 function openLogicModal(panelId, compIdx) {
-  const panel = budgetState.panels.find(p => p.id === panelId);
-  if (!panel || !panel.components[compIdx]) return;
-  
-  const comp = panel.components[compIdx];
-  const modal = document.getElementById('logic-modal');
-  const body = document.getElementById('logic-modal-body');
-  if (!modal || !body) return;
+  try {
+    const panel = budgetState.panels.find(p => p.id === panelId);
+    if (!panel || !panel.components[compIdx]) return;
+    
+    const comp = panel.components[compIdx];
+    const modal = document.getElementById('logic-modal');
+    const body = document.getElementById('logic-modal-body');
+    if (!modal || !body) return;
 
-  currentLogicModalState = { panelId, compIdx };
+    currentLogicModalState = { panelId, compIdx };
 
-  const reasonsHTML = comp.reasons && comp.reasons.length > 0 
-    ? comp.reasons.map(r => `<div style="padding: 8px 12px; background: rgba(99, 102, 241, 0.04); border-left: 3px solid var(--primary); margin-bottom: 8px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; line-height: 1.4; color: var(--text-primary); font-size: 0.8rem;">${r}</div>`).join('')
-    : `<div style="padding: 8px 12px; background: rgba(245, 158, 11, 0.04); border-left: 3px solid #f59e0b; margin-bottom: 8px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.8rem; color: var(--text-primary);">Item adicionado por especificação padrão de componentes.</div>`;
+    const reasonsHTML = comp.reasons && comp.reasons.length > 0 
+      ? comp.reasons.map(r => `<div style="padding: 8px 12px; background: rgba(99, 102, 241, 0.04); border-left: 3px solid var(--primary); margin-bottom: 8px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; line-height: 1.4; color: var(--text-primary); font-size: 0.8rem;">${r}</div>`).join('')
+      : `<div style="padding: 8px 12px; background: rgba(245, 158, 11, 0.04); border-left: 3px solid #f59e0b; margin-bottom: 8px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.8rem; color: var(--text-primary);">Item adicionado por especificação padrão de componentes.</div>`;
 
-  let adjustHTML = '';
-  const code = comp.code;
-  const rules = budgetState.customRules;
+    let adjustHTML = '';
+    const code = comp.code;
+    const rules = budgetState.customRules;
 
-  if (code === 'BORNE-BTWP-2.5') {
-    const type = panel.type;
-    adjustHTML = `
-      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Lógica de Bornes de Passagem</h4>
-        <div class="form-group">
-          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Bornes por Equipamento (Tipo ${type.toUpperCase()})</label>
-          <input type="number" class="form-control" id="edit-logic-value" value="${rules.bornesPerEquip[type] || 6}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+    if (code === 'BORNE-BTWP-2.5') {
+      const type = panel.type;
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Lógica de Bornes de Passagem</h4>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Bornes por Equipamento (Tipo ${type.toUpperCase()})</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.bornesPerEquip[type] || 6}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+          </div>
         </div>
-      </div>
-    `;
-    currentLogicModalState.ruleKey = 'bornesPerEquip';
-    currentLogicModalState.subKey = type;
-  }
-  else if (code === 'KIT-VOLT-BRUM-400A' || code === 'KIT-CONEXAO-BRUM-400A') {
-    adjustHTML = `
-      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Limite de Corrente do Barramento Brum</h4>
-        <div class="form-group">
-          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Limite de Corrente para Barramento (Amperes)</label>
-          <input type="number" class="form-control" id="edit-logic-value" value="${rules.brumBarCurrentThreshold}" min="10" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
-        </div>
-      </div>
-    `;
-    currentLogicModalState.ruleKey = 'brumBarCurrentThreshold';
-  }
-  else if (code === 'TRANSFORMADOR-440-220-400VA') {
-    adjustHTML = `
-      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Preço do Transformador de Comando</h4>
-        <div class="form-group">
-          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Preço Unitário do Transformador (R$)</label>
-          <input type="number" class="form-control" id="edit-logic-value" value="${rules.transformerPrice}" min="0" step="0.01" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
-        </div>
-      </div>
-    `;
-    currentLogicModalState.ruleKey = 'transformerPrice';
-  }
-  else if (code === 'TRILHO-DIN-1M') {
-    adjustHTML = `
-      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Quantidade de Trilho DIN</h4>
-        <div class="form-group">
-          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Barras de 1m por Quadro</label>
-          <input type="number" class="form-control" id="edit-logic-value" value="${rules.trilhoDinQty}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
-        </div>
-      </div>
-    `;
-    currentLogicModalState.ruleKey = 'trilhoDinQty';
-  }
-  else if (code.startsWith('CABO-1.0-')) {
-    const type = panel.type;
-    const typeKey = type === 'potencia-comando' ? 'potenciaComando' : (type === 'completo' ? 'completo' : (type === 'automacao' ? 'automacao' : (type === 'comando' ? 'comando' : 'remoto')));
-    const color = code.endsWith('CINZA') ? 'cinza' : (code.endsWith('VERMELHO') ? 'vermelho' : 'azul');
-    const cabConfig = rules.cables10mm[typeKey] || { cinza: 50, vermelho: 25, azul: 25 };
-    adjustHTML = `
-      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Metragem do Cabo de Comando 1.0mm²</h4>
-        <div class="form-group">
-          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Metragem do Cabo ${color.toUpperCase()} por Equipamento (Tipo ${type.toUpperCase()})</label>
-          <input type="number" class="form-control" id="edit-logic-value" value="${cabConfig[color] || 25}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
-        </div>
-      </div>
-    `;
-    currentLogicModalState.ruleKey = 'cables10mm';
-    currentLogicModalState.subKey = typeKey;
-    currentLogicModalState.color = color;
-  }
-  else if (['POSTE-FINAL', 'BORNE-TERRA-2.5T', 'IDENTIFICADOR-BR5', 'IDENTIFICADOR-BTW', 'TAMPA-BTWMP', 'PORTA-PLAQUETA'].includes(code)) {
-    let key = 'posteFinal';
-    let label = 'Poste Final';
-    if (code === 'BORNE-TERRA-2.5T') { key = 'borneTerra'; label = 'Borne Terra 2.5mm²'; }
-    else if (code === 'IDENTIFICADOR-BR5') { key = 'identificadorBr5'; label = 'Identificador BR 5mm'; }
-    else if (code === 'IDENTIFICADOR-BTW') { key = 'identificadorBtw'; label = 'Identificador BTW'; }
-    else if (code === 'TAMPA-BTWMP') { key = 'tampaBtwmp'; label = 'Tampa de fechamento'; }
-    else if (code === 'PORTA-PLAQUETA') { key = 'portaPlaqueta'; label = 'Porta Plaqueta'; }
-
-    adjustHTML = `
-      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-        <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Proporção de Acessórios</h4>
-        <div class="form-group">
-          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Quantidade de ${label} por Equipamento</label>
-          <input type="number" class="form-control" id="edit-logic-value" value="${rules.borneAccessories[key] || 3}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
-        </div>
-      </div>
-    `;
-    currentLogicModalState.ruleKey = 'borneAccessories';
-    currentLogicModalState.subKey = key;
-  }
-  else {
-    adjustHTML = `
-      <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px; color: var(--text-secondary); text-align: center; font-size: 0.8rem; line-height: 1.4;">
-        A inclusão deste componente é gerada dinamicamente com base nas especificações da planilha de composição ou sensores. Para alterar estes valores, modifique o equipamento na tela de criação/edição.
-      </div>
-    `;
-  }
-
-  body.innerHTML = `
-    <div style="margin-bottom: 15px;">
-      <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Componente</span>
-      <strong style="font-size: 0.95rem; color: var(--text-primary);">${comp.name}</strong>
-      <span style="font-size: 0.7rem; color: var(--text-secondary); display: block; font-family: monospace;">Código: ${comp.code}</span>
-    </div>
-    <div style="margin-bottom: 15px;">
-      <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Por que este item está na lista?</span>
-      ${reasonsHTML}
-    </div>
-    ${adjustHTML}
-  `;
-
-  const saveBtn = document.getElementById('btn-save-custom-logic');
-  if (saveBtn) {
-    if (currentLogicModalState.ruleKey) {
-      saveBtn.style.display = 'inline-block';
-    } else {
-      saveBtn.style.display = 'none';
+      `;
+      currentLogicModalState.ruleKey = 'bornesPerEquip';
+      currentLogicModalState.subKey = type;
     }
-  }
+    else if (code === 'KIT-VOLT-BRUM-400A' || code === 'KIT-CONEXAO-BRUM-400A') {
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Limite de Corrente do Barramento Brum</h4>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Limite de Corrente para Barramento (Amperes)</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.brumBarCurrentThreshold}" min="10" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+          </div>
+        </div>
+      `;
+      currentLogicModalState.ruleKey = 'brumBarCurrentThreshold';
+    }
+    else if (code === 'TRANSFORMADOR-440-220-400VA') {
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Preço do Transformador de Comando</h4>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Preço Unitário do Transformador (R$)</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.transformerPrice}" min="0" step="0.01" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+          </div>
+        </div>
+      `;
+      currentLogicModalState.ruleKey = 'transformerPrice';
+    }
+    else if (code === 'TRILHO-DIN-1M') {
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Quantidade de Trilho DIN</h4>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Barras de 1m por Quadro</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.trilhoDinQty}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+          </div>
+        </div>
+      `;
+      currentLogicModalState.ruleKey = 'trilhoDinQty';
+    }
+    else if (code.startsWith('CABO-1.0-')) {
+      const type = panel.type;
+      const typeKey = type === 'potencia-comando' ? 'potenciaComando' : (type === 'completo' ? 'completo' : (type === 'automacao' ? 'automacao' : (type === 'comando' ? 'comando' : 'remoto')));
+      const color = code.endsWith('CINZA') ? 'cinza' : (code.endsWith('VERMELHO') ? 'vermelho' : 'azul');
+      const cabConfig = rules.cables10mm[typeKey] || { cinza: 50, vermelho: 25, azul: 25 };
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Metragem do Cabo de Comando 1.0mm²</h4>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Metragem do Cabo ${color.toUpperCase()} por Equipamento (Tipo ${type.toUpperCase()})</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${cabConfig[color] || 25}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+          </div>
+        </div>
+      `;
+      currentLogicModalState.ruleKey = 'cables10mm';
+      currentLogicModalState.subKey = typeKey;
+      currentLogicModalState.color = color;
+    }
+    else if (['POSTE-FINAL', 'BORNE-TERRA-2.5T', 'IDENTIFICADOR-BR5', 'IDENTIFICADOR-BTW', 'TAMPA-BTWMP', 'PORTA-PLAQUETA'].includes(code)) {
+      let key = 'posteFinal';
+      let label = 'Poste Final';
+      if (code === 'BORNE-TERRA-2.5T') { key = 'borneTerra'; label = 'Borne Terra 2.5mm²'; }
+      else if (code === 'IDENTIFICADOR-BR5') { key = 'identificadorBr5'; label = 'Identificador BR 5mm'; }
+      else if (code === 'IDENTIFICADOR-BTW') { key = 'identificadorBtw'; label = 'Identificador BTW'; }
+      else if (code === 'TAMPA-BTWMP') { key = 'tampaBtwmp'; label = 'Tampa de fechamento'; }
+      else if (code === 'PORTA-PLAQUETA') { key = 'portaPlaqueta'; label = 'Porta Plaqueta'; }
 
-  modal.style.display = 'flex';
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+          <h4 style="font-weight:600; margin-bottom:10px; font-size:0.9rem; color:var(--text-primary);">Ajustar Proporção de Acessórios</h4>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color: var(--text-secondary);">Quantidade de ${label} por Equipamento</label>
+            <input type="number" class="form-control" id="edit-logic-value" value="${rules.borneAccessories[key] || 3}" min="0" style="height:36px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
+          </div>
+        </div>
+      `;
+      currentLogicModalState.ruleKey = 'borneAccessories';
+      currentLogicModalState.subKey = key;
+    }
+    else {
+      adjustHTML = `
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px; color: var(--text-secondary); text-align: center; font-size: 0.8rem; line-height: 1.4;">
+          A inclusão deste componente é gerada dinamicamente com base nas especificações da planilha de composição ou sensores. Para alterar estes valores, modifique o equipamento na tela de criação/edição.
+        </div>
+      `;
+    }
+
+    body.innerHTML = `
+      <div style="margin-bottom: 15px;">
+        <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Componente</span>
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">${comp.name}</strong>
+        <span style="font-size: 0.7rem; color: var(--text-secondary); display: block; font-family: monospace;">Código: ${comp.code}</span>
+      </div>
+      <div style="margin-bottom: 15px;">
+        <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Por que este item está na lista?</span>
+        ${reasonsHTML}
+      </div>
+      ${adjustHTML}
+    `;
+
+    const saveBtn = document.getElementById('btn-save-custom-logic');
+    if (saveBtn) {
+      if (currentLogicModalState.ruleKey) {
+        saveBtn.style.display = 'inline-block';
+      } else {
+        saveBtn.style.display = 'none';
+      }
+    }
+
+    modal.style.display = 'flex';
+  } catch (err) {
+    console.error("Erro ao abrir modal de lógica:", err);
+    alert("Erro ao abrir modal de lógica:\n" + err.message + "\n" + err.stack);
+  }
 }
 
 function closeLogicModal() {
@@ -2091,10 +2096,15 @@ function renderPanelsList() {
   const logicButtons = listGrid.querySelectorAll('.btn-logic-component');
   logicButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const targetBtn = e.currentTarget;
-      const panelId = parseInt(targetBtn.getAttribute('data-panel-id'));
-      const compIdx = parseInt(targetBtn.getAttribute('data-comp-idx'));
-      openLogicModal(panelId, compIdx);
+      try {
+        const targetBtn = e.currentTarget;
+        const panelId = parseInt(targetBtn.getAttribute('data-panel-id'));
+        const compIdx = parseInt(targetBtn.getAttribute('data-comp-idx'));
+        openLogicModal(panelId, compIdx);
+      } catch (err) {
+        console.error("Erro no clique do botão de lógica:", err);
+        alert("Erro no clique do botão de lógica:\n" + err.message + "\n" + err.stack);
+      }
     });
   });
 
