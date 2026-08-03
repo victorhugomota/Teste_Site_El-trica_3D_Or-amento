@@ -3265,13 +3265,63 @@ function calculateInfraComponentsForPanel(panel) {
     });
   });
 
-  // Round up any eletroduto quantities to the next multiple of 3 (for 3m bars)
+  // Round up eletrodutos to 3m commercial bars and calculate 1 condulete every 1.5m of conduit (2 per 3m bar)
   Object.keys(infraMap).forEach(key => {
     if (key.startsWith('ELETRODUTO-')) {
       const currentQty = infraMap[key].qty;
-      const bars = Math.ceil(currentQty / 3);
-      infraMap[key].qty = bars * 3;
-      infraMap[key].value = infraMap[key].qty * infraMap[key].unitPrice;
+      const bars = Math.ceil(currentQty / 3.0) || 1;
+      const roundedMeters = bars * 3;
+      infraMap[key].qty = roundedMeters;
+      infraMap[key].value = roundedMeters * infraMap[key].unitPrice;
+
+      // Extract conduit size (e.g., "3/4" from "ELETRODUTO-GALV-3/4")
+      const sizeMatch = key.match(/ELETRODUTO-(?:GALV|PESADO)-(.*)$/);
+      if (sizeMatch && sizeMatch[1]) {
+        const conduitSize = sizeMatch[1];
+        const isPesada = key.includes('PESADO');
+        
+        // 1 condulete every 1.5m of conduit = 2 per 3m bar
+        const conduleteQty = roundedMeters / 1.5;
+        const conduleteCode = isPesada ? `CONDULETE-PESADO-T-${conduitSize}` : `CONDULETE-GALV-${conduitSize}`;
+        
+        if (PRECOS_DATABASE.catalog[conduleteCode]) {
+          if (!infraMap[conduleteCode]) {
+            const cat = PRECOS_DATABASE.catalog[conduleteCode];
+            infraMap[conduleteCode] = {
+              code: conduleteCode,
+              name: cat.desc,
+              brand: cat.brand,
+              unit: cat.unit,
+              qty: 0,
+              unitPrice: cat.price,
+              value: 0
+            };
+          }
+          infraMap[conduleteCode].qty = Math.max(infraMap[conduleteCode].qty, conduleteQty);
+          infraMap[conduleteCode].value = infraMap[conduleteCode].qty * infraMap[conduleteCode].unitPrice;
+        }
+
+        // 3 uniduts per condulete for leve line
+        if (!isPesada) {
+          const unidutCode = `UNIDUT-GALV-${conduitSize}`;
+          if (PRECOS_DATABASE.catalog[unidutCode]) {
+            if (!infraMap[unidutCode]) {
+              const cat = PRECOS_DATABASE.catalog[unidutCode];
+              infraMap[unidutCode] = {
+                code: unidutCode,
+                name: cat.desc,
+                brand: cat.brand,
+                unit: cat.unit,
+                qty: 0,
+                unitPrice: cat.price,
+                value: 0
+              };
+            }
+            infraMap[unidutCode].qty = Math.max(infraMap[unidutCode].qty, 3 * conduleteQty);
+            infraMap[unidutCode].value = infraMap[unidutCode].qty * infraMap[unidutCode].unitPrice;
+          }
+        }
+      }
     }
   });
 
