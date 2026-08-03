@@ -2411,7 +2411,7 @@ function renderPanelsList() {
   const priceInputs = listGrid.querySelectorAll('.component-price-input');
   priceInputs.forEach(input => {
     input.addEventListener('input', (e) => {
-      const panelId = parseInt(e.target.getAttribute('data-panel-id'));
+      const panelId = String(e.target.getAttribute('data-panel-id'));
       const compIdx = parseInt(e.target.getAttribute('data-comp-idx'));
       
       const cleanValueStr = e.target.value.replace(/\s/g, '').replace(',', '.');
@@ -2454,7 +2454,7 @@ function renderPanelsList() {
     btn.addEventListener('click', (e) => {
       try {
         const targetBtn = e.currentTarget;
-        const panelId = parseInt(targetBtn.getAttribute('data-panel-id'));
+        const panelId = String(targetBtn.getAttribute('data-panel-id'));
         const compIdx = parseInt(targetBtn.getAttribute('data-comp-idx'));
         openLogicModal(panelId, compIdx);
       } catch (err) {
@@ -2469,7 +2469,7 @@ function renderPanelsList() {
   deleteButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
       const targetBtn = e.target.closest('.btn-delete-component');
-      const panelId = parseInt(targetBtn.getAttribute('data-panel-id'));
+      const panelId = String(targetBtn.getAttribute('data-panel-id'));
       const compIdx = parseInt(targetBtn.getAttribute('data-comp-idx'));
       
       const panel = budgetState.panels.find(p => p.id === panelId);
@@ -3407,6 +3407,7 @@ function getPPCableCode(vias, sectionStr) {
 }
 
 function renderInfraView() {
+  try {
   const select = document.getElementById('infra-panel-select');
   if (!select) return;
   
@@ -3471,8 +3472,8 @@ function renderInfraView() {
 
   if (typeSelect) {
     typeSelect.onchange = (e) => {
-      const pId = parseInt(select.value);
-      const panel = budgetState.panels.find(p => p.id === pId);
+      const pId = select.value;
+      const panel = budgetState.panels.find(p => String(p.id) === String(pId));
       if (panel) {
         panel.infraType = e.target.value;
         saveStateSilently();
@@ -3485,19 +3486,19 @@ function renderInfraView() {
   // If a value was already selected, maintain selection and render tables
   if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
     select.value = currentVal;
-    const panel = budgetState.panels.find(p => p.id === parseInt(currentVal));
+    const panel = budgetState.panels.find(p => String(p.id) === String(currentVal));
     updateSelectedPanelDisplay(panel);
   } else if (select.options.length > 1) {
     select.selectedIndex = 1;
-    const panel = budgetState.panels.find(p => p.id === parseInt(select.value));
+    const panel = budgetState.panels.find(p => String(p.id) === String(select.value));
     updateSelectedPanelDisplay(panel);
   } else {
     updateSelectedPanelDisplay(null);
   }
 
   select.onchange = (e) => {
-    const pId = parseInt(e.target.value);
-    const panel = budgetState.panels.find(p => p.id === pId);
+    const pId = e.target.value;
+    const panel = budgetState.panels.find(p => String(p.id) === String(pId));
     updateSelectedPanelDisplay(panel);
   };
 
@@ -3511,6 +3512,9 @@ function renderInfraView() {
   }
 
   renderConsolidatedInfraTable();
+  } catch (err) {
+    console.error('Erro no renderInfraView:', err);
+  }
 }
 
 function renderInfraEquipmentsInputs(panel) {
@@ -3660,6 +3664,7 @@ function renderInfraEquipmentsInputs(panel) {
 }
 
 function renderInfraTableForPanel(panel) {
+  try {
   const tableBody = document.getElementById('infra-panel-table-body');
   if (!tableBody) return;
   tableBody.innerHTML = '';
@@ -3694,6 +3699,9 @@ function renderInfraTableForPanel(panel) {
     <td style="padding: 12px 16px; text-align: right; color: var(--primary); font-size: 1rem;">R$ ${totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
   `;
   tableBody.appendChild(totalRow);
+  } catch (err) {
+    console.error('Erro no renderInfraTableForPanel:', err);
+  }
 }
 
 function getConsolidatedInfraItems() {
@@ -4750,7 +4758,7 @@ function setupEditEquipmentEvents() {
   if (editEqType) {
     editEqType.addEventListener('change', () => {
       const type = editEqType.value;
-      const panelId = parseInt(document.getElementById('edit-eq-panel-id').value) || 0;
+      const panelId = String(document.getElementById('edit-eq-panel-id').value) || 0;
       const panel = budgetState.panels.find(p => p.id === panelId);
       
       // Hide EC starting type checkbox for BOMBAS
