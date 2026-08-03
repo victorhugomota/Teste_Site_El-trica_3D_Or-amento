@@ -3375,7 +3375,6 @@ function renderInfraView() {
     const addBtn = document.getElementById('btn-add-infra-to-consolidated');
     if (!addBtn) return;
     
-    // Ensure consolidatedInfraPanels is initialized
     budgetState.consolidatedInfraPanels = budgetState.consolidatedInfraPanels || [];
     
     const isAdded = budgetState.consolidatedInfraPanels.includes(panel.id);
@@ -3397,12 +3396,27 @@ function renderInfraView() {
       if (!budgetState.consolidatedInfraPanels.includes(panel.id)) {
         budgetState.consolidatedInfraPanels.push(panel.id);
         saveState();
-        renderInfraView(); // Re-render to update lists and tables
+        renderInfraView();
       }
     };
   };
 
   const typeSelect = document.getElementById('infra-type-select');
+
+  const updateSelectedPanelDisplay = (panel) => {
+    if (!panel) {
+      document.getElementById('infra-config-panel').classList.add('hidden-section');
+      return;
+    }
+    document.getElementById('infra-config-panel').classList.remove('hidden-section');
+    if (typeSelect) {
+      typeSelect.value = panel.infraType || 'leve';
+    }
+    renderInfraEquipmentsInputs(panel);
+    renderInfraTableForPanel(panel);
+    updateAddBtnState(panel);
+  };
+
   if (typeSelect) {
     typeSelect.onchange = (e) => {
       const pId = parseInt(select.value);
@@ -3411,38 +3425,28 @@ function renderInfraView() {
         panel.infraType = e.target.value;
         saveStateSilently();
         renderInfraTableForPanel(panel);
+        renderConsolidatedInfraTable();
       }
     };
   }
 
+  // If a value was already selected, maintain selection and render tables
   if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
     select.value = currentVal;
     const panel = budgetState.panels.find(p => p.id === parseInt(currentVal));
-    if (panel) {
-      document.getElementById('infra-config-panel').classList.remove('hidden-section');
-      if (typeSelect) {
-        typeSelect.value = panel.infraType || 'leve';
-      }
-      updateAddBtnState(panel);
-    }
+    updateSelectedPanelDisplay(panel);
+  } else if (select.options.length > 1) {
+    select.selectedIndex = 1;
+    const panel = budgetState.panels.find(p => p.id === parseInt(select.value));
+    updateSelectedPanelDisplay(panel);
   } else {
-    document.getElementById('infra-config-panel').classList.add('hidden-section');
+    updateSelectedPanelDisplay(null);
   }
 
   select.onchange = (e) => {
     const pId = parseInt(e.target.value);
     const panel = budgetState.panels.find(p => p.id === pId);
-    if (panel) {
-      document.getElementById('infra-config-panel').classList.remove('hidden-section');
-      if (typeSelect) {
-        typeSelect.value = panel.infraType || 'leve';
-      }
-      renderInfraEquipmentsInputs(panel);
-      renderInfraTableForPanel(panel);
-      updateAddBtnState(panel);
-    } else {
-      document.getElementById('infra-config-panel').classList.add('hidden-section');
-    }
+    updateSelectedPanelDisplay(panel);
   };
 
   const centralCb = document.getElementById('central-automation-checkbox');
