@@ -885,14 +885,19 @@ function calculatePanelComponents(panel) {
               addComp(`CABO-POT-${sec}-PRETO`, 25, null, `Cabo de Potência VRF Condensadora ${idx + 1}: ${sec}mm² para ${condCurrent.toFixed(1)}A`);
               addComp(`CABO-POT-${sec}-VERDE`, 10, null, `Cabo Terra VRF Condensadora ${idx + 1}: ${sec}mm² condutor PE`);
               addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Identificação da condensadora VRF ${idx + 1}`);
+              cond.calculatedCurrent = condCurrent.toFixed(1).replace('.', ',') + ' A';
+              cond.calculatedCable = sec + ' mm²';
             }
           });
         }
         // Evaporadoras (200W cada, bipolar 10A)
         const vrfEvapQty = parseInt(eq.vrfEvaporadorasQty) || 0;
         if (vrfEvapQty > 0) {
+          const vrfEvapCurrent = (vrfEvapQty * 200) / voltageVal;
           addComp('MINIDISJ-MDW-C10-2', vrfEvapQty, null, `Proteção VRF Evaporadoras: ${vrfEvapQty}× disjuntor bipolar 10A para unidades evaporadoras de 200W cada`);
           addComp('PORTA-PLAQUETA', vrfEvapQty, null, `Sinalização: Identificação dos circuitos de evaporadoras VRF`);
+          eq.vrfEvapCurrent = vrfEvapCurrent.toFixed(1).replace('.', ',') + ' A';
+          eq.vrfEvapCable = '2,5 mm²';
         }
       }
 
@@ -900,21 +905,26 @@ function calculatePanelComponents(panel) {
       if (eqType === 'SPLIT' && hasPowerCol) {
         const splitPowerKw = parsePowerKw(eq.splitPower);
         if (splitPowerKw > 0) {
+          let splitCurrent = 0;
+          let sec = '2.5';
           if (eq.splitPhase === 'trifasico') {
             // Trifásico
-            const splitCurrent = (splitPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+            splitCurrent = (splitPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
             const djCode = getTripolarBreakerCode(splitPowerKw, voltage);
             addComp(djCode, 1, null, `Proteção SPLIT Trifásico: Disjuntor tripolar para split de ${eq.splitPower} (${splitCurrent.toFixed(1)}A)`);
-            const sec = getNBR5410CableSection(splitCurrent);
+            sec = getNBR5410CableSection(splitCurrent);
             addComp(`CABO-POT-${sec}-PRETO`, 25, null, `Cabo de Potência SPLIT: ${sec}mm² para ${splitCurrent.toFixed(1)}A`);
             addComp(`CABO-POT-${sec}-VERDE`, 10, null, `Cabo Terra SPLIT: ${sec}mm² condutor PE`);
           } else {
             // Monofásico (220V)
-            const splitCurrent = (splitPowerKw * 1000) / 220;
+            splitCurrent = (splitPowerKw * 1000) / 220;
             const djCode = getBipolarBreakerCode(splitCurrent);
+            sec = getNBR5410CableSection(splitCurrent);
             addComp(djCode, 1, null, `Proteção SPLIT Monofásico: Disjuntor bipolar para split de ${eq.splitPower} (${splitCurrent.toFixed(1)}A)`);
           }
           addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Identificação do circuito SPLIT`);
+          eq.calculatedCurrent = splitCurrent.toFixed(1).replace('.', ',') + ' A';
+          eq.calculatedCable = sec + ' mm²';
         }
       }
 
@@ -930,6 +940,8 @@ function calculatePanelComponents(panel) {
           addComp(`CABO-POT-${sec}-PRETO`, 25, null, `Cabo de Potência Splitão Evaporadora: ${sec}mm² para ${evapCurrent.toFixed(1)}A`);
           addComp(`CABO-POT-${sec}-VERDE`, 10, null, `Cabo Terra Splitão Evaporadora: ${sec}mm² condutor PE`);
           addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Identificação do motor evaporadora Splitão`);
+          eq.splitaoEvapCurrent = evapCurrent.toFixed(1).replace('.', ',') + ' A';
+          eq.splitaoEvapCable = sec + ' mm²';
         }
         // Condensadoras
         if (eq.condensadoras && eq.condensadoras.length > 0) {
@@ -943,6 +955,8 @@ function calculatePanelComponents(panel) {
               addComp(`CABO-POT-${sec}-PRETO`, 25, null, `Cabo de Potência Splitão Condensadora ${idx === 0 ? 'Mestre' : 'Escrava ' + idx}: ${sec}mm²`);
               addComp(`CABO-POT-${sec}-VERDE`, 10, null, `Cabo Terra Splitão Condensadora ${idx === 0 ? 'Mestre' : 'Escrava ' + idx}: ${sec}mm²`);
               addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Identificação da condensadora ${idx === 0 ? 'mestre' : 'escrava ' + idx}`);
+              cond.calculatedCurrent = condCurrent.toFixed(1).replace('.', ',') + ' A';
+              cond.calculatedCable = sec + ' mm²';
             }
           });
         }
@@ -952,8 +966,11 @@ function calculatePanelComponents(panel) {
       if (eqType === 'FANCOLETE' && hasPowerCol) {
         const fanQty = parseInt(eq.fancoleteQty) || 0;
         if (fanQty > 0) {
+          const fancoleteCurrent = (fanQty * 200) / voltageVal;
           addComp('MINIDISJ-MDW-C10-2', fanQty, null, `Proteção Fancoletes: ${fanQty}× disjuntor bipolar 10A para fancoletes de 200W cada`);
           addComp('PORTA-PLAQUETA', fanQty, null, `Sinalização: ${fanQty}× porta plaqueta para identificação dos circuitos de fancoletes`);
+          eq.calculatedCurrent = fancoleteCurrent.toFixed(1).replace('.', ',') + ' A';
+          eq.calculatedCable = '2,5 mm²';
         }
       }
 
@@ -1063,17 +1080,19 @@ function calculatePanelComponents(panel) {
         }
       }
 
-      // D) Custom UTA additional configurations (Heating, Humidification, Valve)
-      if (eqType === 'UTA') {
+      // D) Custom UTA / SPLITÃO additional configurations (Heating, Humidification, Valve)
+      if (eqType === 'UTA' || eqType === 'SPLITAO') {
         // Heating components
         if (eq.hasHeating && eq.heatingPower) {
-      const customKw = parsePowerKw(eq.heatingPower);
-      const stages = parseInt(eq.heatingStages) || 1;
-      const stageKw = customKw / stages;
-      
-      const stageCurrent = (stageKw * 1000) / (Math.sqrt(3) * voltageVal);
-      const breakerCode = getTripolarBreakerCode(stageKw, voltage);
-      const sec = getNBR5410CableSection(stageCurrent);
+          const customKw = parsePowerKw(eq.heatingPower);
+          const stages = parseInt(eq.heatingStages) || 1;
+          const stageKw = customKw / stages;
+          
+          const stageCurrent = (stageKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+          const breakerCode = getTripolarBreakerCode(stageKw, voltage);
+          const sec = getNBR5410CableSection(stageCurrent);
+          eq.heatingCalculatedCurrent = stageCurrent.toFixed(1).replace('.', ',') + ' A';
+          eq.heatingCalculatedCable = sec + ' mm²';
       
       if (type !== 'automacao' && type !== 'remoto') {
         // Power cable for heating stages
@@ -1103,13 +1122,15 @@ function calculatePanelComponents(panel) {
 
         // Humidification components
         if (eq.hasHumid && eq.humidPower) {
-      const customKw = parsePowerKw(eq.humidPower);
-      const stages = parseInt(eq.humidStages) || 1;
-      const stageKw = customKw / stages;
-      
-      const stageCurrent = (stageKw * 1000) / (Math.sqrt(3) * voltageVal);
-      const breakerCode = getTripolarBreakerCode(stageKw, voltage);
-      const sec = getNBR5410CableSection(stageCurrent);
+          const customKw = parsePowerKw(eq.humidPower);
+          const stages = parseInt(eq.humidStages) || 1;
+          const stageKw = customKw / stages;
+          
+          const stageCurrent = (stageKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+          const breakerCode = getTripolarBreakerCode(stageKw, voltage);
+          const sec = getNBR5410CableSection(stageCurrent);
+          eq.humidCalculatedCurrent = stageCurrent.toFixed(1).replace('.', ',') + ' A';
+          eq.humidCalculatedCable = sec + ' mm²';
       
       if (type !== 'automacao' && type !== 'remoto') {
         // Power cable for humidification stages
@@ -2528,35 +2549,178 @@ function renderCargasView() {
     } else if (panel.equipments && panel.equipments.length > 0) {
       panel.equipments.forEach((eq, eqIdx) => {
         const eqName = eq.name ? eq.name : `Equipamento ${eqIdx + 1}`;
+        const voltageVal = parseInt((panel.voltage || '220V').replace('V', '')) || 220;
         
-        // Calculations for total power and current
-        const motorKw = eq.power ? parsePowerKw(eq.power) : 0;
-        const motorCurVal = eq.calculatedCurrent ? parseFloat(eq.calculatedCurrent.replace('A', '').trim().replace(',', '.')) : 0;
-        
-        let heatingKw = 0;
-        let heatingCurVal = 0;
-        let heatingCab = '-';
-        const hStg = eq.heatingStages || 1;
-        if (eq.hasHeating && eq.heatingPower) {
-          heatingKw = parsePowerKw(eq.heatingPower);
-          heatingCurVal = eq.heatingCalculatedCurrent ? parseFloat(eq.heatingCalculatedCurrent.replace('A', '').trim().replace(',', '.')) : 0;
-          heatingCab = eq.heatingCalculatedCable ? eq.heatingCalculatedCable.trim() : '-';
+        let totalEqPower = 0;
+        let totalEqCurrent = 0;
+        const subRows = []; // { title, typeLabel, powerKw, currentA, cable, isPerStage }
+
+        // A) SPLITÃO
+        if (eq.type === 'SPLITAO') {
+          // Motor Evaporadora
+          const evapKw = parsePowerKw(eq.splitaoEvapPower);
+          if (evapKw > 0) {
+            const evapCur = (evapKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+            const evapCab = eq.splitaoEvapCable || (getNBR5410CableSection(evapCur) + ' mm²');
+            totalEqPower += evapKw;
+            totalEqCurrent += evapCur;
+            subRows.push({
+              title: '↳ Motor Evaporadora',
+              typeLabel: 'Evaporadora',
+              powerKw: evapKw,
+              currentA: evapCur,
+              cable: evapCab
+            });
+          }
+          // Condensadoras
+          if (eq.condensadoras && eq.condensadoras.length > 0) {
+            eq.condensadoras.forEach((cond, idx) => {
+              const cKw = parsePowerKw(cond.power);
+              if (cKw > 0) {
+                const cCur = (cKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+                const cCab = cond.calculatedCable || (getNBR5410CableSection(cCur) + ' mm²');
+                totalEqPower += cKw;
+                totalEqCurrent += cCur;
+                const label = idx === 0 ? 'Condensadora Mestre' : `Condensadora Escrava ${idx}`;
+                subRows.push({
+                  title: `↳ ${label}`,
+                  typeLabel: 'Condensadora/Compressor',
+                  powerKw: cKw,
+                  currentA: cCur,
+                  cable: cCab
+                });
+              }
+            });
+          }
         }
-        
-        let humidKw = 0;
-        let humidCurVal = 0;
-        let humidCab = '-';
-        const huStg = eq.humidStages || 1;
-        if (eq.hasHumid && eq.humidPower) {
-          humidKw = parsePowerKw(eq.humidPower);
-          humidCurVal = eq.humidCalculatedCurrent ? parseFloat(eq.humidCalculatedCurrent.replace('A', '').trim().replace(',', '.')) : 0;
-          humidCab = eq.humidCalculatedCable ? eq.humidCalculatedCable.trim() : '-';
+        // B) VRF
+        else if (eq.type === 'VRF') {
+          if (eq.condensadoras && eq.condensadoras.length > 0) {
+            eq.condensadoras.forEach((cond, idx) => {
+              const cKw = parsePowerKw(cond.power);
+              if (cKw > 0) {
+                const cCur = (cKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+                const cCab = cond.calculatedCable || (getNBR5410CableSection(cCur) + ' mm²');
+                totalEqPower += cKw;
+                totalEqCurrent += cCur;
+                subRows.push({
+                  title: `↳ Condensadora ${idx + 1}`,
+                  typeLabel: 'Condensadora VRF',
+                  powerKw: cKw,
+                  currentA: cCur,
+                  cable: cCab
+                });
+              }
+            });
+          }
+          const vrfEvapQty = parseInt(eq.vrfEvaporadorasQty) || 0;
+          if (vrfEvapQty > 0) {
+            const vrfEvapKw = vrfEvapQty * 0.2;
+            const vrfEvapCur = (vrfEvapKw * 1000) / voltageVal;
+            totalEqPower += vrfEvapKw;
+            totalEqCurrent += vrfEvapCur;
+            subRows.push({
+              title: `↳ Evaporadoras (${vrfEvapQty}× 200W)`,
+              typeLabel: 'Evaporadoras VRF',
+              powerKw: vrfEvapKw,
+              currentA: vrfEvapCur,
+              cable: '2,5 mm²'
+            });
+          }
         }
-        
-        const totalEqPower = motorKw + heatingKw + humidKw;
-        const totalEqCurrent = motorCurVal + (eq.hasHeating ? (heatingCurVal * hStg) : 0) + (eq.hasHumid ? (humidCurVal * huStg) : 0);
-        
-        // 1. Equipment Summary Row (shows total power and current)
+        // C) SPLIT
+        else if (eq.type === 'SPLIT') {
+          const sKw = parsePowerKw(eq.splitPower);
+          if (sKw > 0) {
+            let sCur = 0;
+            if (eq.splitPhase === 'trifasico') {
+              sCur = (sKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+            } else {
+              sCur = (sKw * 1000) / 220;
+            }
+            const sCab = eq.calculatedCable || (getNBR5410CableSection(sCur) + ' mm²');
+            totalEqPower += sKw;
+            totalEqCurrent += sCur;
+            subRows.push({
+              title: '↳ Split',
+              typeLabel: 'Split AC',
+              powerKw: sKw,
+              currentA: sCur,
+              cable: sCab
+            });
+          }
+        }
+        // D) FANCOLETE
+        else if (eq.type === 'FANCOLETE') {
+          const fanQty = parseInt(eq.fancoleteQty) || 0;
+          if (fanQty > 0) {
+            const fKw = fanQty * 0.2;
+            const fCur = (fKw * 1000) / voltageVal;
+            totalEqPower += fKw;
+            totalEqCurrent += fCur;
+            subRows.push({
+              title: `↳ Fancoletes (${fanQty}× 200W)`,
+              typeLabel: 'Fancolete',
+              powerKw: fKw,
+              currentA: fCur,
+              cable: '2,5 mm²'
+            });
+          }
+        }
+        // E) Standard Equipment (UTA, EX/CV, BOMBAS, CHILLER)
+        else {
+          const motorKw = eq.power ? parsePowerKw(eq.power) : 0;
+          if (motorKw > 0) {
+            const motorCur = (motorKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+            const motorCab = eq.calculatedCable || (getNBR5410CableSection(motorCur) + ' mm²');
+            totalEqPower += motorKw;
+            totalEqCurrent += motorCur;
+            subRows.push({
+              title: '↳ Motor',
+              typeLabel: 'Motor',
+              powerKw: motorKw,
+              currentA: motorCur,
+              cable: motorCab
+            });
+          }
+        }
+
+        // Heating & Humidification for UTA and SPLITÃO
+        if ((eq.type === 'UTA' || eq.type === 'SPLITAO') && eq.hasHeating && eq.heatingPower) {
+          const hKw = parsePowerKw(eq.heatingPower);
+          const hStg = parseInt(eq.heatingStages) || 1;
+          const hCurPerStg = ((hKw / hStg) * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+          const hCab = eq.heatingCalculatedCable || (getNBR5410CableSection(hCurPerStg) + ' mm²');
+          totalEqPower += hKw;
+          totalEqCurrent += (hCurPerStg * hStg);
+          subRows.push({
+            title: `↳ Aquecimento (${hStg} Est.)`,
+            typeLabel: 'Aquec. elétrico',
+            powerKw: hKw,
+            currentA: hCurPerStg,
+            cable: hCab + ' (por est.)',
+            isPerStage: true
+          });
+        }
+
+        if ((eq.type === 'UTA' || eq.type === 'SPLITAO') && eq.hasHumid && eq.humidPower) {
+          const huKw = parsePowerKw(eq.humidPower);
+          const huStg = parseInt(eq.humidStages) || 1;
+          const huCurPerStg = ((huKw / huStg) * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+          const huCab = eq.humidCalculatedCable || (getNBR5410CableSection(huCurPerStg) + ' mm²');
+          totalEqPower += huKw;
+          totalEqCurrent += (huCurPerStg * huStg);
+          subRows.push({
+            title: `↳ Umidificação (${huStg} Est.)`,
+            typeLabel: 'Umid. elétrica',
+            powerKw: huKw,
+            currentA: huCurPerStg,
+            cable: huCab + ' (por est.)',
+            isPerStage: true
+          });
+        }
+
+        // 1. Equipment Header Summary Row
         const equipRow = document.createElement('tr');
         equipRow.innerHTML = `
           <td style="padding: 12px 16px 12px 36px; color: var(--text-primary); font-weight: 700;">
@@ -2564,64 +2728,29 @@ function renderCargasView() {
           </td>
           <td style="padding: 12px 16px; font-weight: 700; font-size: 0.85rem; color: var(--text-secondary);">${eq.type}</td>
           <td style="padding: 12px 16px; font-size: 0.85rem; color: var(--text-secondary);">-</td>
-          <td style="padding: 12px 16px; text-align: right; font-size: 0.85rem; color: var(--text-primary); font-weight: 700;">${totalEqPower.toFixed(1).replace('.', ',')} kW</td>
-          <td style="padding: 12px 16px; text-align: right; font-size: 0.85rem; color: var(--primary); font-weight: 700;">${totalEqCurrent.toFixed(1).replace('.', ',')} A</td>
+          <td style="padding: 12px 16px; text-align: right; font-size: 0.85rem; color: var(--text-primary); font-weight: 700;">${totalEqPower > 0 ? totalEqPower.toFixed(1).replace('.', ',') + ' kW' : '-'}</td>
+          <td style="padding: 12px 16px; text-align: right; font-size: 0.85rem; color: var(--primary); font-weight: 700;">${totalEqCurrent > 0 ? totalEqCurrent.toFixed(1).replace('.', ',') + ' A' : '-'}</td>
           <td style="padding: 12px 16px; font-size: 0.85rem; color: var(--text-secondary);">-</td>
         `;
         tableBody.appendChild(equipRow);
-        
-        // 2. Motor Subline Row (always present)
-        const motorRow = document.createElement('tr');
-        const motorPowerStr = eq.power ? eq.power.replace('kW', '').trim().replace('.', ',') : '-';
-        const motorCurStr = eq.calculatedCurrent ? eq.calculatedCurrent.replace('A', '').trim() : '-';
-        const motorCabStr = eq.calculatedCable ? eq.calculatedCable.trim() : '-';
-        motorRow.innerHTML = `
-          <td style="padding: 10px 16px 10px 56px; font-size: 0.8rem; color: var(--text-secondary);">
-            ↳ Motor
-          </td>
-          <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">Motor</td>
-          <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">-</td>
-          <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${motorPowerStr !== '-' ? motorPowerStr + ' kW' : '-'}</td>
-          <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${motorCurStr !== '-' ? motorCurStr + ' A' : '-'}</td>
-          <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">${motorCabStr}</td>
-        `;
-        tableBody.appendChild(motorRow);
-        
-        // 3. Heating Subline Row
-        if (eq.type === 'UTA' && eq.hasHeating && eq.heatingPower) {
-          const heatRow = document.createElement('tr');
-          const heatPowerStr = eq.heatingPower.replace('kW', '').trim().replace('.', ',');
-          const heatCurStr = eq.heatingCalculatedCurrent ? eq.heatingCalculatedCurrent.replace('A', '').trim() : '-';
-          heatRow.innerHTML = `
+
+        // 2. Render all sub-rows for this equipment
+        subRows.forEach(sr => {
+          const srRow = document.createElement('tr');
+          const pStr = sr.powerKw ? sr.powerKw.toFixed(1).replace('.', ',') + ' kW' : '-';
+          const cStr = sr.currentA ? sr.currentA.toFixed(1).replace('.', ',') + ' A' + (sr.isPerStage ? ' (por est.)' : '') : '-';
+          srRow.innerHTML = `
             <td style="padding: 10px 16px 10px 56px; font-size: 0.8rem; color: var(--text-secondary);">
-              ↳ Aquecimento (${hStg} Est.)
+              ${sr.title}
             </td>
-            <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">Aquec. UTA</td>
+            <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">${sr.typeLabel}</td>
             <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">-</td>
-            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${heatPowerStr} kW</td>
-            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${heatCurStr !== '-' ? heatCurStr + ' A' : '-'} (por est.)</td>
-            <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">${heatingCab} (por est.)</td>
+            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${pStr}</td>
+            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${cStr}</td>
+            <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">${sr.cable}</td>
           `;
-          tableBody.appendChild(heatRow);
-        }
-        
-        // 4. Humidification Subline Row
-        if (eq.type === 'UTA' && eq.hasHumid && eq.humidPower) {
-          const humidRow = document.createElement('tr');
-          const humidPowerStr = eq.humidPower.replace('kW', '').trim().replace('.', ',');
-          const humidCurStr = eq.humidCalculatedCurrent ? eq.humidCalculatedCurrent.replace('A', '').trim() : '-';
-          humidRow.innerHTML = `
-            <td style="padding: 10px 16px 10px 56px; font-size: 0.8rem; color: var(--text-secondary);">
-              ↳ Umidificação (${huStg} Est.)
-            </td>
-            <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">Umid. UTA</td>
-            <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">-</td>
-            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${humidPowerStr} kW</td>
-            <td style="padding: 10px 16px; text-align: right; font-size: 0.8rem; color: var(--text-secondary);">${humidCurStr !== '-' ? humidCurStr + ' A' : '-'} (por est.)</td>
-            <td style="padding: 10px 16px; font-size: 0.8rem; color: var(--text-secondary);">${humidCab} (por est.)</td>
-          `;
-          tableBody.appendChild(humidRow);
-        }
+          tableBody.appendChild(srRow);
+        });
       });
     }
   });

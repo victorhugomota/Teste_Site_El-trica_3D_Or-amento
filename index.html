@@ -463,28 +463,30 @@
                 </div>
 
                 <!-- Tipo de Expansão (Direta ou Indireta) -->
-                <div class="form-group" style="margin-bottom: 15px;">
-                  <label class="form-label">Tipo de Expansão (UTA)</label>
-                  <div style="display: flex; gap: 20px; align-items: center; height: 38px;">
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
-                      <input type="radio" name="uta-expansion-type" value="Direta"> Expansão Direta
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
-                      <input type="radio" name="uta-expansion-type" value="Indireta" checked> Expansão Indireta
-                    </label>
+                <div id="uta-expansion-section">
+                  <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="form-label">Tipo de Expansão (UTA)</label>
+                    <div style="display: flex; gap: 20px; align-items: center; height: 38px;">
+                      <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                        <input type="radio" name="uta-expansion-type" value="Direta"> Expansão Direta
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                        <input type="radio" name="uta-expansion-type" value="Indireta" checked> Expansão Indireta
+                      </label>
+                    </div>
                   </div>
-                </div>
 
-                <!-- Painel de Válvulas para Expansão Indireta (Shown by default) -->
-                <div id="uta-indirect-valves-panel" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
-                  <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Opções de Válvula (Expansão Indireta)</h4>
-                  <div style="display: flex; gap: 20px; align-items: center; height: 38px;">
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
-                      <input type="radio" name="uta-valve-type" value="OnOff"> Válvula ON/OFF
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
-                      <input type="radio" name="uta-valve-type" value="Proporcional" checked> Válvula Proporcional
-                    </label>
+                  <!-- Painel de Válvulas para Expansão Indireta (Shown by default) -->
+                  <div id="uta-indirect-valves-panel" style="background-color: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 15px;">
+                    <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Opções de Válvula (Expansão Indireta)</h4>
+                    <div style="display: flex; gap: 20px; align-items: center; height: 38px;">
+                      <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                        <input type="radio" name="uta-valve-type" value="OnOff"> Válvula ON/OFF
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary);">
+                        <input type="radio" name="uta-valve-type" value="Proporcional" checked> Válvula Proporcional
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
