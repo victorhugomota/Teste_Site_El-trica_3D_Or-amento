@@ -680,6 +680,28 @@
                 </label>
               </div>
             </div>
+
+            <!-- Painel Selecionador de Equipamentos para Automação Central -->
+            <div id="central-automation-panel" class="hidden-section" style="margin-bottom: 24px; padding: 20px; background-color: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--primary); transition: all 0.3s ease;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                <div>
+                  <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    Equipamentos Integrados à Automação Central
+                  </h4>
+                  <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">
+                    Selecione abaixo quais equipamentos se comunicarão com a Central de Automação. Apenas as distâncias dos equipamentos selecionados serão consideradas na infraestrutura de comunicação e cabeamento.
+                  </p>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" id="btn-select-all-central-aut" class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 10px;">Selecionar Todos</button>
+                  <button type="button" id="btn-deselect-all-central-aut" class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 10px;">Desmarcar Todos</button>
+                </div>
+              </div>
+              <div id="central-automation-equipments-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+                <!-- Lista dinâmica de equipamentos -->
+              </div>
+            </div>
             
             <div style="margin-bottom: 24px; padding: 16px; background-color: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
               <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">Quadros considerados na lista geral:</h4>

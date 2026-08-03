@@ -3455,9 +3455,12 @@ function renderInfraView() {
     centralCb.checked = !!budgetState.hasCentralAutomation;
     centralCb.onchange = (e) => {
       budgetState.hasCentralAutomation = e.target.checked;
-      saveState();
+      saveStateSilently();
+      renderCentralAutomationPanel();
+      renderConsolidatedInfraTable();
     };
   }
+  renderCentralAutomationPanel();
 
   renderConsolidatedInfraTable();
   } catch (err) {
@@ -3669,8 +3672,10 @@ function getConsolidatedInfraItems() {
     });
   });
 
-  // 2. Gather Central Automation items if checked
+  // 2. Gather Central Automation items for user-selected equipments only
   if (budgetState.hasCentralAutomation) {
+    const selectedEquipIds = budgetState.centralAutomationEquips || [];
+
     const addConsolidated = (code, qtyMultiplier = 1) => {
       if (!code) return;
       const catItem = PRECOS_DATABASE.catalog[code];
@@ -3691,46 +3696,68 @@ function getConsolidatedInfraItems() {
       }
     };
 
-    addedPanels.forEach(panel => {
-      const isEligible = panel.type === 'automacao' || panel.type === 'remoto' || panel.type === 'completo';
-      if (!isEligible) return;
-      
+    budgetState.panels.forEach(panel => {
       const distances = panel.infraDistances || {};
       const infraType = panel.infraType || 'leve';
-      
-      let equips = [];
-      if (panel.equipments && panel.equipments.length > 0) {
-        equips = panel.equipments;
-      } else if ((panel.type === 'comando' || panel.type === 'remoto') && panel.quantity > 0) {
-        for (let i = 1; i <= panel.quantity; i++) {
-          equips.push({ id: `virtual-${i}` });
+
+      const getDistanceForLocal = (keyPrimary, fallbackKey) => {
+        if (distances[keyPrimary] !== undefined && parseFloat(distances[keyPrimary]) > 0) return parseFloat(distances[keyPrimary]);
+        const strKey = String(keyPrimary);
+        if (distances[strKey] !== undefined && parseFloat(distances[strKey]) > 0) return parseFloat(distances[strKey]);
+        const keys = Object.keys(distances);
+        for (let i = 0; i < keys.length; i++) {
+          const k = keys[i];
+          if (k === keyPrimary || k === strKey || k.endsWith(strKey) || strKey.endsWith(k)) {
+            const val = parseFloat(distances[k]) || 0;
+            if (val > 0) return val;
+          }
         }
-      }
-      
+        if (fallbackKey) {
+          const fbStr = String(fallbackKey);
+          if (distances[fallbackKey] !== undefined && parseFloat(distances[fallbackKey]) > 0) return parseFloat(distances[fallbackKey]);
+          if (distances[fbStr] !== undefined && parseFloat(distances[fbStr]) > 0) return parseFloat(distances[fbStr]);
+        }
+        return 0;
+      };
+
+      const equips = panel.equipments || [];
       equips.forEach(eq => {
-        const D = (panel.type === 'comando' || panel.type === 'remoto') ? (parseFloat(panel.infraDistances['general']) || 0) : (parseFloat(distances[eq.id]) || 0);
+        const eqIdStr = String(eq.id);
+        if (!selectedEquipIds.includes(eqIdStr)) return; // Only include user-selected equipments
+
+        let D = 0;
+        if (eq.type === 'VRF' || eq.type === 'SPLITAO') {
+          if (eq.condensadoras && eq.condensadoras.length > 0) {
+            eq.condensadoras.forEach((c, idx) => {
+              const dCond = getDistanceForLocal(`${eqIdStr}_cond_${idx}`, eqIdStr);
+              if (dCond > D) D = dCond;
+            });
+          }
+          const dEvap = getDistanceForLocal(`${eqIdStr}_evap`, eqIdStr);
+          if (dEvap > D) D = dEvap;
+          const dRede = getDistanceForLocal(`${eqIdStr}_rede_frig`, eqIdStr);
+          if (dRede > D) D = dRede;
+          if (D === 0) D = getDistanceForLocal(eqIdStr);
+        } else {
+          D = getDistanceForLocal(eqIdStr);
+        }
+
         if (D <= 0) return;
-        
+
         addConsolidated('CABO-REDE-CAT6', D);
-        
-        const size = '1/2';
+
+        const size = '3/4';
         if (infraType === 'pesada') {
           addConsolidated(`ELETRODUTO-PESADO-${size}`, D);
         } else {
           addConsolidated(`ELETRODUTO-GALV-${size}`, D);
         }
-        
         addConsolidated('SUPORTE-ABRACADEIRA', Math.ceil(D / 1.5));
-        
-        const conduleteCount = Math.ceil(D);
+
+        let conduleteCount = Math.ceil(D / 1.5);
         if (conduleteCount > 0) {
           if (infraType === 'pesada') {
-            const qT = Math.floor(conduleteCount / 3);
-            const qLR = Math.floor(conduleteCount / 3);
-            const qE = conduleteCount - 2 * qT;
-            if (qT > 0) addConsolidated(`CONDULETE-PESADO-T-${size}`, qT);
-            if (qLR > 0) addConsolidated(`CONDULETE-PESADO-LR-${size}`, qLR);
-            if (qE > 0) addConsolidated(`CONDULETE-PESADO-E-${size}`, qE);
+            addConsolidated(`CONDULETE-PESADO-T-${size}`, conduleteCount);
           } else {
             addConsolidated(`CONDULETE-GALV-${size}`, conduleteCount);
             addConsolidated(`UNIDUT-GALV-${size}`, 3 * conduleteCount);
@@ -3740,8 +3767,167 @@ function getConsolidatedInfraItems() {
     });
   }
 
+  // Adjust eletrodutos to 3m commercial bars and calculate 1 condulete every 1.5m of conduit (2 per 3m bar)
+  Object.keys(totalInfraMap).forEach(key => {
+    if (key.startsWith('ELETRODUTO-')) {
+      const currentQty = totalInfraMap[key].qty;
+      const bars = Math.ceil(currentQty / 3.0) || 1;
+      const roundedMeters = bars * 3;
+      totalInfraMap[key].qty = roundedMeters;
+      totalInfraMap[key].value = roundedMeters * totalInfraMap[key].unitPrice;
+
+      const sizeMatch = key.match(/ELETRODUTO-(?:GALV|PESADO)-(.*)$/);
+      if (sizeMatch && sizeMatch[1]) {
+        const conduitSize = sizeMatch[1];
+        const isPesada = key.includes('PESADO');
+        const conduleteQty = roundedMeters / 1.5;
+        const conduleteCode = isPesada ? `CONDULETE-PESADO-T-${conduitSize}` : `CONDULETE-GALV-${conduitSize}`;
+        
+        if (PRECOS_DATABASE.catalog[conduleteCode]) {
+          if (!totalInfraMap[conduleteCode]) {
+            const cat = PRECOS_DATABASE.catalog[conduleteCode];
+            totalInfraMap[conduleteCode] = {
+              code: conduleteCode,
+              name: cat.desc,
+              brand: cat.brand,
+              unit: cat.unit,
+              qty: 0,
+              unitPrice: cat.price,
+              value: 0
+            };
+          }
+          totalInfraMap[conduleteCode].qty = Math.max(totalInfraMap[conduleteCode].qty, conduleteQty);
+          totalInfraMap[conduleteCode].value = totalInfraMap[conduleteCode].qty * totalInfraMap[conduleteCode].unitPrice;
+        }
+
+        if (!isPesada) {
+          const unidutCode = `UNIDUT-GALV-${conduitSize}`;
+          if (PRECOS_DATABASE.catalog[unidutCode]) {
+            if (!totalInfraMap[unidutCode]) {
+              const cat = PRECOS_DATABASE.catalog[unidutCode];
+              totalInfraMap[unidutCode] = {
+                code: unidutCode,
+                name: cat.desc,
+                brand: cat.brand,
+                unit: cat.unit,
+                qty: 0,
+                unitPrice: cat.price,
+                value: 0
+              };
+            }
+            totalInfraMap[unidutCode].qty = Math.max(totalInfraMap[unidutCode].qty, 3 * conduleteQty);
+            totalInfraMap[unidutCode].value = totalInfraMap[unidutCode].qty * totalInfraMap[unidutCode].unitPrice;
+          }
+        }
+      }
+    }
+  });
+
   return Object.values(totalInfraMap);
 }
+
+
+function renderCentralAutomationPanel() {
+  const panelDiv = document.getElementById('central-automation-panel');
+  const listContainer = document.getElementById('central-automation-equipments-list');
+  if (!panelDiv || !listContainer) return;
+
+  if (!budgetState.hasCentralAutomation) {
+    panelDiv.classList.add('hidden-section');
+    return;
+  }
+
+  panelDiv.classList.remove('hidden-section');
+  listContainer.innerHTML = '';
+
+  budgetState.centralAutomationEquips = budgetState.centralAutomationEquips || [];
+
+  let totalEquipsFound = 0;
+
+  budgetState.panels.forEach(panel => {
+    const equips = panel.equipments || [];
+    if (equips.length === 0) return;
+
+    equips.forEach(eq => {
+      totalEquipsFound++;
+      const eqIdStr = String(eq.id);
+      const isChecked = budgetState.centralAutomationEquips.includes(eqIdStr);
+
+      const card = document.createElement('div');
+      card.style.padding = '12px 14px';
+      card.style.backgroundColor = 'var(--bg-primary)';
+      card.style.border = isChecked ? '1px solid var(--primary)' : '1px solid var(--border-color)';
+      card.style.borderRadius = 'var(--radius-sm)';
+      card.style.display = 'flex';
+      card.style.alignItems = 'center';
+      card.style.gap = '12px';
+      card.style.transition = 'all 0.2s ease';
+
+      card.innerHTML = `
+        <input type="checkbox" class="central-aut-cb" data-eq-id="${eqIdStr}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+        <div style="flex: 1; overflow: hidden;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+            <strong style="font-size: 0.85rem; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${eq.name || eq.type}</strong>
+            <span class="badge badge-accent" style="font-size: 0.65rem; padding: 2px 6px;">${eq.type}</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">
+            Quadro: <strong>${panel.name}</strong>
+          </div>
+        </div>
+      `;
+
+      const cb = card.querySelector('.central-aut-cb');
+      cb.onchange = (e) => {
+        budgetState.centralAutomationEquips = budgetState.centralAutomationEquips || [];
+        if (e.target.checked) {
+          if (!budgetState.centralAutomationEquips.includes(eqIdStr)) {
+            budgetState.centralAutomationEquips.push(eqIdStr);
+          }
+          card.style.border = '1px solid var(--primary)';
+        } else {
+          budgetState.centralAutomationEquips = budgetState.centralAutomationEquips.filter(id => id !== eqIdStr);
+          card.style.border = '1px solid var(--border-color)';
+        }
+        saveStateSilently();
+        renderConsolidatedInfraTable();
+      };
+
+      listContainer.appendChild(card);
+    });
+  });
+
+  if (totalEquipsFound === 0) {
+    listContainer.innerHTML = '<div style="grid-column: 1 / -1; color: var(--text-secondary); font-size: 0.85rem; padding: 12px 0;">Nenhum equipamento cadastrado nos quadros elétricos ainda.</div>';
+  }
+
+  // Bind Select All / Deselect All
+  const btnSelectAll = document.getElementById('btn-select-all-central-aut');
+  const btnDeselectAll = document.getElementById('btn-deselect-all-central-aut');
+
+  if (btnSelectAll) {
+    btnSelectAll.onclick = () => {
+      budgetState.centralAutomationEquips = [];
+      budgetState.panels.forEach(p => {
+        (p.equipments || []).forEach(eq => {
+          budgetState.centralAutomationEquips.push(String(eq.id));
+        });
+      });
+      saveStateSilently();
+      renderCentralAutomationPanel();
+      renderConsolidatedInfraTable();
+    };
+  }
+
+  if (btnDeselectAll) {
+    btnDeselectAll.onclick = () => {
+      budgetState.centralAutomationEquips = [];
+      saveStateSilently();
+      renderCentralAutomationPanel();
+      renderConsolidatedInfraTable();
+    };
+  }
+}
+
 
 function renderConsolidatedInfraTable() {
   const tableBody = document.getElementById('infra-consolidated-table-body');
