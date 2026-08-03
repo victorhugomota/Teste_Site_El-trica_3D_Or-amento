@@ -1702,108 +1702,50 @@ let viewSubtitle = null;
 // Load data from LocalStorage
 function loadState() {
   try {
-    const savedState = localStorage.getItem('panel_builder_state');
-    if (savedState) {
-      const parsed = JSON.parse(savedState);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        budgetState = parsed;
-      } else {
-        budgetState = { panels: [], theme: 'dark' };
-      }
+    const saved = localStorage.getItem('panel_builder_state');
+    if (saved) {
+      budgetState = JSON.parse(saved);
     }
-    
-    if (!budgetState) {
-      budgetState = { panels: [], theme: 'dark' };
-    }
-    if (!budgetState.panels) budgetState.panels = [];
-    if (!budgetState.theme) budgetState.theme = 'dark';
-    if (!budgetState.consolidatedInfraPanels) budgetState.consolidatedInfraPanels = [];
-    
-    // Defensive deep merge for customRules
-    budgetState.customRules = budgetState.customRules || {};
-    
-    budgetState.customRules.brumBarCurrentThreshold = budgetState.customRules.brumBarCurrentThreshold !== undefined ? budgetState.customRules.brumBarCurrentThreshold : 75;
-    budgetState.customRules.transformerVoltageRequired = budgetState.customRules.transformerVoltageRequired || '440V';
-    budgetState.customRules.transformerVaRating = budgetState.customRules.transformerVaRating || '400VA';
-    budgetState.customRules.transformerPrice = budgetState.customRules.transformerPrice !== undefined ? budgetState.customRules.transformerPrice : 600.0;
-    budgetState.customRules.trilhoDinQty = budgetState.customRules.trilhoDinQty !== undefined ? budgetState.customRules.trilhoDinQty : 1;
-    budgetState.customRules.pressostatoQty = budgetState.customRules.pressostatoQty !== undefined ? budgetState.customRules.pressostatoQty : 2;
-    budgetState.customRules.releQty = budgetState.customRules.releQty !== undefined ? budgetState.customRules.releQty : 2;
-    budgetState.customRules.sinaleiroSegurancaQty = budgetState.customRules.sinaleiroSegurancaQty !== undefined ? budgetState.customRules.sinaleiroSegurancaQty : 1;
-    budgetState.customRules.mswCurrentLimit = budgetState.customRules.mswCurrentLimit !== undefined ? budgetState.customRules.mswCurrentLimit : 160;
-    
-    budgetState.customRules.cables10mm = budgetState.customRules.cables10mm || {};
-    const dCables = {
-      potenciaComando: { cinza: 50, vermelho: 25, azul: 25 },
-      completo: { cinza: 50, vermelho: 25, azul: 25 },
-      automacao: { cinza: 50, vermelho: 25, azul: 25 },
-      comando: { vermelho: 10, azul: 10, cinza: 10 },
-      remoto: { vermelho: 50, azul: 50, cinza: 50 }
-    };
-    Object.keys(dCables).forEach(k => {
-      budgetState.customRules.cables10mm[k] = budgetState.customRules.cables10mm[k] || {};
-      Object.keys(dCables[k]).forEach(cKey => {
-        if (budgetState.customRules.cables10mm[k][cKey] === undefined) {
-          budgetState.customRules.cables10mm[k][cKey] = dCables[k][cKey];
-        }
-      });
-    });
-
-    budgetState.customRules.bornesPerEquip = budgetState.customRules.bornesPerEquip || {};
-    const dBornes = { comando: 6, remoto: 6, potencia: 4, 'potencia-comando': 10, automacao: 15, completo: 20 };
-    Object.keys(dBornes).forEach(k => {
-      if (budgetState.customRules.bornesPerEquip[k] === undefined) {
-        budgetState.customRules.bornesPerEquip[k] = dBornes[k];
-      }
-    });
-
-    budgetState.customRules.borneAccessories = budgetState.customRules.borneAccessories || {};
-    const dAcc = { posteFinal: 2, borneTerra: 3, identificadorBr5: 3, identificadorBtw: 3, tampaBtwmp: 3, portaPlaqueta: 3 };
-    Object.keys(dAcc).forEach(k => {
-      if (budgetState.customRules.borneAccessories[k] === undefined) {
-        budgetState.customRules.borneAccessories[k] = dAcc[k];
-      }
-    });
-    
-    // Synergize catalog price for transformer
-    if (typeof PRECOS_DATABASE !== 'undefined' && PRECOS_DATABASE.catalog && PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA']) {
-      PRECOS_DATABASE.catalog['TRANSFORMADOR-440-220-400VA'].price = budgetState.customRules.transformerPrice;
-    }
-    
-    // Migrate/recalculate existing panels to sync with the new catalog and engineering rules
-    budgetState.panels.forEach(panel => {
-      if (!panel.equipments) panel.equipments = [];
-      if (!panel.infraDistances) panel.infraDistances = {};
-      const customPrices = {};
-      if (panel.components) {
-        panel.components.forEach(c => {
-          customPrices[c.code] = c.value;
-        });
-      }
-      panel.components = calculatePanelComponents(panel);
-      panel.components.forEach(c => {
-        if (customPrices[c.code] !== undefined) {
-          c.value = customPrices[c.code];
-        }
-      });
-    });
-    
-    // Apply theme
-    document.body.setAttribute('data-theme', budgetState.theme);
-    updateThemeIcon();
-    
-    // Render views
-    renderDashboard();
-    renderPanelsList();
-    renderCargasView();
-    renderInfraView();
   } catch (e) {
-    console.error("Erro no loadState:", e);
+    console.error("Erro ao ler localStorage:", e);
     budgetState = { panels: [], theme: 'dark' };
   }
+
+  if (!budgetState || typeof budgetState !== 'object') {
+    budgetState = { panels: [], theme: 'dark' };
+  }
+  if (!Array.isArray(budgetState.panels)) {
+    budgetState.panels = [];
+  }
+
+  // Safely update component lists for each panel
+  budgetState.panels.forEach(panel => {
+    try {
+      if (!panel.components || panel.components.length === 0) {
+        panel.components = calculatePanelComponents(panel);
+      }
+    } catch (err) {
+      console.error("Erro ao calcular componentes para painel no loadState:", err);
+      panel.components = panel.components || [];
+    }
+  });
+
+  // Apply theme safely
+  try {
+    document.body.setAttribute('data-theme', budgetState.theme || 'dark');
+    if (typeof updateThemeIcon === 'function') updateThemeIcon();
+  } catch (e) {
+    console.error("Erro ao aplicar tema:", e);
+  }
+
+  // Render all views with individual try-catch blocks to prevent cascading failures
+  try { renderDashboard(); } catch (e) { console.error("Erro no renderDashboard:", e); }
+  try { renderPanelsList(); } catch (e) { console.error("Erro no renderPanelsList:", e); }
+  try { renderCargasView(); } catch (e) { console.error("Erro no renderCargasView:", e); }
+  try { renderInfraView(); } catch (e) { console.error("Erro no renderInfraView:", e); }
 }
 
-// Save data to LocalStorage
+
 function saveState() {
   try {
     localStorage.setItem('panel_builder_state', JSON.stringify(budgetState));
@@ -5190,7 +5132,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Load Local Storage budget safely
-  loadState();
+  try { loadState(); } catch (err) { console.error('Erro na inicializacao do loadState:', err); }
   
   // Sidebar Navigation Links
   if (navLinks) {
