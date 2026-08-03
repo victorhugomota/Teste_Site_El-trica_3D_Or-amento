@@ -123,6 +123,34 @@ function getEquipmentDetailsHTML(eq) {
 
 // Default Components per Panel Type (Dummy values)
 // Calculate detailed panel components and pricing based on the PRECOS_DATABASE
+
+// ==========================================
+// NBR 5410 GLOBAL HELPER FUNCTIONS
+// ==========================================
+function parsePowerKw(powerStr) {
+  if (!powerStr) return 0;
+  const clean = powerStr.toString().replace("kW", "").replace("KW", "").trim().replace(",", ".");
+  return parseFloat(clean) || 0;
+}
+
+function getNBR5410CableSection(current) {
+  const cur = parseFloat(current) || 0;
+  if (cur <= 21) return '2.5';
+  if (cur <= 28) return '4.0';
+  if (cur <= 36) return '6.0';
+  if (cur <= 50) return '10.0';
+  if (cur <= 68) return '16.0';
+  if (cur <= 89) return '25.0';
+  if (cur <= 110) return '35.0';
+  if (cur <= 134) return '50.0';
+  if (cur <= 171) return '70.0';
+  if (cur <= 207) return '95.0';
+  if (cur <= 239) return '120.0';
+  if (cur <= 272) return '150.0';
+  if (cur <= 310) return '185.0';
+  return '240.0';
+}
+
 function calculatePanelComponents(panel) {
   if (typeof PRECOS_DATABASE === 'undefined') {
     console.error("PRECOS_DATABASE não carregado! Verifique precos.js.");
@@ -272,28 +300,7 @@ function calculatePanelComponents(panel) {
   }
 
   // Helper functions
-  const parsePowerKw = (powerStr) => {
-    if (!powerStr) return 0;
-    const clean = powerStr.toString().replace("kW", "").trim().replace(",", ".");
-    return parseFloat(clean) || 0;
-  };
 
-  const getNBR5410CableSection = (current) => {
-    if (current <= 21) return '2.5';
-    if (current <= 28) return '4.0';
-    if (current <= 36) return '6.0';
-    if (current <= 50) return '10.0';
-    if (current <= 68) return '16.0';
-    if (current <= 89) return '25.0';
-    if (current <= 110) return '35.0';
-    if (current <= 134) return '50.0';
-    if (current <= 171) return '70.0';
-    if (current <= 207) return '95.0';
-    if (current <= 239) return '120.0';
-    if (current <= 272) return '150.0';
-    if (current <= 310) return '185.0';
-    return '240.0';
-  };
 
   // B) Calculate Total Power & Three-Phase Current to select WEG MSW switch
   let totalPowerKw = 0;
