@@ -2776,6 +2776,36 @@ function getNBR5410CableSectionForPanel(current) {
 
 function calculateInfraComponentsForPanel(panel) {
   const infraMap = {};
+  const distances = panel.infraDistances || {};
+
+  const getDistanceFor = (keyPrimary, fallbackKey) => {
+    if (distances[keyPrimary] !== undefined && parseFloat(distances[keyPrimary]) > 0) {
+      return parseFloat(distances[keyPrimary]);
+    }
+    const strKey = String(keyPrimary);
+    if (distances[strKey] !== undefined && parseFloat(distances[strKey]) > 0) {
+      return parseFloat(distances[strKey]);
+    }
+    // Search in distances keys for matching suffix or string equality
+    const keys = Object.keys(distances);
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      if (k === keyPrimary || k === strKey || k.endsWith(strKey) || strKey.endsWith(k)) {
+        const val = parseFloat(distances[k]) || 0;
+        if (val > 0) return val;
+      }
+    }
+    if (fallbackKey) {
+      const fbStr = String(fallbackKey);
+      if (distances[fallbackKey] !== undefined && parseFloat(distances[fallbackKey]) > 0) {
+        return parseFloat(distances[fallbackKey]);
+      }
+      if (distances[fbStr] !== undefined && parseFloat(distances[fbStr]) > 0) {
+        return parseFloat(distances[fbStr]);
+      }
+    }
+    return 0;
+  };
 
   const addInfra = (code, qtyMultiplier = 1) => {
     if (!code) return;
@@ -2991,22 +3021,22 @@ function calculateInfraComponentsForPanel(panel) {
   const activeEquips = [];
   
   equips.forEach(eq => {
+    const eqIdStr = String(eq.id);
     if (eq.type === 'VRF') {
-      // VRF: handle multiple distances (per condensadora + rede frigorífica)
       let hasAnyDistance = false;
       if (eq.condensadoras && eq.condensadoras.length > 0) {
         eq.condensadoras.forEach((cond, idx) => {
-          const condD = parseFloat(distances[eq.id + '_cond_' + idx]) || 0;
+          const key = `${eqIdStr}_cond_${idx}`;
+          const condD = getDistanceFor(key, eqIdStr);
           if (condD > 0) {
             hasAnyDistance = true;
-            // Power cable for condensadora
             const condPowerKw = parsePowerKw(cond.power);
-            const condCurrent = condPowerKw > 0 ? (condPowerKw * 1000) / (Math.sqrt(3) * (parseInt(panel.voltage.replace('V','')) || 220) * 0.85) : 0;
+            const condCurrent = condPowerKw > 0 ? (condPowerKw * 1000) / (Math.sqrt(3) * (parseInt((panel.voltage||'220V').replace('V','')) || 220) * 0.85) : 0;
             const bitola = condCurrent > 0 ? getNBR5410CableSection(condCurrent) : '2.5';
-            const cableCode = getPPCableCode(4, bitola);
-            const condCables = cableCode ? [{ code: cableCode, qty: condD }] : [];
+            const cableCode = getPPCableCode(4, bitola) || 'CABO-PP-4X2.5';
+            const condCables = [{ code: cableCode, qty: condD }];
             activeEquips.push({
-              eq: { ...eq, name: (eq.name || 'VRF') + ' Cond.' + (idx+1), id: eq.id + '_cond_' + idx },
+              eq: { ...eq, name: (eq.name || 'VRF') + ' Cond.' + (idx+1), id: `${eqIdStr}_cond_${idx}` },
               distance: condD,
               cables: condCables,
               autCount: 0,
@@ -3015,35 +3045,46 @@ function calculateInfraComponentsForPanel(panel) {
           }
         });
       }
-      // VRF rede frigorífica (cabo shield 3x1.0)
-      const redeD = parseFloat(distances[eq.id + '_rede_frig']) || 0;
+      const redeKey = `${eqIdStr}_rede_frig`;
+      const redeD = getDistanceFor(redeKey, eqIdStr);
       if (redeD > 0) {
         hasAnyDistance = true;
         activeEquips.push({
-          eq: { ...eq, name: (eq.name || 'VRF') + ' Rede Frig.', id: eq.id + '_rede_frig' },
+          eq: { ...eq, name: (eq.name || 'VRF') + ' Rede Frig.', id: `${eqIdStr}_rede_frig` },
           distance: redeD * 0.8,
           cables: [{ code: 'CABO-SHIELD-3X1.0', qty: redeD * 0.8 }],
           autCount: 0,
           hasPower: false
         });
       }
-      if (!hasAnyDistance) return;
+      if (!hasAnyDistance) {
+        const genD = getDistanceFor(eqIdStr);
+        if (genD > 0) {
+          activeEquips.push({
+            eq: eq,
+            distance: genD,
+            cables: [{ code: 'CABO-PP-4X2.5', qty: genD }],
+            autCount: 0,
+            hasPower: true
+          });
+        }
+      }
     } else if (eq.type === 'SPLITAO') {
-      // SPLITÃO: handle mestre, escrava(s), evaporadora distances
       let hasAnyDistance = false;
       if (eq.condensadoras && eq.condensadoras.length > 0) {
         eq.condensadoras.forEach((cond, idx) => {
-          const condD = parseFloat(distances[eq.id + '_cond_' + idx]) || 0;
+          const key = `${eqIdStr}_cond_${idx}`;
+          const condD = getDistanceFor(key, eqIdStr);
           if (condD > 0) {
             hasAnyDistance = true;
             const condPowerKw = parsePowerKw(cond.power);
-            const condCurrent = condPowerKw > 0 ? (condPowerKw * 1000) / (Math.sqrt(3) * (parseInt(panel.voltage.replace('V','')) || 220) * 0.85) : 0;
+            const condCurrent = condPowerKw > 0 ? (condPowerKw * 1000) / (Math.sqrt(3) * (parseInt((panel.voltage||'220V').replace('V','')) || 220) * 0.85) : 0;
             const bitola = condCurrent > 0 ? getNBR5410CableSection(condCurrent) : '2.5';
-            const cableCode = getPPCableCode(4, bitola);
-            const condCables = cableCode ? [{ code: cableCode, qty: condD }] : [];
-            const label = idx === 0 ? 'Cond. Mestre' : 'Cond. Escrava ' + idx;
+            const cableCode = getPPCableCode(4, bitola) || 'CABO-PP-4X2.5';
+            const condCables = [{ code: cableCode, qty: condD }];
+            const label = idx === 0 ? 'Cond. Mestre' : `Cond. Escrava ${idx}`;
             activeEquips.push({
-              eq: { ...eq, name: (eq.name || 'Splitão') + ' ' + label, id: eq.id + '_cond_' + idx },
+              eq: { ...eq, name: (eq.name || 'Splitão') + ' ' + label, id: `${eqIdStr}_cond_${idx}` },
               distance: condD,
               cables: condCables,
               autCount: 0,
@@ -3052,58 +3093,69 @@ function calculateInfraComponentsForPanel(panel) {
           }
         });
       }
-      // Evaporadora distance + PP 5x1.0
-      const evapD = parseFloat(distances[eq.id + '_evap']) || 0;
+      const evapKey = `${eqIdStr}_evap`;
+      const evapD = getDistanceFor(evapKey, eqIdStr);
       if (evapD > 0) {
         hasAnyDistance = true;
         const evapCables = [{ code: 'CABO-PP-5X1.0', qty: evapD }];
-        // Also add motor power cable for evaporadora
         const evapKw = parsePowerKw(eq.splitaoEvapPower);
         if (evapKw > 0) {
-          const evapCurrent = (evapKw * 1000) / (Math.sqrt(3) * (parseInt(panel.voltage.replace('V','')) || 220) * 0.85);
+          const evapCurrent = (evapKw * 1000) / (Math.sqrt(3) * (parseInt((panel.voltage||'220V').replace('V','')) || 220) * 0.85);
           const bitola = getNBR5410CableSection(evapCurrent);
-          const cableCode = getPPCableCode(4, bitola);
-          if (cableCode) evapCables.push({ code: cableCode, qty: evapD });
+          const cableCode = getPPCableCode(4, bitola) || 'CABO-PP-4X2.5';
+          evapCables.push({ code: cableCode, qty: evapD });
+        } else {
+          evapCables.push({ code: 'CABO-PP-4X2.5', qty: evapD });
         }
         activeEquips.push({
-          eq: { ...eq, name: (eq.name || 'Splitão') + ' Evaporadora', id: eq.id + '_evap' },
+          eq: { ...eq, name: (eq.name || 'Splitão') + ' Evaporadora', id: `${eqIdStr}_evap` },
           distance: evapD,
           cables: evapCables,
           autCount: getAutCountForEquipment(eq),
           hasPower: true
         });
       }
-      if (!hasAnyDistance) return;
+      if (!hasAnyDistance) {
+        const genD = getDistanceFor(eqIdStr);
+        if (genD > 0) {
+          activeEquips.push({
+            eq: eq,
+            distance: genD,
+            cables: [{ code: 'CABO-PP-4X2.5', qty: genD }, { code: 'CABO-PP-5X1.0', qty: genD }],
+            autCount: getAutCountForEquipment(eq),
+            hasPower: true
+          });
+        }
+      }
     } else if (eq.type === 'FANCOLETE') {
-      // FANCOLETE: distância média × qty, só cabo PP 2x1.0 (sem infra de eletroduto)
-      const D = parseFloat(distances[eq.id]) || 0;
-      if (D <= 0) return;
-      const fanQty = parseInt(eq.fancoleteQty) || 1;
-      const fanCables = [{ code: 'CABO-PP-2X1.0', qty: D * fanQty }];
-      // Push as a single entry - no conduit infrastructure
-      activeEquips.push({
-        eq: eq,
-        distance: D,
-        cables: fanCables,
-        autCount: 0,
-        hasPower: false, // false to skip conduit calculation
-        skipConduit: true // custom flag to skip conduit/eletrocalha
-      });
+      const D = getDistanceFor(eqIdStr);
+      if (D > 0) {
+        const fanQty = parseInt(eq.fancoleteQty) || 1;
+        const fanCables = [{ code: 'CABO-PP-2X1.0', qty: D * fanQty }];
+        activeEquips.push({
+          eq: eq,
+          distance: D,
+          cables: fanCables,
+          autCount: 0,
+          hasPower: false,
+          skipConduit: true
+        });
+      }
     } else {
-      const D = (panel.type === 'comando' || panel.type === 'remoto') ? (parseFloat(panel.infraDistances['general']) || 0) : (parseFloat(distances[eq.id]) || 0);
-      if (D <= 0) return;
-      
-      const cables = getCablesForEquipment(eq, D);
-      const autCount = getAutCountForEquipment(eq);
-      const hasPower = !!eq.power;
-      
-      activeEquips.push({
-        eq: eq,
-        distance: D,
-        cables: cables,
-        autCount: autCount,
-        hasPower: hasPower
-      });
+      const D = (panel.type === 'comando' || panel.type === 'remoto') ? (getDistanceFor('general')) : (getDistanceFor(eqIdStr));
+      if (D > 0) {
+        const cables = getCablesForEquipment(eq, D);
+        const autCount = getAutCountForEquipment(eq);
+        const hasPower = !!eq.power;
+        
+        activeEquips.push({
+          eq: eq,
+          distance: D,
+          cables: cables,
+          autCount: autCount,
+          hasPower: hasPower
+        });
+      }
     }
   });
 
@@ -4196,7 +4248,7 @@ function addEquipmentToDraft() {
   const name = document.getElementById('equip-name').value.trim();
   
   let newEquip = {
-    id: Date.now() + Math.random(),
+    id: 'eq_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
     type: equipType,
     name: name
   };
@@ -4337,7 +4389,7 @@ function savePanel() {
   }
   
   let newPanel = {
-    id: Date.now(),
+    id: 'eq_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
     name: name,
     type: type,
     voltage: selectedVoltageCb.value,
