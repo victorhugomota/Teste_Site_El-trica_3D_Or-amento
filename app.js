@@ -2959,7 +2959,6 @@ function calculateInfraComponentsForPanel(panel) {
     return [];
   }
 
-  const distances = panel.infraDistances || {};
   const activeEquips = [];
   
   equips.forEach(eq => {
