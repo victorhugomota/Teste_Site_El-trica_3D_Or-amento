@@ -83,6 +83,18 @@ function getContatorCodeForCurrent(current) {
   return 'CONTATOR-CWM50_80';
 }
 
+// Helper to select bipolar breaker code based on current (for SPLIT, VRF evaporadoras, FANCOLETE)
+function getBipolarBreakerCode(current) {
+  if (current <= 10) return 'MINIDISJ-MDW-C10-2';
+  if (current <= 16) return 'MINIDISJ-MDW-C16-2';
+  if (current <= 20) return 'MINIDISJ-MDW-C20-2';
+  if (current <= 25) return 'MINIDISJ-MDW-C25-2';
+  if (current <= 32) return 'MINIDISJ-MDW-C32-2';
+  if (current <= 40) return 'MINIDISJ-MDW-C40-2';
+  if (current <= 50) return 'MINIDISJ-MDW-C50-2';
+  return 'MINIDISJ-MDW-C63-2';
+}
+
 function getEquipmentDetailsHTML(eq) {
   let html = `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px; display:flex; flex-direction:column; gap:2px;">`;
   
@@ -302,6 +314,39 @@ function calculatePanelComponents(panel) {
           const val = parsePowerKw(eq.humidPower);
           totalPowerKw += val;
         }
+        // SPLITÃO - evaporator motor power + condensadoras
+        if (eq.type === 'SPLITAO') {
+          if (eq.splitaoEvapPower) {
+            totalPowerKw += parsePowerKw(eq.splitaoEvapPower);
+          }
+          if (eq.condensadoras && eq.condensadoras.length > 0) {
+            eq.condensadoras.forEach(c => { totalPowerKw += parsePowerKw(c.power); });
+          }
+          if (eq.hasHumid && eq.humidPower) {
+            totalPowerKw += parsePowerKw(eq.humidPower);
+          }
+        }
+        // VRF - condensadoras + evaporadoras (200W each)
+        if (eq.type === 'VRF') {
+          if (eq.condensadoras && eq.condensadoras.length > 0) {
+            eq.condensadoras.forEach(c => { totalPowerKw += parsePowerKw(c.power); });
+          }
+          if (eq.vrfEvaporadorasQty) {
+            totalPowerKw += (parseInt(eq.vrfEvaporadorasQty) || 0) * 0.2; // 200W = 0.2kW each
+          }
+        }
+        // SPLIT - individual power
+        if (eq.type === 'SPLIT') {
+          if (eq.splitPower) {
+            totalPowerKw += parsePowerKw(eq.splitPower);
+          }
+        }
+        // FANCOLETE - 200W each
+        if (eq.type === 'FANCOLETE') {
+          if (eq.fancoleteQty) {
+            totalPowerKw += (parseInt(eq.fancoleteQty) || 0) * 0.2; // 200W = 0.2kW each
+          }
+        }
       });
     }
   } else if (type === 'automacao') {
@@ -384,6 +429,26 @@ function calculatePanelComponents(panel) {
           } else {
             spaceUnits += 1.5 * stages;
           }
+        }
+
+        // New equipment types space sizing
+        if (eq.type === 'VRF') {
+          const numCond = (eq.condensadoras || []).length;
+          const numEvap = parseInt(eq.vrfEvaporadorasQty) || 0;
+          spaceUnits += numCond * 1.5; // Breaker per condensadora
+          spaceUnits += Math.ceil(numEvap / 3) * 0.5; // Bipolar breakers for evaporadoras (compact)
+        }
+        if (eq.type === 'SPLIT') {
+          spaceUnits += 0.5; // Single bipolar breaker
+        }
+        if (eq.type === 'SPLITAO') {
+          const numCond = (eq.condensadoras || []).length;
+          spaceUnits += numCond * 1.5; // Breaker per condensadora
+          spaceUnits += 1.0; // Evaporator motor breaker
+        }
+        if (eq.type === 'FANCOLETE') {
+          const numFan = parseInt(eq.fancoleteQty) || 0;
+          spaceUnits += Math.ceil(numFan / 3) * 0.5; // Bipolar breakers (compact)
         }
       });
     }
@@ -806,6 +871,92 @@ function calculatePanelComponents(panel) {
         }
       }
       
+      // A2) VRF components
+      if (eqType === 'VRF' && hasPowerCol) {
+        // Condensadoras (trifásicas)
+        if (eq.condensadoras && eq.condensadoras.length > 0) {
+          eq.condensadoras.forEach((cond, idx) => {
+            const condPowerKw = parsePowerKw(cond.power);
+            if (condPowerKw > 0) {
+              const condCurrent = (condPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+              const djCode = getTripolarBreakerCode(condPowerKw, voltage);
+              addComp(djCode, 1, null, `Proteção VRF Condensadora ${idx + 1}: Disjuntor tripolar para unidade condensadora de ${cond.power} (${condCurrent.toFixed(1)}A)`);
+              const sec = getNBR5410CableSection(condCurrent);
+              addComp(`CABO-POT-${sec}-PRETO`, 25, null, `Cabo de Potência VRF Condensadora ${idx + 1}: ${sec}mm² para ${condCurrent.toFixed(1)}A`);
+              addComp(`CABO-POT-${sec}-VERDE`, 10, null, `Cabo Terra VRF Condensadora ${idx + 1}: ${sec}mm² condutor PE`);
+              addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Identificação da condensadora VRF ${idx + 1}`);
+            }
+          });
+        }
+        // Evaporadoras (200W cada, bipolar 10A)
+        const vrfEvapQty = parseInt(eq.vrfEvaporadorasQty) || 0;
+        if (vrfEvapQty > 0) {
+          addComp('MINIDISJ-MDW-C10-2', vrfEvapQty, null, `Proteção VRF Evaporadoras: ${vrfEvapQty}× disjuntor bipolar 10A para unidades evaporadoras de 200W cada`);
+          addComp('PORTA-PLAQUETA', vrfEvapQty, null, `Sinalização: Identificação dos circuitos de evaporadoras VRF`);
+        }
+      }
+
+      // A3) SPLIT components
+      if (eqType === 'SPLIT' && hasPowerCol) {
+        const splitPowerKw = parsePowerKw(eq.splitPower);
+        if (splitPowerKw > 0) {
+          if (eq.splitPhase === 'trifasico') {
+            // Trifásico
+            const splitCurrent = (splitPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+            const djCode = getTripolarBreakerCode(splitPowerKw, voltage);
+            addComp(djCode, 1, null, `Proteção SPLIT Trifásico: Disjuntor tripolar para split de ${eq.splitPower} (${splitCurrent.toFixed(1)}A)`);
+            const sec = getNBR5410CableSection(splitCurrent);
+            addComp(`CABO-POT-${sec}-PRETO`, 25, null, `Cabo de Potência SPLIT: ${sec}mm² para ${splitCurrent.toFixed(1)}A`);
+            addComp(`CABO-POT-${sec}-VERDE`, 10, null, `Cabo Terra SPLIT: ${sec}mm² condutor PE`);
+          } else {
+            // Monofásico (220V)
+            const splitCurrent = (splitPowerKw * 1000) / 220;
+            const djCode = getBipolarBreakerCode(splitCurrent);
+            addComp(djCode, 1, null, `Proteção SPLIT Monofásico: Disjuntor bipolar para split de ${eq.splitPower} (${splitCurrent.toFixed(1)}A)`);
+          }
+          addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Identificação do circuito SPLIT`);
+        }
+      }
+
+      // A4) SPLITÃO components (sem contatoras, com condensadoras)
+      if (eqType === 'SPLITAO' && hasPowerCol) {
+        // Motor evaporadora
+        const splitaoEvapKw = parsePowerKw(eq.splitaoEvapPower);
+        if (splitaoEvapKw > 0) {
+          const evapCurrent = (splitaoEvapKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+          const evapDjCode = getTripolarBreakerCode(splitaoEvapKw, voltage);
+          addComp(evapDjCode, 1, null, `Proteção Splitão Evaporadora: Disjuntor tripolar para motor evaporadora de ${eq.splitaoEvapPower} (${evapCurrent.toFixed(1)}A)`);
+          const sec = getNBR5410CableSection(evapCurrent);
+          addComp(`CABO-POT-${sec}-PRETO`, 25, null, `Cabo de Potência Splitão Evaporadora: ${sec}mm² para ${evapCurrent.toFixed(1)}A`);
+          addComp(`CABO-POT-${sec}-VERDE`, 10, null, `Cabo Terra Splitão Evaporadora: ${sec}mm² condutor PE`);
+          addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Identificação do motor evaporadora Splitão`);
+        }
+        // Condensadoras
+        if (eq.condensadoras && eq.condensadoras.length > 0) {
+          eq.condensadoras.forEach((cond, idx) => {
+            const condPowerKw = parsePowerKw(cond.power);
+            if (condPowerKw > 0) {
+              const condCurrent = (condPowerKw * 1000) / (Math.sqrt(3) * voltageVal * 0.85);
+              const djCode = getTripolarBreakerCode(condPowerKw, voltage);
+              addComp(djCode, 1, null, `Proteção Splitão Condensadora ${idx === 0 ? 'Mestre' : 'Escrava ' + idx}: Disjuntor tripolar para condensadora de ${cond.power} (${condCurrent.toFixed(1)}A)`);
+              const sec = getNBR5410CableSection(condCurrent);
+              addComp(`CABO-POT-${sec}-PRETO`, 25, null, `Cabo de Potência Splitão Condensadora ${idx === 0 ? 'Mestre' : 'Escrava ' + idx}: ${sec}mm²`);
+              addComp(`CABO-POT-${sec}-VERDE`, 10, null, `Cabo Terra Splitão Condensadora ${idx === 0 ? 'Mestre' : 'Escrava ' + idx}: ${sec}mm²`);
+              addComp('PORTA-PLAQUETA', 1, null, `Sinalização: Identificação da condensadora ${idx === 0 ? 'mestre' : 'escrava ' + idx}`);
+            }
+          });
+        }
+      }
+
+      // A5) FANCOLETE components (200W each + bipolar 10A)
+      if (eqType === 'FANCOLETE' && hasPowerCol) {
+        const fanQty = parseInt(eq.fancoleteQty) || 0;
+        if (fanQty > 0) {
+          addComp('MINIDISJ-MDW-C10-2', fanQty, null, `Proteção Fancoletes: ${fanQty}× disjuntor bipolar 10A para fancoletes de 200W cada`);
+          addComp('PORTA-PLAQUETA', fanQty, null, `Sinalização: ${fanQty}× porta plaqueta para identificação dos circuitos de fancoletes`);
+        }
+      }
+
       // B) Command items (signal lights + selector switch + bornes)
       const hasCommandItems = (type === 'potencia-comando' || type === 'completo');
       if (hasCommandItems) {
@@ -2647,7 +2798,7 @@ function calculateInfraComponentsForPanel(panel) {
       }
 
       // 3. Heating & Humidification stages
-      if (eq.type === 'UTA') {
+      if (eq.type === 'UTA' || eq.type === 'SPLITAO') {
         if (eq.hasHeating && eq.heatingPower && eq.heatingCalculatedCable) {
           const stages = parseInt(eq.heatingStages) || 1;
           const bitola = eq.heatingCalculatedCable.replace("mm²", "").replace("mm", "").trim();
@@ -2665,6 +2816,20 @@ function calculateInfraComponentsForPanel(panel) {
           }
         }
       }
+
+      // 4. SPLITÃO - Cabo PP 5x1,0mm² for evaporadora-to-mestre link
+      if (eq.type === 'SPLITAO') {
+        eqCables.push({ code: 'CABO-PP-5X1.0', qty: D });
+      }
+
+      // 5. FANCOLETE - Cabo PP 2x1,0mm² (no conduit, just cable)
+      if (eq.type === 'FANCOLETE') {
+        const fanQty = parseInt(eq.fancoleteQty) || 1;
+        eqCables.push({ code: 'CABO-PP-2X1.0', qty: D * fanQty });
+      }
+
+      // 6. VRF - Cabo SHIELD 3x1,0mm² for rede frigorífica
+      // Note: VRF rede frig distance is handled separately in the multi-distance system
     }
     return eqCables;
   };
@@ -2697,20 +2862,120 @@ function calculateInfraComponentsForPanel(panel) {
   const activeEquips = [];
   
   equips.forEach(eq => {
-    const D = (panel.type === 'comando' || panel.type === 'remoto') ? (parseFloat(panel.infraDistances['general']) || 0) : (parseFloat(distances[eq.id]) || 0);
-    if (D <= 0) return;
-    
-    const cables = getCablesForEquipment(eq, D);
-    const autCount = getAutCountForEquipment(eq);
-    const hasPower = !!eq.power;
-    
-    activeEquips.push({
-      eq: eq,
-      distance: D,
-      cables: cables,
-      autCount: autCount,
-      hasPower: hasPower
-    });
+    if (eq.type === 'VRF') {
+      // VRF: handle multiple distances (per condensadora + rede frigorífica)
+      let hasAnyDistance = false;
+      if (eq.condensadoras && eq.condensadoras.length > 0) {
+        eq.condensadoras.forEach((cond, idx) => {
+          const condD = parseFloat(distances[eq.id + '_cond_' + idx]) || 0;
+          if (condD > 0) {
+            hasAnyDistance = true;
+            // Power cable for condensadora
+            const condPowerKw = parsePowerKw(cond.power);
+            const condCurrent = condPowerKw > 0 ? (condPowerKw * 1000) / (Math.sqrt(3) * (parseInt(panel.voltage.replace('V','')) || 220) * 0.85) : 0;
+            const bitola = condCurrent > 0 ? getNBR5410CableSection(condCurrent) : '2.5';
+            const cableCode = getPPCableCode(4, bitola);
+            const condCables = cableCode ? [{ code: cableCode, qty: condD }] : [];
+            activeEquips.push({
+              eq: { ...eq, name: (eq.name || 'VRF') + ' Cond.' + (idx+1), id: eq.id + '_cond_' + idx },
+              distance: condD,
+              cables: condCables,
+              autCount: 0,
+              hasPower: true
+            });
+          }
+        });
+      }
+      // VRF rede frigorífica (cabo shield 3x1.0)
+      const redeD = parseFloat(distances[eq.id + '_rede_frig']) || 0;
+      if (redeD > 0) {
+        hasAnyDistance = true;
+        activeEquips.push({
+          eq: { ...eq, name: (eq.name || 'VRF') + ' Rede Frig.', id: eq.id + '_rede_frig' },
+          distance: redeD * 0.8,
+          cables: [{ code: 'CABO-SHIELD-3X1.0', qty: redeD * 0.8 }],
+          autCount: 0,
+          hasPower: false
+        });
+      }
+      if (!hasAnyDistance) return;
+    } else if (eq.type === 'SPLITAO') {
+      // SPLITÃO: handle mestre, escrava(s), evaporadora distances
+      let hasAnyDistance = false;
+      if (eq.condensadoras && eq.condensadoras.length > 0) {
+        eq.condensadoras.forEach((cond, idx) => {
+          const condD = parseFloat(distances[eq.id + '_cond_' + idx]) || 0;
+          if (condD > 0) {
+            hasAnyDistance = true;
+            const condPowerKw = parsePowerKw(cond.power);
+            const condCurrent = condPowerKw > 0 ? (condPowerKw * 1000) / (Math.sqrt(3) * (parseInt(panel.voltage.replace('V','')) || 220) * 0.85) : 0;
+            const bitola = condCurrent > 0 ? getNBR5410CableSection(condCurrent) : '2.5';
+            const cableCode = getPPCableCode(4, bitola);
+            const condCables = cableCode ? [{ code: cableCode, qty: condD }] : [];
+            const label = idx === 0 ? 'Cond. Mestre' : 'Cond. Escrava ' + idx;
+            activeEquips.push({
+              eq: { ...eq, name: (eq.name || 'Splitão') + ' ' + label, id: eq.id + '_cond_' + idx },
+              distance: condD,
+              cables: condCables,
+              autCount: 0,
+              hasPower: true
+            });
+          }
+        });
+      }
+      // Evaporadora distance + PP 5x1.0
+      const evapD = parseFloat(distances[eq.id + '_evap']) || 0;
+      if (evapD > 0) {
+        hasAnyDistance = true;
+        const evapCables = [{ code: 'CABO-PP-5X1.0', qty: evapD }];
+        // Also add motor power cable for evaporadora
+        const evapKw = parsePowerKw(eq.splitaoEvapPower);
+        if (evapKw > 0) {
+          const evapCurrent = (evapKw * 1000) / (Math.sqrt(3) * (parseInt(panel.voltage.replace('V','')) || 220) * 0.85);
+          const bitola = getNBR5410CableSection(evapCurrent);
+          const cableCode = getPPCableCode(4, bitola);
+          if (cableCode) evapCables.push({ code: cableCode, qty: evapD });
+        }
+        activeEquips.push({
+          eq: { ...eq, name: (eq.name || 'Splitão') + ' Evaporadora', id: eq.id + '_evap' },
+          distance: evapD,
+          cables: evapCables,
+          autCount: getAutCountForEquipment(eq),
+          hasPower: true
+        });
+      }
+      if (!hasAnyDistance) return;
+    } else if (eq.type === 'FANCOLETE') {
+      // FANCOLETE: distância média × qty, só cabo PP 2x1.0 (sem infra de eletroduto)
+      const D = parseFloat(distances[eq.id]) || 0;
+      if (D <= 0) return;
+      const fanQty = parseInt(eq.fancoleteQty) || 1;
+      const fanCables = [{ code: 'CABO-PP-2X1.0', qty: D * fanQty }];
+      // Push as a single entry - no conduit infrastructure
+      activeEquips.push({
+        eq: eq,
+        distance: D,
+        cables: fanCables,
+        autCount: 0,
+        hasPower: false, // false to skip conduit calculation
+        skipConduit: true // custom flag to skip conduit/eletrocalha
+      });
+    } else {
+      const D = (panel.type === 'comando' || panel.type === 'remoto') ? (parseFloat(panel.infraDistances['general']) || 0) : (parseFloat(distances[eq.id]) || 0);
+      if (D <= 0) return;
+      
+      const cables = getCablesForEquipment(eq, D);
+      const autCount = getAutCountForEquipment(eq);
+      const hasPower = !!eq.power;
+      
+      activeEquips.push({
+        eq: eq,
+        distance: D,
+        cables: cables,
+        autCount: autCount,
+        hasPower: hasPower
+      });
+    }
   });
 
   if (activeEquips.length === 0) {
@@ -3061,27 +3326,97 @@ function renderInfraEquipmentsInputs(panel) {
       item.style.backgroundColor = 'var(--bg-secondary)';
       item.style.border = '1px solid var(--border-color)';
       item.style.borderRadius = 'var(--radius-sm)';
+
+      let fieldsHTML = '';
+
+      if (eq.type === 'VRF') {
+        // VRF: distance per condensadora + rede frigorífica
+        fieldsHTML = `
+          <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">${eq.name || 'VRF'} <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">VRF</span></h4>`;
+        if (eq.condensadoras && eq.condensadoras.length > 0) {
+          eq.condensadoras.forEach((cond, idx) => {
+            fieldsHTML += `
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Condensadora ${idx + 1} (${cond.power})</label>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="number" class="form-control infra-distance-input" data-eq-id="${eq.id}_cond_${idx}" value="${panel.infraDistances[eq.id + '_cond_' + idx] || 0}" min="0" style="height: 36px;">
+                <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">metros</span>
+              </div>
+            </div>`;
+          });
+        }
+        fieldsHTML += `
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Rede Frigorífica (×0.8 para cabo shield 3×1,0mm²)</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="number" class="form-control infra-distance-input" data-eq-id="${eq.id}_rede_frig" value="${panel.infraDistances[eq.id + '_rede_frig'] || 0}" min="0" style="height: 36px;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">metros</span>
+            </div>
+          </div>`;
+      } else if (eq.type === 'SPLITAO') {
+        // SPLITÃO: mestre + escrava(s) + evaporadora
+        fieldsHTML = `
+          <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">${eq.name || 'Splitão'} <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">SPLITÃO</span></h4>`;
+        if (eq.condensadoras && eq.condensadoras.length > 0) {
+          eq.condensadoras.forEach((cond, idx) => {
+            const label = idx === 0 ? 'Condensadora Mestre' : 'Condensadora Escrava ' + idx;
+            fieldsHTML += `
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">${label} (${cond.power})</label>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="number" class="form-control infra-distance-input" data-eq-id="${eq.id}_cond_${idx}" value="${panel.infraDistances[eq.id + '_cond_' + idx] || 0}" min="0" style="height: 36px;">
+                <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">metros</span>
+              </div>
+            </div>`;
+          });
+        }
+        fieldsHTML += `
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Evaporadora</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="number" class="form-control infra-distance-input" data-eq-id="${eq.id}_evap" value="${panel.infraDistances[eq.id + '_evap'] || 0}" min="0" style="height: 36px;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">metros</span>
+            </div>
+          </div>`;
+      } else if (eq.type === 'FANCOLETE') {
+        // FANCOLETE: distância média (sem infra, só cabo)
+        fieldsHTML = `
+          <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">${eq.name || 'Fancolete'} <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">FANCOLETE</span></h4>
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Distância Média por Fancolete (apenas cabo PP 2×1,0, sem infra)</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="number" class="form-control infra-distance-input" data-eq-id="${eq.id}" value="${panel.infraDistances[eq.id] || 0}" min="0" style="height: 36px;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">metros</span>
+            </div>
+          </div>`;
+      } else {
+        // Standard equipment (UTA, EX/CV, BOMBAS, CHILLER, SPLIT)
+        fieldsHTML = `
+          <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">${eq.name || eq.type} <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">${eq.type}</span></h4>
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Distância até o Quadro</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="number" class="form-control infra-distance-input" data-eq-id="${eq.id}" value="${panel.infraDistances[eq.id] || 0}" min="0" style="height: 36px;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">metros</span>
+            </div>
+          </div>`;
+      }
+
+      item.innerHTML = fieldsHTML;
       
-      item.innerHTML = `
-        <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">${eq.name || eq.type} <span class="badge badge-accent" style="margin-left: 6px; font-size: 0.7rem;">${eq.type}</span></h4>
-        <div class="form-group" style="margin: 0;">
-          <label class="form-label" style="font-size: 0.75rem; margin-bottom: 6px;">Distância até o Quadro</label>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <input type="number" class="form-control infra-distance-input" data-eq-id="${eq.id}" value="${panel.infraDistances[eq.id] || 0}" min="0" style="height: 36px;">
-            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">metros</span>
-          </div>
-        </div>
-      `;
-      
-      const input = item.querySelector('.infra-distance-input');
-      input.addEventListener('input', (e) => {
-        const dist = parseFloat(e.target.value) || 0;
-        panel.infraDistances[eq.id] = dist;
-        
-        localStorage.setItem('panel_builder_state', JSON.stringify(budgetState));
-        
-        renderInfraTableForPanel(panel);
-        renderConsolidatedInfraTable();
+      // Bind all distance inputs in this item
+      const inputs = item.querySelectorAll('.infra-distance-input');
+      inputs.forEach(input => {
+        input.addEventListener('input', (e) => {
+          const dist = parseFloat(e.target.value) || 0;
+          const eqId = e.target.dataset.eqId;
+          panel.infraDistances[eqId] = dist;
+          
+          localStorage.setItem('panel_builder_state', JSON.stringify(budgetState));
+          
+          renderInfraTableForPanel(panel);
+          renderConsolidatedInfraTable();
+        });
       });
       
       container.appendChild(item);
@@ -3396,6 +3731,22 @@ function resetEquipmentForm() {
   const valvesPanel = document.getElementById('uta-indirect-valves-panel');
   if (valvesPanel) valvesPanel.classList.remove('hidden-section');
   
+  // Reset new equipment type fields
+  const vrfCondList = document.getElementById('vrf-condensadoras-list');
+  if (vrfCondList) vrfCondList.innerHTML = '';
+  const vrfEvapQty = document.getElementById('vrf-evaporadoras-qty');
+  if (vrfEvapQty) vrfEvapQty.value = '1';
+  const splitPower = document.getElementById('split-power');
+  if (splitPower) splitPower.value = '';
+  const splitPhaseRadio = document.querySelector('input[name="split-phase"][value="monofasico"]');
+  if (splitPhaseRadio) splitPhaseRadio.checked = true;
+  const splitaoEvapPower = document.getElementById('splitao-evap-power');
+  if (splitaoEvapPower) splitaoEvapPower.value = '';
+  const splitaoCondList = document.getElementById('splitao-condensadoras-list');
+  if (splitaoCondList) splitaoCondList.innerHTML = '';
+  const fancoleteQty = document.getElementById('fancolete-qty');
+  if (fancoleteQty) fancoleteQty.value = '1';
+
   // Reset automation fields
   toggleAutomationFields();
 }
@@ -3481,18 +3832,38 @@ function toggleAutomationFields() {
   // Toggle UTA additional configs
   const utaConfigs = document.getElementById('uta-additional-configs');
   if (utaConfigs) {
-    if (equipType === 'UTA') {
+    if (equipType === 'UTA' || equipType === 'SPLITAO') {
       utaConfigs.classList.remove('hidden-section');
+      // For SPLITÃO, hide expansion type choice (always direct)
+      if (equipType === 'SPLITAO') {
+        const expansionSection = document.getElementById('uta-expansion-section');
+        if (expansionSection) expansionSection.classList.add('hidden-section');
+      } else {
+        const expansionSection = document.getElementById('uta-expansion-section');
+        if (expansionSection) expansionSection.classList.remove('hidden-section');
+      }
     } else {
       utaConfigs.classList.add('hidden-section');
     }
   }
 
+  // Toggle new equipment type config sections
+  const vrfConfigs = document.getElementById('vrf-configs');
+  const splitConfigs = document.getElementById('split-configs');
+  const splitaoConfigs = document.getElementById('splitao-configs');
+  const fancoleteConfigs = document.getElementById('fancolete-configs');
+  
+  if (vrfConfigs) vrfConfigs.classList.toggle('hidden-section', equipType !== 'VRF');
+  if (splitConfigs) splitConfigs.classList.toggle('hidden-section', equipType !== 'SPLIT');
+  if (splitaoConfigs) splitaoConfigs.classList.toggle('hidden-section', equipType !== 'SPLITAO');
+  if (fancoleteConfigs) fancoleteConfigs.classList.toggle('hidden-section', equipType !== 'FANCOLETE');
+
   // Toggle Starting Group based on Equipment Type & Panel Type
   const startingGroup = document.getElementById('equip-starting-group');
   if (startingGroup) {
+    const noStartTypes = ['CHILLER', 'VRF', 'SPLIT', 'SPLITAO', 'FANCOLETE'];
     if (panelType === 'potencia' || panelType === 'potencia-comando' || panelType === 'completo' || panelType === 'automacao') {
-      if (equipType === 'CHILLER') {
+      if (noStartTypes.includes(equipType)) {
         startingGroup.classList.add('hidden-section');
       } else {
         startingGroup.classList.remove('hidden-section');
@@ -3527,16 +3898,23 @@ function toggleAutomationFields() {
     }
   }
 
-  // Toggle Motor Power Input vs Dropdown Select based on Chiller type
+  // Toggle Motor Power Input vs Dropdown Select based on equipment type
   const powerSelect = document.getElementById('equip-motor-power');
   const powerTxt = document.getElementById('equip-motor-power-txt');
   const powerLabel = document.getElementById('equip-motor-power-label');
+  const powerGroup = document.getElementById('equip-power-group');
   if (powerSelect && powerTxt) {
-    if (equipType === 'CHILLER') {
+    const selfConfigTypes = ['VRF', 'SPLIT', 'SPLITAO', 'FANCOLETE'];
+    if (selfConfigTypes.includes(equipType)) {
+      // These types have their own config sections with power inputs
+      if (powerGroup) powerGroup.classList.add('hidden-section');
+    } else if (equipType === 'CHILLER') {
+      if (powerGroup) powerGroup.classList.remove('hidden-section');
       powerSelect.classList.add('hidden-section');
       powerTxt.classList.remove('hidden-section');
       if (powerLabel) powerLabel.textContent = "Potência do Chiller (kW)";
     } else {
+      if (powerGroup) powerGroup.classList.remove('hidden-section');
       powerSelect.classList.remove('hidden-section');
       powerTxt.classList.add('hidden-section');
       if (powerLabel) powerLabel.textContent = "Potência do Motor";
@@ -3669,8 +4047,53 @@ function addEquipmentToDraft() {
     }
   }
 
+  // VRF attributes
+  if (equipType === 'VRF') {
+    newEquip.starts = [];
+    newEquip.condensadoras = [];
+    const vrfCondItems = document.querySelectorAll('#vrf-condensadoras-list .vrf-cond-item');
+    vrfCondItems.forEach((item, idx) => {
+      const powerInput = item.querySelector('.vrf-cond-power');
+      if (powerInput && powerInput.value) {
+        newEquip.condensadoras.push({ id: idx, power: powerInput.value.trim() + 'kW' });
+      }
+    });
+    newEquip.vrfEvaporadorasQty = parseInt(document.getElementById('vrf-evaporadoras-qty').value) || 1;
+  }
+
+  // SPLIT attributes
+  if (equipType === 'SPLIT') {
+    newEquip.starts = [];
+    const splitPowerEl = document.getElementById('split-power');
+    newEquip.splitPower = splitPowerEl ? splitPowerEl.value.trim() + 'kW' : '0kW';
+    const phaseRadio = document.querySelector('input[name="split-phase"]:checked');
+    newEquip.splitPhase = phaseRadio ? phaseRadio.value : 'monofasico';
+  }
+
+  // SPLITÃO attributes
+  if (equipType === 'SPLITAO') {
+    newEquip.starts = [];
+    newEquip.expansionType = 'Direta'; // Always direct expansion
+    const splitaoEvapPowerEl = document.getElementById('splitao-evap-power');
+    newEquip.splitaoEvapPower = splitaoEvapPowerEl ? splitaoEvapPowerEl.value.trim() + 'kW' : '0kW';
+    newEquip.condensadoras = [];
+    const splitaoCondItems = document.querySelectorAll('#splitao-condensadoras-list .splitao-cond-item');
+    splitaoCondItems.forEach((item, idx) => {
+      const powerInput = item.querySelector('.splitao-cond-power');
+      if (powerInput && powerInput.value) {
+        newEquip.condensadoras.push({ id: idx, power: powerInput.value.trim() + 'kW' });
+      }
+    });
+  }
+
+  // FANCOLETE attributes
+  if (equipType === 'FANCOLETE') {
+    newEquip.starts = [];
+    newEquip.fancoleteQty = parseInt(document.getElementById('fancolete-qty').value) || 1;
+  }
+
   // Custom UTA attributes (available whenever type is UTA, regardless of panelType)
-  if (equipType === 'UTA') {
+  if (equipType === 'UTA' || equipType === 'SPLITAO') {
     const hasHeating = document.getElementById('uta-has-heating').checked;
     newEquip.hasHeating = hasHeating;
     if (hasHeating) {
@@ -3769,7 +4192,9 @@ function savePanel() {
   // Calculate components list dynamically!
   newPanel.components = calculatePanelComponents(newPanel);
   
-  budgetState.panels.push(newPanel);
+  // Generate automatic panel description
+    newPanel.description = generatePanelDescription(newPanel);
+    budgetState.panels.push(newPanel);
   saveState();
   resetCreatorForm();
   navigateTo('list-view');
@@ -4845,8 +5270,117 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSaveEditPanel.addEventListener('click', saveEditPanelChanges);
   }
   
+  // Condensadora add buttons for VRF and SPLITÃO
+  const btnAddVrfCond = document.getElementById('btn-add-vrf-condensadora');
+  if (btnAddVrfCond) {
+    btnAddVrfCond.addEventListener('click', () => addCondensadoraRow('vrf-condensadoras-list', 'vrf'));
+  }
+  const btnAddSplitaoCond = document.getElementById('btn-add-splitao-condensadora');
+  if (btnAddSplitaoCond) {
+    btnAddSplitaoCond.addEventListener('click', () => addCondensadoraRow('splitao-condensadoras-list', 'splitao'));
+  }
+  // Edit modal condensadora buttons
+  const btnEditAddVrfCond = document.getElementById('btn-edit-add-vrf-condensadora');
+  if (btnEditAddVrfCond) {
+    btnEditAddVrfCond.addEventListener('click', () => addCondensadoraRow('edit-vrf-condensadoras-list', 'vrf'));
+  }
+  const btnEditAddSplitaoCond = document.getElementById('btn-edit-add-splitao-condensadora');
+  if (btnEditAddSplitaoCond) {
+    btnEditAddSplitaoCond.addEventListener('click', () => addCondensadoraRow('edit-splitao-condensadoras-list', 'splitao'));
+  }
+
   setupEditEquipmentEvents();
 });
+
+// Generate automatic descriptive text for a panel
+function generatePanelDescription(panel) {
+  const typeNames = {
+    'potencia': 'Potência',
+    'comando': 'Comando',
+    'potencia-comando': 'Potência e Comando',
+    'automacao': 'Automação',
+    'completo': 'Potência, Comando e Automação',
+    'remoto': 'Automação Remoto'
+  };
+  const typeName = typeNames[panel.type] || panel.type;
+  let desc = `Quadro Elétrico tipo ${typeName}, alimentação ${panel.voltage}`;
+  
+  if (panel.equipments && panel.equipments.length > 0) {
+    const eqTypes = {};
+    panel.equipments.forEach(eq => {
+      const key = eq.type;
+      if (!eqTypes[key]) eqTypes[key] = [];
+      eqTypes[key].push(eq);
+    });
+    
+    const parts = [];
+    Object.keys(eqTypes).forEach(type => {
+      const eqs = eqTypes[type];
+      const typeLabels = {
+        'UTA': 'UTA', 'EX/CV': 'Exaustor/CV', 'BOMBAS': 'Bomba',
+        'CHILLER': 'Chiller', 'VRF': 'VRF', 'SPLIT': 'Split',
+        'SPLITAO': 'Splitão', 'FANCOLETE': 'Fancolete'
+      };
+      const label = typeLabels[type] || type;
+      
+      if (type === 'FANCOLETE' && eqs[0].fancoleteQty) {
+        parts.push(`${eqs[0].fancoleteQty}× ${label}`);
+      } else if (type === 'VRF') {
+        const condCount = eqs.reduce((sum, e) => sum + (e.condensadoras ? e.condensadoras.length : 0), 0);
+        const evapCount = eqs.reduce((sum, e) => sum + (parseInt(e.vrfEvaporadorasQty) || 0), 0);
+        parts.push(`${eqs.length}× ${label} (${condCount} cond. + ${evapCount} evap.)`);
+      } else {
+        const startTypes = eqs.map(e => (Array.isArray(e.starts) ? e.starts[0] : e.starts) || '').filter(Boolean);
+        const uniqueStarts = [...new Set(startTypes)];
+        const startStr = uniqueStarts.length > 0 ? ` (${uniqueStarts.join('/')})` : '';
+        parts.push(`${eqs.length}× ${label}${startStr}`);
+      }
+    });
+    
+    desc += `, composto por ${panel.equipments.length} equipamento(s): ${parts.join(', ')}`;
+  } else if (panel.quantity) {
+    desc += `, ${panel.quantity} pontos de ${panel.type === 'comando' ? 'comando' : 'automação remota'}`;
+  }
+  
+  if (panel.totalPowerKw) {
+    desc += `. Potência total: ${panel.totalPowerKw.toFixed(1)}kW`;
+  }
+  if (panel.calculatedCurrent) {
+    desc += `, corrente: ${panel.calculatedCurrent.toFixed(1)}A`;
+  }
+  
+  // Identify main protection type
+  if (panel.components) {
+    const mainBreaker = panel.components.find(c => c.code && (c.code.startsWith('DISJ-AGW') || c.code.startsWith('MSW')));
+    if (mainBreaker) {
+      const db = PRECOS_DATABASE.catalog[mainBreaker.code];
+      if (db) {
+        desc += `. Proteção geral: ${db.desc}`;
+      }
+    }
+  }
+  
+  desc += '.';
+  return desc;
+}
+
+// Helper: Add a condensadora input row
+function addCondensadoraRow(listId, prefix) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+  const idx = list.children.length;
+  const row = document.createElement('div');
+  row.className = prefix + '-cond-item';
+  row.style.display = 'flex';
+  row.style.alignItems = 'center';
+  row.style.gap = '8px';
+  row.innerHTML = `
+    <span style="font-size: 0.8rem; color: var(--text-secondary); min-width: 30px;">#${idx + 1}</span>
+    <input type="text" class="form-control ${prefix}-cond-power" placeholder="Potência (kW)" style="height: 32px; flex: 1;">
+    <button type="button" style="background: var(--danger, #ef4444); color: #fff; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.7rem;" onclick="this.parentElement.remove()">✕</button>
+  `;
+  list.appendChild(row);
+}
 
 function clearAllPanels() {
   if (confirm("ATENÇÃO: Você tem certeza de que deseja apagar todos os quadros gerados e limpar o orçamento atual? Esta ação não pode ser desfeita.")) {

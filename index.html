@@ -285,6 +285,10 @@
                     <option value="EX/CV">EX/CV</option>
                     <option value="BOMBAS">BOMBAS</option>
                     <option value="CHILLER">CHILLER</option>
+                    <option value="VRF">VRF</option>
+                    <option value="SPLIT">SPLIT</option>
+                    <option value="SPLITAO">SPLITÃO</option>
+                    <option value="FANCOLETE">FANCOLETE</option>
                   </select>
                 </div>
 
@@ -484,6 +488,73 @@
                   </div>
                 </div>
               </div>
+
+<!-- VRF Configuration -->
+<div id="vrf-configs" class="hidden-section" style="margin-top: 12px;">
+  <div class="form-card" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
+    <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);">Configuração VRF</h4>
+    <div class="form-group" style="margin-bottom: 10px;">
+      <label class="form-label">Unidades Condensadoras</label>
+      <div id="vrf-condensadoras-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      <button type="button" class="btn btn-sm" id="btn-add-vrf-condensadora" style="margin-top: 8px; font-size: 0.75rem; padding: 4px 12px; background: var(--primary); color: #fff; border: none; border-radius: 4px; cursor: pointer;">+ Adicionar Condensadora</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quantidade de Unidades Evaporadoras</label>
+      <input type="number" class="form-control" id="vrf-evaporadoras-qty" min="1" value="1" placeholder="Qtd de evaporadoras">
+      <span style="font-size: 0.7rem; color: var(--text-secondary);">Cada evaporadora: 200W + Disjuntor Bipolar 10A</span>
+    </div>
+  </div>
+</div>
+
+<!-- SPLIT Configuration -->
+<div id="split-configs" class="hidden-section" style="margin-top: 12px;">
+  <div class="form-card" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
+    <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);">Configuração SPLIT</h4>
+    <div class="form-group" style="margin-bottom: 10px;">
+      <label class="form-label">Potência do Split (kW)</label>
+      <input type="text" class="form-control" id="split-power" placeholder="Ex: 3.5">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo de Alimentação</label>
+      <div style="display: flex; gap: 12px;">
+        <label style="display:flex; align-items:center; gap:4px; font-size:0.8rem; cursor:pointer;">
+          <input type="radio" name="split-phase" value="monofasico" checked> Monofásico (220V)
+        </label>
+        <label style="display:flex; align-items:center; gap:4px; font-size:0.8rem; cursor:pointer;">
+          <input type="radio" name="split-phase" value="trifasico"> Trifásico
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SPLITÃO Configuration -->
+<div id="splitao-configs" class="hidden-section" style="margin-top: 12px;">
+  <div class="form-card" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
+    <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);">Configuração Splitão</h4>
+    <div class="form-group" style="margin-bottom: 10px;">
+      <label class="form-label">Potência do Motor Evaporadora (kW)</label>
+      <input type="text" class="form-control" id="splitao-evap-power" placeholder="Ex: 3.0">
+    </div>
+    <div class="form-group" style="margin-bottom: 10px;">
+      <label class="form-label">Unidades Condensadoras</label>
+      <div id="splitao-condensadoras-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      <button type="button" class="btn btn-sm" id="btn-add-splitao-condensadora" style="margin-top: 8px; font-size: 0.75rem; padding: 4px 12px; background: var(--primary); color: #fff; border: none; border-radius: 4px; cursor: pointer;">+ Adicionar Condensadora</button>
+    </div>
+  </div>
+</div>
+
+<!-- FANCOLETE Configuration -->
+<div id="fancolete-configs" class="hidden-section" style="margin-top: 12px;">
+  <div class="form-card" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
+    <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);">Configuração Fancolete</h4>
+    <div class="form-group">
+      <label class="form-label">Quantidade de Fancoletes</label>
+      <input type="number" class="form-control" id="fancolete-qty" min="1" value="1" placeholder="Qtd de fancoletes">
+      <span style="font-size: 0.7rem; color: var(--text-secondary);">Cada fancolete: 200W + Disjuntor Bipolar 10A</span>
+    </div>
+  </div>
+</div>
 
               <div style="margin-top: 20px;">
                 <button type="button" class="btn btn-secondary" id="btn-add-equipment">
@@ -848,6 +919,10 @@
                 <option value="EX/CV">EX/CV (Exaustor / Caixa de Ventilação)</option>
                 <option value="BOMBAS">BOMBAS (Bomba Hidráulica)</option>
                 <option value="CHILLER">CHILLER (Resfriador de Líquido)</option>
+                <option value="VRF">VRF (Variable Refrigerant Flow)</option>
+                <option value="SPLIT">SPLIT (Ar Condicionado Split)</option>
+                <option value="SPLITAO">SPLITÃO (Fan Coil Expansão Direta)</option>
+                <option value="FANCOLETE">FANCOLETE (Fan Coil de Parede)</option>
               </select>
             </div>
           </div>
@@ -1024,6 +1099,74 @@
                 </label>
               </div>
             </div>
+
+<!-- Edit VRF Configuration -->
+<div id="edit-vrf-configs" class="hidden-section" style="margin-top: 12px;">
+  <div class="form-card" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
+    <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);">Configuração VRF</h4>
+    <div class="form-group" style="margin-bottom: 10px;">
+      <label class="form-label">Unidades Condensadoras</label>
+      <div id="edit-vrf-condensadoras-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      <button type="button" class="btn btn-sm" id="btn-edit-add-vrf-condensadora" style="margin-top: 8px; font-size: 0.75rem; padding: 4px 12px; background: var(--primary); color: #fff; border: none; border-radius: 4px; cursor: pointer;">+ Adicionar Condensadora</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quantidade de Unidades Evaporadoras</label>
+      <input type="number" class="form-control" id="edit-vrf-evaporadoras-qty" min="1" value="1">
+      <span style="font-size: 0.7rem; color: var(--text-secondary);">Cada evaporadora: 200W + Disjuntor Bipolar 10A</span>
+    </div>
+  </div>
+</div>
+
+<!-- Edit SPLIT Configuration -->
+<div id="edit-split-configs" class="hidden-section" style="margin-top: 12px;">
+  <div class="form-card" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
+    <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);">Configuração SPLIT</h4>
+    <div class="form-group" style="margin-bottom: 10px;">
+      <label class="form-label">Potência do Split (kW)</label>
+      <input type="text" class="form-control" id="edit-split-power" placeholder="Ex: 3.5">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo de Alimentação</label>
+      <div style="display: flex; gap: 12px;">
+        <label style="display:flex; align-items:center; gap:4px; font-size:0.8rem; cursor:pointer;">
+          <input type="radio" name="edit-split-phase" value="monofasico" checked> Monofásico (220V)
+        </label>
+        <label style="display:flex; align-items:center; gap:4px; font-size:0.8rem; cursor:pointer;">
+          <input type="radio" name="edit-split-phase" value="trifasico"> Trifásico
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit SPLITÃO Configuration -->
+<div id="edit-splitao-configs" class="hidden-section" style="margin-top: 12px;">
+  <div class="form-card" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
+    <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);">Configuração Splitão</h4>
+    <div class="form-group" style="margin-bottom: 10px;">
+      <label class="form-label">Potência do Motor Evaporadora (kW)</label>
+      <input type="text" class="form-control" id="edit-splitao-evap-power" placeholder="Ex: 3.0">
+    </div>
+    <div class="form-group" style="margin-bottom: 10px;">
+      <label class="form-label">Unidades Condensadoras</label>
+      <div id="edit-splitao-condensadoras-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      <button type="button" class="btn btn-sm" id="btn-edit-add-splitao-condensadora" style="margin-top: 8px; font-size: 0.75rem; padding: 4px 12px; background: var(--primary); color: #fff; border: none; border-radius: 4px; cursor: pointer;">+ Adicionar Condensadora</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit FANCOLETE Configuration -->
+<div id="edit-fancolete-configs" class="hidden-section" style="margin-top: 12px;">
+  <div class="form-card" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
+    <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);">Configuração Fancolete</h4>
+    <div class="form-group">
+      <label class="form-label">Quantidade de Fancoletes</label>
+      <input type="number" class="form-control" id="edit-fancolete-qty" min="1" value="1">
+      <span style="font-size: 0.7rem; color: var(--text-secondary);">Cada fancolete: 200W + Disjuntor Bipolar 10A</span>
+    </div>
+  </div>
+</div>
+
           </div>
         </form>
       </div>

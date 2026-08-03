@@ -265,6 +265,13 @@ const PRECOS_DATABASE = {
       "unit": "un",
       "price": 50.0
     },
+    "MINIDISJ-MDW-C16-2": { "desc": "MINIDISJUNTOR BIPOLAR 16A CURVA C MDW-C16-2", "brand": "WEG", "unit": "un", "price": 50.0 },
+    "MINIDISJ-MDW-C20-2": { "desc": "MINIDISJUNTOR BIPOLAR 20A CURVA C MDW-C20-2", "brand": "WEG", "unit": "un", "price": 50.0 },
+    "MINIDISJ-MDW-C25-2": { "desc": "MINIDISJUNTOR BIPOLAR 25A CURVA C MDW-C25-2", "brand": "WEG", "unit": "un", "price": 50.0 },
+    "MINIDISJ-MDW-C32-2": { "desc": "MINIDISJUNTOR BIPOLAR 32A CURVA C MDW-C32-2", "brand": "WEG", "unit": "un", "price": 50.0 },
+    "MINIDISJ-MDW-C40-2": { "desc": "MINIDISJUNTOR BIPOLAR 40A CURVA C MDW-C40-2", "brand": "WEG", "unit": "un", "price": 60.0 },
+    "MINIDISJ-MDW-C50-2": { "desc": "MINIDISJUNTOR BIPOLAR 50A CURVA C MDW-C50-2", "brand": "WEG", "unit": "un", "price": 80.0 },
+    "MINIDISJ-MDW-C63-2": { "desc": "MINIDISJUNTOR BIPOLAR 63A CURVA C MDW-C63-2", "brand": "WEG", "unit": "un", "price": 80.0 },
     "TRANSFORMADOR-440-220": {
       "desc": "TRANSFORMADOR MONOFÁSICO 440/220V - 200VA",
       "brand": "WEG",
@@ -1381,6 +1388,9 @@ const PRECOS_DATABASE = {
       "unit": "m",
       "price": 8.5
     },
+    "CABO-PP-5X1.0": { "desc": "CABO PP 5x1,0mm²", "brand": "CORFIO", "unit": "m", "price": 7.0 },
+    "CABO-PP-2X1.0": { "desc": "CABO PP 2x1,0mm²", "brand": "CORFIO", "unit": "m", "price": 2.5 },
+    "CABO-SHIELD-3X1.0": { "desc": "CABO SHIELD 3x1,0mm²", "brand": "CORFIO", "unit": "m", "price": 6.0 },
     "CONDULETE-GALV-1/2": {
       "desc": "CONDULETE MÚLTIPLO X 1/2 COM TAMPA",
       "brand": "WETZEL",
